@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TxnsStatus {
+  SUCCESS
+  PENDING
+  FAILED
+}
+
+model Community {
+  id              Int                     @id @default(autoincrement())
+  address         String                  @unique()
+  name            String
+  description     String
+  longitude       Float?
+  latitude        Float?
+  country         String
+  district        String?
+  fundRaisedUsd   Float                   @default(0)
+  categoryId      Int
+  fundRaisedLocal String                  @default("0")
+  localCurrency   String //NPR, INR, USD
+  category        Category                @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+  summary         CommunityDemographics[]
+  tags            String[]                @default([])
+  managers        String[]                @default([])
+  images          Json?                    
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@map(name: "tbl_communities")
+}
+
+model CommunityManager {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String?
+  phone         String?
+  walletAddress String?
+  communities   String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt //list of community addresses
+
+  @@map(name: "tbl_communityManagers")
+}
+
+model CommunityDemographics {
+  id                  Int       @id @default(autoincrement())
+  community           Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId         Int
+  total_beneficiaries Int       @default(0)
+  gender_male         Int?
+  gender_female       Int?
+  gender_other        Int?
+  bank_yes            Int?
+  bank_no             Int?
+  internet_yes        Int?
+  internet_no         Int?
+  extras              Json?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map(name: "tbl_communityDemographics")
+}
+
+model Tags {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map(name: "tbl_tags")
+}
+
+model Category {
+  id          Int         @id @default(autoincrement())
+  name        String
+  communities Community[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map(name: "tbl_categories")
+}
+
+
+model Role {
+  id         Int       @unique @default(autoincrement())
+  name       String    @db.VarChar() @unique
+  isSystem   Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  Permission Permission[]
+  User       User[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id         Int     @unique @default(autoincrement())
+  role       Role    @relation(fields: [roleId], references: [id])
+  roleId    Int     @db.Integer()
+  action     String  @db.VarChar()
+  subject    String  @db.VarChar()
+  inverted   Boolean @default(false)
+  conditions Json?   @db.JsonB()
+  reason     String? @db.Text()
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  @@map("permissions")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authAddress String @unique
+  authType    AuthType @default(Email)  
+
+  firstName   String
+  lastName    String
+
+  role    Role @relation(fields: [roleId], references: [id])
+  roleId Int  @db.Integer()
+
+  otp     String?
+
+  @@map("users")
+}
+
+enum AuthType {
+  Email
+  Phone
+  Wallet
+}

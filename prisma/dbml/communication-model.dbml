@@ -1,0 +1,86 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Project "Communication Campaign" {
+  database_type: 'PostgreSQL'
+  Note: 'Communication Campaign'
+}
+
+Table tbl_communities {
+  id Int [pk, increment]
+  address String [unique, not null]
+  name String [not null]
+  description String [not null]
+  longitude Float
+  latitude Float
+  country String [not null]
+  totalDonations_usd Int [not null, default: 0]
+  categoryId Int [not null]
+  category tbl_categories [not null]
+  summary tbl_communityDemographics [not null]
+  tags String[] [not null]
+  managers String[] [not null]
+  images Json [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table tbl_communityManagers {
+  id Int [pk, increment]
+  name String [not null]
+  email String
+  phone String
+  walletAddress String
+  communities String[] [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table tbl_communityDemographics {
+  id Int [pk, increment]
+  community tbl_communities [not null]
+  communityId Int [not null]
+  total_beneficiaries Int [not null, default: 0]
+  gender_male Int
+  gender_female Int
+  gender_other Int
+  bank_yes Int
+  bank_no Int
+  internet_yes Int
+  internet_no Int
+  extras Json [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table tbl_tags {
+  id Int [pk, increment]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table tbl_categories {
+  id Int [pk, increment]
+  name String [not null]
+  communities tbl_communities [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Enum TxnsStatus {
+  SUCCESS
+  PENDING
+  FAILED
+}
+
+Enum Gender {
+  M
+  F
+  O
+}
+
+Ref: tbl_communities.categoryId > tbl_categories.id
+
+Ref: tbl_communityDemographics.communityId > tbl_communities.id
