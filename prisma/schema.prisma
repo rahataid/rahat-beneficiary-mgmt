@@ -33,7 +33,7 @@ model Community {
   summary         CommunityDemographics[]
   tags            String[]                @default([])
   managers        String[]                @default([])
-  images          Json?                    
+  images          Json?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
@@ -127,7 +127,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   authAddress String @unique
-  authType    AuthType @default(Email)  
+  authType    AuthType @default(Email)
 
   firstName   String
   lastName    String
@@ -138,6 +138,61 @@ model User {
   otp     String?
 
   @@map("users")
+}
+
+model Beneficiary{
+  id    Int    @id @default(autoincrement()) @db.Integer()
+
+  uuid  String  @unique  @db.VarChar()
+
+  firstName String
+  lastName String
+  birthDate DateTime?
+  gender    Gender
+  location String?
+  latitude  Float?
+  longitude Float?
+  phone     String?
+  email    String?
+  extras Json?
+  notes String?
+
+  beneficiaries_group BeneficiaryGroup[]
+
+  @@map("tbl_beneficiaries")
+}
+
+
+model Group{
+  id  Int @id @default(autoincrement()) @db.Integer()
+
+  name  String  @unique
+
+  beneficiaries_group   BeneficiaryGroup[]
+
+  @@map("tbl_groups")
+
+}
+
+model BeneficiaryGroup{
+  id  Int  @id @default(autoincrement()) @db.Integer()
+
+  beneficiary  Beneficiary  @relation(fields: [beneficary_id], references: [id])
+  beneficary_id  Int  @db.Integer()
+
+  group  Group  @relation(fields: [group_id],references: [id])
+  group_id Int  @db.Integer()
+
+  @@map("tbl_beneficiariesgroups")
+
+}
+
+
+
+enum Gender {
+  Male
+  Female
+  Others
 }
 
 enum AuthType {

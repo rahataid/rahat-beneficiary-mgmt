@@ -10,6 +10,7 @@ import { ManagersModule } from './managers/managers.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RsUserModule } from '@rahat/user';
 // import { CommunityModule } from './community/community.module';
+import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RsUserModule } from '@rahat/user';
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RsUserModule,
     PrismaModule,
+    BeneficiariesModule,
     // CategoriesModule,
     // ManagersModule,
     // CommunityModule,
