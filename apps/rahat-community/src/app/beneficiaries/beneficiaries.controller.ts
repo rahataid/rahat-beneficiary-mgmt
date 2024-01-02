@@ -8,9 +8,9 @@ import {
   Delete,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
-import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
