@@ -11,6 +11,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RsUserModule } from '@rahat/user';
 // import { CommunityModule } from './community/community.module';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
+import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
     RsUserModule,
     PrismaModule,
     BeneficiariesModule,
-    // CategoriesModule,
+    FieldDefinitionsModule,
     // ManagersModule,
     // CommunityModule,
   ],
