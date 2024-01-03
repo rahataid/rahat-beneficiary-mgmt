@@ -17,7 +17,7 @@ import {
 } from './dto/update-field-definition.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
-import { ACTIONS, SUBJECTS } from 'libs/user/src/lib/constants';
+import { ACTIONS, SUBJECTS } from '@rahat/user';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')

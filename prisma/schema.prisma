@@ -143,7 +143,7 @@ model User {
 model Beneficiary{
   id    Int    @id @default(autoincrement()) @db.Integer()
 
-  uuid  String  @unique  @db.VarChar()
+  uuid  String  @unique  @default(uuid()) @db.Uuid()
 
   firstName String
   lastName String
@@ -154,7 +154,7 @@ model Beneficiary{
   longitude Float?
   phone     String?
   email    String?
-  extras Json?
+  extras Json?      @db.JsonB()
   notes String?
 
   beneficiaries_group BeneficiaryGroup[]
@@ -164,8 +164,8 @@ model Beneficiary{
 
 model FieldDefinition {
   id          Int     @id      @default(autoincrement())   @db.Integer()
-  name        String  @unique  
-  field_type  String  
+  name        String  @unique
+  field_type  String
   is_active   Boolean @default(true)
 
   @@map("tbl_field_definition")

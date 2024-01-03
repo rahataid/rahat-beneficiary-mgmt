@@ -1,26 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
+import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
+import { PrismaService } from '@rahat/prisma';
 
 @Injectable()
 export class BeneficiariesService {
-  create(createBeneficiaryDto: CreateBeneficiaryDto) {
-    return 'This action adds a new beneficiary';
+  constructor(private prisma: PrismaService) {}
+  async create(createBeneficiaryDto: CreateBeneficiaryDto) {
+    await this.prisma.beneficiary.create({
+      data: {
+        firstName: createBeneficiaryDto.firstName,
+        lastName: createBeneficiaryDto.lastName,
+        gender: createBeneficiaryDto.gender,
+        birthDate: createBeneficiaryDto.birthDate,
+        email: createBeneficiaryDto.email,
+        extras: createBeneficiaryDto.extras,
+        location: createBeneficiaryDto.location,
+        latitude: createBeneficiaryDto.latitude,
+        longitude: createBeneficiaryDto.longitude,
+        phone: createBeneficiaryDto.phone,
+        notes: createBeneficiaryDto.notes,
+      },
+    });
+
+    return 'created Successfully';
   }
 
-  findAll() {
-    return `This action returns all beneficiaries`;
+  async findAll() {
+    return await this.prisma.beneficiary.findMany({});
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} beneficiary`;
+  async findOne(uuid: string) {
+    return await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+    });
   }
 
-  update(id: number, updateBeneficiaryDto: UpdateBeneficiaryDto) {
-    return `This action updates a #${id} beneficiary`;
+  async update(uuid: string, updateBeneficiaryDto: UpdateBeneficiaryDto) {
+    return await this.prisma.beneficiary.update({
+      where: {
+        uuid,
+      },
+      data: updateBeneficiaryDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} beneficiary`;
+  async remove(uuid: string) {
+    return await this.prisma.beneficiary.delete({
+      where: {
+        uuid,
+      },
+    });
   }
 }
