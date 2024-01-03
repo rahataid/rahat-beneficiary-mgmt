@@ -162,6 +162,15 @@ model Beneficiary{
   @@map("tbl_beneficiaries")
 }
 
+model FieldDefinition {
+  id          Int     @id      @default(autoincrement())   @db.Integer()
+  name        String  @unique  
+  field_type  String  
+  is_active   Boolean @default(true)
+
+  @@map("tbl_field_definition")
+}
+
 
 model Group{
   id  Int @id @default(autoincrement()) @db.Integer()
