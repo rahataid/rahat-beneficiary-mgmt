@@ -6,24 +6,26 @@ import { PrismaService } from '@rahat/prisma';
 @Injectable()
 export class BeneficiariesService {
   constructor(private prisma: PrismaService) {}
-  async create(createBeneficiaryDto: CreateBeneficiaryDto) {
-    await this.prisma.beneficiary.create({
+  async create(dto: CreateBeneficiaryDto) {
+    if (dto.birthDate) {
+      const formattedDate = new Date(dto.birthDate).toISOString();
+      dto.birthDate = formattedDate;
+    }
+    return this.prisma.beneficiary.create({
       data: {
-        firstName: createBeneficiaryDto.firstName,
-        lastName: createBeneficiaryDto.lastName,
-        gender: createBeneficiaryDto.gender,
-        birthDate: createBeneficiaryDto.birthDate,
-        email: createBeneficiaryDto.email,
-        extras: createBeneficiaryDto.extras,
-        location: createBeneficiaryDto.location,
-        latitude: createBeneficiaryDto.latitude,
-        longitude: createBeneficiaryDto.longitude,
-        phone: createBeneficiaryDto.phone,
-        notes: createBeneficiaryDto.notes,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        gender: dto.gender,
+        birthDate: dto.birthDate,
+        email: dto.email,
+        extras: dto.extras,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        phone: dto.phone,
+        notes: dto.notes,
       },
     });
-
-    return 'created Successfully';
   }
 
   async findAll() {

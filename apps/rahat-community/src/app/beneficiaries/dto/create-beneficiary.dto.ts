@@ -34,7 +34,7 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'MALE',
+    example: 'Male',
     description: 'Gender ',
   })
   @IsString()
