@@ -12,6 +12,8 @@ import { RsUserModule } from '@rahat/user';
 // import { CommunityModule } from './community/community.module';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
+import { GroupModule } from './group/group.module';
+import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { FieldDefinitionsModule } from './field-definitions/field-definitions.mo
     PrismaModule,
     BeneficiariesModule,
     FieldDefinitionsModule,
+    GroupModule,
+    BeneficiaryGroupModule,
     // ManagersModule,
     // CommunityModule,
   ],
