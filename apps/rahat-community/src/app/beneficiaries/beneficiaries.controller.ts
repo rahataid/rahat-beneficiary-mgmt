@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
@@ -16,6 +17,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
 import { ACTIONS, SUBJECTS } from '@rahat/user';
+import {
+  BeneficiaryFilterDto,
+  ApiFilterQuery,
+} from './dto/list-beneficiary.dto';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -32,8 +37,9 @@ export class BeneficiariesController {
   }
 
   @Get()
-  findAll() {
-    return this.beneficiariesService.findAll();
+  @ApiFilterQuery('filters', BeneficiaryFilterDto)
+  findAll(@Query('filters') filters: BeneficiaryFilterDto) {
+    return this.beneficiariesService.findAll(filters);
   }
 
   @Get(':uuid')

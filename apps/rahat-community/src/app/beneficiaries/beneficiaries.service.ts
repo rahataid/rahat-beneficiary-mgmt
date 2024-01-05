@@ -4,6 +4,9 @@ import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { PrismaService } from '@rahat/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../utils';
+import { paginate } from '../utils/paginate';
+
+export const EXTRA_SEARCH_FIELDS = ['home', 'work'];
 
 @Injectable()
 export class BeneficiariesService {
@@ -43,8 +46,49 @@ export class BeneficiariesService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.beneficiary.findMany({});
+  async findAll(filters: any) {
+    const OR_CONDITIONS = [];
+    let conditions = {};
+
+    const keys = Object.keys(filters);
+    const values = Object.values(filters);
+    for (let i = 0; i < keys.length; i++) {
+      const found = EXTRA_SEARCH_FIELDS.includes(keys[i]);
+      if (found) {
+        const fieldName = keys[i];
+        OR_CONDITIONS.push({
+          extras: {
+            path: [fieldName],
+            string_contains: values[i],
+          },
+        });
+      }
+    }
+
+    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
+
+    if (filters.firstName) {
+      OR_CONDITIONS.push({
+        firstName: { contains: filters.firstName, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
+    if (filters.lastName) {
+      OR_CONDITIONS.push({
+        lastName: { contains: filters.lastName, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
+    return paginate(
+      this.prisma.beneficiary,
+      { where: conditions },
+      {
+        page: +filters?.page,
+        perPage: +filters?.perPage,
+      },
+    );
   }
 
   async findOne(uuid: string) {
