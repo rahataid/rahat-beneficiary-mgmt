@@ -1,20 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('group')
+@ApiTags('Group')
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
   @Post()
-  create(@Body() createGroupDto: CreateGroupDto) {
-    return this.groupService.create(createGroupDto);
+  create(@Body() dto: CreateGroupDto) {
+    return this.groupService.create(dto);
   }
 
   @Get()
-  findAll() {
-    return this.groupService.findAll();
+  findAll(@Query() query: any) {
+    return this.groupService.findAll(query);
   }
 
   @Get(':id')
