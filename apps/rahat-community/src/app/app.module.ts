@@ -5,11 +5,8 @@ import { AppService } from './app.service';
 import { PrismaModule, PrismaService } from '@rahat/prisma';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
-// import { CategoriesModule } from './categories/categories.module';
-import { ManagersModule } from './managers/managers.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RsUserModule } from '@rahat/user';
-// import { CommunityModule } from './community/community.module';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './group/group.module';
@@ -25,8 +22,6 @@ import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.mo
     FieldDefinitionsModule,
     GroupModule,
     BeneficiaryGroupModule,
-    // ManagersModule,
-    // CommunityModule,
   ],
   controllers: [AppController],
   providers: [
