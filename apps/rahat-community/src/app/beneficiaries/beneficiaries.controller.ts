@@ -17,10 +17,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
 import { ACTIONS, SUBJECTS } from '@rahat/user';
-import {
-  BeneficiaryFilterDto,
-  ApiFilterQuery,
-} from './dto/list-beneficiary.dto';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -37,8 +33,8 @@ export class BeneficiariesController {
   }
 
   @Get()
-  @ApiFilterQuery('filters', BeneficiaryFilterDto)
-  findAll(@Query('filters') filters: BeneficiaryFilterDto) {
+  // @ApiFilterQuery('filters', BeneficiaryFilterDto)
+  findAll(@Query('') filters: any) {
     return this.beneficiariesService.findAll(filters);
   }
 

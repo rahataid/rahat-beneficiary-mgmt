@@ -6,8 +6,6 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { validateAllowedFieldAndTypes } from '../utils';
 import { paginate } from '../utils/paginate';
 
-export const EXTRA_SEARCH_FIELDS = ['home', 'work'];
-
 @Injectable()
 export class BeneficiariesService {
   constructor(
@@ -50,10 +48,15 @@ export class BeneficiariesService {
     const OR_CONDITIONS = [];
     let conditions = {};
 
+    const fields = await this.fieldDefService.listActive();
+    const fieldNames = fields.map((f) => f.name);
+
     const keys = Object.keys(filters);
     const values = Object.values(filters);
     for (let i = 0; i < keys.length; i++) {
-      const found = EXTRA_SEARCH_FIELDS.includes(keys[i]);
+      const searchField = keys[i].toLocaleLowerCase();
+      console.log({ searchField });
+      const found = fieldNames.includes(searchField);
       if (found) {
         const fieldName = keys[i];
         OR_CONDITIONS.push({
@@ -80,6 +83,8 @@ export class BeneficiariesService {
       });
       conditions = { OR: OR_CONDITIONS };
     }
+
+    console.log('Final_Condition==>', conditions);
 
     return paginate(
       this.prisma.beneficiary,
