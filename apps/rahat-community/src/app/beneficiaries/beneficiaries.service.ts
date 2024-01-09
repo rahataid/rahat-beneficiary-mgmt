@@ -3,7 +3,7 @@ import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { PrismaService } from '@rahat/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { validateAllowedFieldAndTypes } from '../utils';
+import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
 
 @Injectable()

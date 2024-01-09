@@ -81,10 +81,11 @@ model Beneficiary{
 }
 
 model FieldDefinition {
-  id          Int     @id      @default(autoincrement())   @db.Integer()
-  name        String  @unique
-  field_type  String
-  is_active   Boolean @default(true)
+  id                Int     @id      @default(autoincrement())   @db.Integer()
+  name              String  @unique   
+  field_type        String  // Enum
+  field_populate    Json?   // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
+  is_active         Boolean @default(true)
 
   @@map("tbl_field_definition")
 }
@@ -126,4 +127,14 @@ enum AuthType {
   Email
   Phone
   Wallet
+}
+
+enum FieldType {
+  Checkbox
+  Dropdown
+  Number
+  Password
+  Radio
+  Text
+  Textarea
 }

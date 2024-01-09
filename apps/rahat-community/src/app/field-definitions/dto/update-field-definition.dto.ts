@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateFieldDefinitionDto } from './create-field-definition.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateFieldDefinitionDto extends PartialType(
   CreateFieldDefinitionDto,
@@ -16,12 +16,20 @@ export class UpdateFieldDefinitionDto extends PartialType(
 
   @ApiProperty({
     type: 'string',
-    example: 'String',
-    description: 'Valid prisma data type Eg: String/Int/DateTime/Boolean',
+    example: 'Text',
+    description:
+      'Valid prisma data type Eg:  Checkbox/Dropdown/Number/Password/Radio/Text/Textarea',
   })
   @IsString()
   @IsNotEmpty()
   field_type: string;
+
+  @ApiProperty({
+    type: 'object',
+    example: { data: 'any' },
+  })
+  @IsOptional()
+  field_populate: any;
 }
 
 export class updateStatusDto {

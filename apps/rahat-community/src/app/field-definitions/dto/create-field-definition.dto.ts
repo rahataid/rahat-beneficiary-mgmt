@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateFieldDefinitionDto {
   @ApiProperty({
@@ -12,10 +12,18 @@ export class CreateFieldDefinitionDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'String',
-    description: 'Valid prisma data type Eg: String/Int/DateTime/Boolean',
+    example: 'Text',
+    description:
+      'Valid prisma data type Eg:  Checkbox/Dropdown/Number/Password/Radio/Text/Textarea',
   })
   @IsString()
   @IsNotEmpty()
   field_type: string;
+
+  @ApiProperty({
+    type: 'object',
+    example: { data: 'any' },
+  })
+  @IsOptional()
+  field_populate: any;
 }
