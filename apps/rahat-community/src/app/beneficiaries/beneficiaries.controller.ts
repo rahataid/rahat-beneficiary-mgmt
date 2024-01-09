@@ -29,10 +29,12 @@ export class BeneficiariesController {
   @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() createBeneficiaryDto: CreateBeneficiaryDto) {
+    console.log(createBeneficiaryDto);
     return this.beneficiariesService.create(createBeneficiaryDto);
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   // @ApiFilterQuery('filters', BeneficiaryFilterDto)
   findAll(@Query('') filters: any) {
     return this.beneficiariesService.findAll(filters);

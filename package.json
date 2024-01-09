@@ -6,7 +6,8 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
-    "dev": "npx nx serve rahat-community"
+    "dev": "npx nx serve rahat-community",
+    "test": "npx nx test rahat-community-e2e:e2e"
   },
   "husky": {
     "hooks": {

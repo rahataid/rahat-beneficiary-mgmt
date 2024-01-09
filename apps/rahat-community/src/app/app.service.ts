@@ -5,7 +5,7 @@ import { PrismaService } from '@rahat/prisma';
 export class AppService {
   constructor(private prisma: PrismaService) {}
   async getData() {
-    const d = await this.prisma.category.findMany();
-    return { message: 'Hello API', data: d };
+    // const d = await this.prisma.;
+    return { message: 'Hello API' };
   }
 }

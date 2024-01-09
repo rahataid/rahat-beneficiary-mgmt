@@ -13,6 +13,7 @@ export class BeneficiariesService {
     private fieldDefService: FieldDefinitionsService,
   ) {}
   async create(dto: CreateBeneficiaryDto) {
+    console.log(dto);
     const { birthDate, extras } = dto;
     if (birthDate) {
       const formattedDate = new Date(dto.birthDate).toISOString();
