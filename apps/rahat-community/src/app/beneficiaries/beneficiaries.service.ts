@@ -9,6 +9,8 @@ import * as ExcelJS from 'exceljs';
 import * as fs from 'fs';
 import csvParser from 'csv-parser';
 import path from 'path';
+import { fetchSchemaFields, validateFieldAndTypes } from './helpers';
+import { DB_MODELS } from '../../constants';
 
 @Injectable()
 export class BeneficiariesService {
@@ -16,6 +18,25 @@ export class BeneficiariesService {
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
   ) {}
+
+  async validateAndImport(dto: any) {
+    try {
+      const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+      const hasInvalid = validateFieldAndTypes(dbFields, dto);
+      if (hasInvalid.length)
+        return {
+          status: 500,
+          success: false,
+          data: `Please check these fields: ${hasInvalid.toString()}`,
+        };
+      // Save to Database
+      console.log('Save DTO==>', dto);
+      return dto;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   async create(dto: CreateBeneficiaryDto) {
     console.log(dto);
     const { birthDate, extras } = dto;
