@@ -52,7 +52,8 @@ export class AuthService {
     try {
       const OTP_SECRET = this.config.get('OTP_SECRET');
       const otp = totp.generate(OTP_SECRET);
-      console.log(otp);
+
+      console.log(typeof otp);
       const exist = await this.userService.getUserByAuthAddress(
         dto.authAddress,
       );
@@ -68,9 +69,10 @@ export class AuthService {
         subject: 'OTP for login',
         otp,
       };
-      if (user.otp) delete user.otp;
+      // if (user.otp) delete user.otp;  //for testing puprpose should comment
       // EMIT EVENT
       this.eventEmitter.emit(EVENTS.SEND_OTP_EMAIL, context);
+      console.log(user);
       return user;
     } catch (err) {
       throw err;

@@ -10,13 +10,16 @@ import {
   HttpStatus,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
 import { ACTIONS, SUBJECTS } from '@rahat/user';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -32,6 +35,13 @@ export class BeneficiariesController {
     console.log(createBeneficiaryDto);
     return this.beneficiariesService.create(createBeneficiaryDto);
   }
+
+  // @Post('upload')
+  // @ApiConsumes('multipart/form-data')
+  // @UseInterceptors(FileInterceptor('file'))
+  // uploadAsset(@UploadedFile() file: any) {
+  //   return this.beneficiariesService.uploadFile(file);
+  // }
 
   @Get()
   @HttpCode(HttpStatus.OK)

@@ -11,6 +11,7 @@ import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './group/group.module';
 import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
@@ -22,6 +23,9 @@ import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.mo
     FieldDefinitionsModule,
     GroupModule,
     BeneficiaryGroupModule,
+    MulterModule.register({
+      dest: './file',
+    }),
   ],
   controllers: [AppController],
   providers: [
