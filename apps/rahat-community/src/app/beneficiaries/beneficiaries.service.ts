@@ -141,6 +141,7 @@ export class BeneficiariesService {
   }
 
   async uploadFile(file: any) {
+    // console.log(file);
     const fileExtension = path.extname(file.originalname).toLowerCase();
     console.log(fileExtension);
     switch (fileExtension) {
