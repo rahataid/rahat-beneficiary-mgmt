@@ -12,14 +12,18 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
 import { ACTIONS, SUBJECTS } from '@rahat/user';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
+import { multerOptions } from '../utils/multer';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -44,12 +48,20 @@ export class BeneficiariesController {
     return this.beneficiariesService.validateAndImport(dto);
   }
 
-  // @Post('upload')
-  // @ApiConsumes('multipart/form-data')
-  // @UseInterceptors(FileInterceptor('file'))
-  // uploadAsset(@UploadedFile() file: any) {
-  //   return this.beneficiariesService.uploadFile(file);
-  // }
+  @Post('upload')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', multerOptions))
+  async uploadAsset(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 10000000000 })],
+      }),
+    )
+    file: //@ts-ignore
+    Express.Multer.file,
+  ) {
+    return this.beneficiariesService.uploadFile(file);
+  }
 
   @Get()
   @HttpCode(HttpStatus.OK)

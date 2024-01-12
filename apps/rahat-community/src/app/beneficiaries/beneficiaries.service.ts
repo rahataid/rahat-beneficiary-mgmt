@@ -5,12 +5,10 @@ import { PrismaService } from '@rahat/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
-import * as ExcelJS from 'exceljs';
-import * as fs from 'fs';
-import csvParser from 'csv-parser';
-import path from 'path';
+import XLSX from 'xlsx';
 import { fetchSchemaFields, validateFieldAndTypes } from './helpers';
 import { DB_MODELS } from '../../constants';
+import { deleteFileFromDisk } from '../utils/multer';
 
 @Injectable()
 export class BeneficiariesService {
@@ -168,50 +166,13 @@ export class BeneficiariesService {
   }
 
   async uploadFile(file: any) {
-    const fileExtension = path.extname(file.originalname).toLowerCase();
-    console.log(fileExtension);
-    switch (fileExtension) {
-      case '.csv':
-        return this.readCsv(file);
-      case '.xls':
-        return this.readXlsx(file);
-      default:
-        throw new Error('Unsupported file type');
-    }
-  }
-  private async readXlsx(file: any) {
-    console.log(file);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(file.buffer);
-
-    const worksheet = workbook.worksheets[0];
-    const rows: any[][] = [];
-
-    worksheet.eachRow((row, rowNumber) => {
-      const rowData: any[] = [];
-      row.eachCell((cell) => {
-        rowData.push(cell.value);
-      });
-      rows.push(rowData);
+    const workbook = XLSX.readFile(file.path);
+    await deleteFileFromDisk(file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet);
+    data.forEach((element: CreateBeneficiaryDto) => {
+      this.create(element);
     });
-
-    return rows;
-  }
-
-  private async readCsv(file: any) {
-    const rows: any[] = [];
-    return new Promise((resolve, reject) => {
-      fs.createReadStream(file.buffer)
-        .pipe(csvParser())
-        .on('data', (row) => {
-          rows.push(row);
-        })
-        .on('end', () => {
-          resolve(rows);
-        })
-        .on('error', (error) => {
-          reject(error);
-        });
-    });
+    return 'Data Uploded Sucessfully';
   }
 }
