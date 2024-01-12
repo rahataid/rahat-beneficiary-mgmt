@@ -21,17 +21,23 @@ export class BeneficiariesService {
 
   async validateAndImport(dto: any) {
     try {
+      // Limit number of imports?
+      // Validate required fields
+      // Validate data types
+      // Duplicate/Upsert check?
       const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
       const hasInvalid = validateFieldAndTypes(dbFields, dto);
       if (hasInvalid.length)
-        return {
-          status: 500,
-          success: false,
-          data: `Please check these fields: ${hasInvalid.toString()}`,
-        };
-      // Save to Database
-      console.log('Save DTO==>', dto);
-      return dto;
+        throw new Error(`Please check these fields: ${hasInvalid.toString()}`);
+      const importIdMapped = dto.map((d: any) => {
+        const newItem = { ...d, gender: 'Male', importId: d._id.toString() };
+        delete newItem._id;
+        return newItem;
+      });
+      return this.prisma.beneficiary.createMany({
+        data: importIdMapped,
+        skipDuplicates: false,
+      });
     } catch (err) {
       throw new Error(err);
     }

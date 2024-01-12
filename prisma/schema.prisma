@@ -11,9 +11,9 @@ datasource db {
 }
 
 model Role {
-  id         Int       @unique @default(autoincrement())
-  name       String    @db.VarChar() @unique
-  isSystem   Boolean   @default(false)
+  id        Int       @unique @default(autoincrement())
+  name      String    @unique @db.VarChar()
+  isSystem  Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 
@@ -26,7 +26,7 @@ model Role {
 model Permission {
   id         Int     @unique @default(autoincrement())
   role       Role    @relation(fields: [roleId], references: [id])
-  roleId    Int     @db.Integer()
+  roleId     Int     @db.Integer()
   action     String  @db.VarChar()
   subject    String  @db.VarChar()
   inverted   Boolean @default(false)
@@ -40,40 +40,42 @@ model Permission {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  authAddress String @unique
+  authAddress String   @unique
   authType    AuthType @default(Email)
 
-  firstName   String
-  lastName    String
+  firstName String
+  lastName  String
 
-  role    Role @relation(fields: [roleId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
   roleId Int  @db.Integer()
 
-  otp     String?
+  otp String?
 
   @@map("users")
 }
 
-model Beneficiary{
-  id    Int    @id @default(autoincrement()) @db.Integer()
+model Beneficiary {
+  id Int @id @default(autoincrement()) @db.Integer()
 
-  uuid  String  @unique  @default(uuid()) @db.Uuid()
+  uuid String @unique @default(uuid()) @db.Uuid()
 
   firstName String
-  lastName String
-  birthDate DateTime?
+  lastName  String
   gender    Gender
-  location String?
+  birthDate DateTime?
+  location  String?
   latitude  Float?
   longitude Float?
   phone     String?
-  email    String?
-  extras Json?      @db.JsonB()
-  notes String?
+  email     String?
+  extras    Json?     @db.JsonB()
+  notes     String?
+  importId  String?
+  rawData   Json?
 
   beneficiaries_group BeneficiaryGroup[]
 
@@ -81,41 +83,36 @@ model Beneficiary{
 }
 
 model FieldDefinition {
-  id                Int     @id      @default(autoincrement())   @db.Integer()
-  name              String  @unique   
-  field_type        String  // Enum
-  field_populate    Json?   // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
-  is_active         Boolean @default(true)
+  id             Int     @id @default(autoincrement()) @db.Integer()
+  name           String  @unique
+  field_type     String // Enum
+  field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
+  is_active      Boolean @default(true)
 
   @@map("tbl_field_definition")
 }
 
+model Group {
+  id Int @id @default(autoincrement()) @db.Integer()
 
-model Group{
-  id  Int @id @default(autoincrement()) @db.Integer()
+  name String @unique
 
-  name  String  @unique
-
-  beneficiaries_group   BeneficiaryGroup[]
+  beneficiaries_group BeneficiaryGroup[]
 
   @@map("tbl_groups")
-
 }
 
-model BeneficiaryGroup{
-  id  Int  @id @default(autoincrement()) @db.Integer()
+model BeneficiaryGroup {
+  id Int @id @default(autoincrement()) @db.Integer()
 
-  beneficiary  Beneficiary  @relation(fields: [beneficary_id], references: [id])
-  beneficary_id  Int  @db.Integer()
+  beneficiary   Beneficiary @relation(fields: [beneficary_id], references: [id])
+  beneficary_id Int         @db.Integer()
 
-  group  Group  @relation(fields: [group_id],references: [id])
-  group_id Int  @db.Integer()
+  group    Group @relation(fields: [group_id], references: [id])
+  group_id Int   @db.Integer()
 
   @@map("tbl_beneficiariesgroups")
-
 }
-
-
 
 enum Gender {
   Male
