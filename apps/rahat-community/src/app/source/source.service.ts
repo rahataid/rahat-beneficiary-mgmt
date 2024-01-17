@@ -9,6 +9,7 @@ export class SourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateBeneficiarySourceDto) {
     try {
+      console.log('DTO=>', dto);
       return this.prisma.source.create({ data: dto });
     } catch (err) {
       throw new Error(err);
