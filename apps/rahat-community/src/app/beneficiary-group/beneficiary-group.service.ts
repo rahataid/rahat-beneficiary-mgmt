@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
 import { UpdateBeneficiaryGroupDto } from './dto/update-beneficiary-group.dto';
 import { PrismaService } from '@rahat/prisma';
@@ -8,14 +8,14 @@ export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateBeneficiaryGroupDto) {
     await this.prisma.$transaction(async (prisma) => {
-      const data = await prisma.beneficiaryGroup.findFirst({
-        where: {
-          beneficary_id: dto.beneficiary_id,
-          group_id: dto.group_id,
-        },
-      });
+      // const data = await prisma.beneficiaryGroup.findFirst({
+      //   where: {
+      //     beneficary_id: dto.beneficiary_id,
+      //     group_id: dto.group_id,
+      //   },
+      // });
 
-      if (data) throw new Error('Already Connected');
+      // if (data) throw new HttpException('Already Connected', 409);
 
       await prisma.beneficiaryGroup.create({
         data: {

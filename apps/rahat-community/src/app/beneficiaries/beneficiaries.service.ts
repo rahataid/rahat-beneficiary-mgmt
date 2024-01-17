@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
@@ -43,37 +43,43 @@ export class BeneficiariesService {
   }
 
   async create(dto: CreateBeneficiaryDto) {
-    console.log(dto);
-    const { birthDate, extras } = dto;
-    if (birthDate) {
-      const formattedDate = new Date(dto.birthDate).toISOString();
-      dto.birthDate = formattedDate;
+    try {
+      const { birthDate, extras } = dto;
+      if (birthDate) {
+        const formattedDate = new Date(dto.birthDate).toISOString();
+        dto.birthDate = formattedDate;
+      }
+      if (extras) {
+        const fields = await this.fieldDefService.listActive();
+        if (!fields.length)
+          throw new Error('Please setup allowed fields first!');
+        const nonMatching = validateAllowedFieldAndTypes(extras, fields);
+        if (nonMatching.length)
+          throw new Error(
+            `[${nonMatching.toString()}] field/type are not allowed inside extras!`,
+          );
+      }
+
+      console.log(dto);
+      return this.prisma.beneficiary.create({
+        data: {
+          custom_id: uuid(),
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          gender: dto.gender,
+          birth_date: dto.birthDate,
+          email: dto.email,
+          extras: dto.extras,
+          location: dto.location,
+          latitude: dto.latitude,
+          longitude: dto.longitude,
+          phone: dto.phone,
+          notes: dto.notes,
+        },
+      });
+    } catch (error) {
+      console.log('beneficiaryService', error);
     }
-    if (extras) {
-      const fields = await this.fieldDefService.listActive();
-      if (!fields.length) throw new Error('Please setup allowed fields first!');
-      const nonMatching = validateAllowedFieldAndTypes(extras, fields);
-      if (nonMatching.length)
-        throw new Error(
-          `[${nonMatching.toString()}] field/type are not allowed inside extras!`,
-        );
-    }
-    return this.prisma.beneficiary.create({
-      data: {
-        custom_id: uuid(),
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        gender: dto.gender,
-        birth_date: dto.birthDate,
-        email: dto.email,
-        extras: dto.extras,
-        location: dto.location,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        phone: dto.phone,
-        notes: dto.notes,
-      },
-    });
   }
 
   async findAll(filters: any) {
@@ -129,6 +135,13 @@ export class BeneficiariesService {
   }
 
   async findOne(uuid: string) {
+    const findUuid = await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+    });
+
+    if (!findUuid) throw new HttpException('Data not Found', 404);
     return await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
@@ -137,6 +150,13 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
+    const findUuid = await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+    });
+
+    if (!findUuid) throw new HttpException('Data not Found', 404);
     const { birthDate, extras } = dto;
     if (birthDate) {
       const formattedDate = new Date(dto.birthDate).toISOString();
@@ -160,6 +180,13 @@ export class BeneficiariesService {
   }
 
   async remove(uuid: string) {
+    const findUuid = await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+    });
+
+    if (!findUuid) throw new HttpException('Data not Found', 404);
     return await this.prisma.beneficiary.delete({
       where: {
         uuid,

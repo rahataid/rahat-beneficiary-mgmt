@@ -90,6 +90,7 @@ model BeneficiaryGroup {
   updated_at DateTime? @updatedAt()
 
   @@map("tbl_beneficiariesgroups")
+  @@unique([beneficary_id,group_id])
 }
 
 enum BankedStatus {
