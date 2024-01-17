@@ -16,8 +16,6 @@ export const fetchSchemaFields = (dbModelName: string) => {
 export const validateFieldAndTypes = (dbFields: any, dto: any) => {
   let hasInvalidfields = [];
   for (let d of dto) {
-    // delete d.rawData;
-    // delete d._id;
     const keys = Object.keys(d);
     // const values = Object.values(d);
     const { invalidFields } = validateKeys({
@@ -25,7 +23,7 @@ export const validateFieldAndTypes = (dbFields: any, dto: any) => {
       dbFields,
     });
     invalidFields.pop();
-    hasInvalidfields = IdAndRawdataKeys(invalidFields);
+    hasInvalidfields = fileterIdAndRawdataKeys(invalidFields);
   }
   return hasInvalidfields;
 };
@@ -45,7 +43,7 @@ function validateKeys({ keys, dbFields }) {
   return { invalidFields };
 }
 
-function IdAndRawdataKeys(keys: any) {
+function fileterIdAndRawdataKeys(keys: any) {
   let idFiltered = keys.filter((k: any) => k !== '_id');
   let rawDataFiltered = idFiltered.filter((k: any) => k !== 'rawData');
   return rawDataFiltered;

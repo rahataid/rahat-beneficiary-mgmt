@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
 import { PrismaService } from '@rahat/prisma';
@@ -59,10 +60,11 @@ export class BeneficiariesService {
     }
     return this.prisma.beneficiary.create({
       data: {
+        custom_id: uuid(),
         firstName: dto.firstName,
         lastName: dto.lastName,
         gender: dto.gender,
-        birthDate: dto.birthDate,
+        birth_date: dto.birthDate,
         email: dto.email,
         extras: dto.extras,
         location: dto.location,

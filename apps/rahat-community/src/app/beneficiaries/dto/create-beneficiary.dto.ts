@@ -4,7 +4,8 @@ import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
 enum Gender {
   Male = 'Male',
   Female = 'Female',
-  Others = 'Others',
+  Others = 'Other',
+  Unknown = 'Unknown',
 }
 export class CreateBeneficiaryDto {
   @ApiProperty({

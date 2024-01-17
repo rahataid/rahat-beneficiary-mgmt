@@ -10,6 +10,120 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Beneficiary {
+  id        Int    @id @default(autoincrement()) @db.Integer()
+  uuid      String @unique @default(uuid()) @db.Uuid()
+  custom_id String @unique @db.Uuid()
+
+  firstName       String
+  lastName        String
+  gender          Gender             @default(Unknown)
+  wallet_address  String?
+  birth_date      DateTime?
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  phone           String?
+  email           String?
+  extras          Json?              @db.JsonB()
+  notes           String?
+  banked_status   BankedStatus       @default(UNKNOWN)
+  internet_status InternetStatus     @default(UNKNOWN)
+  phone_status    PhoneStatus        @default(UNKNOWN)
+  source          BeneficiarySource? @relation(fields: [sourceId], references: [id])
+  sourceId        Int                @db.Integer()
+
+  beneficiaries_group BeneficiaryGroup[]
+
+  @@map("tbl_beneficiaries")
+}
+
+model BeneficiarySource {
+  id            Int    @id @default(autoincrement()) @db.Integer()
+  uuid          String @unique @default(uuid()) @db.Uuid()
+  name          String
+  details       Json   @db.JsonB()
+  field_mapping Json   @db.JsonB()
+
+  Beneficiary Beneficiary[]
+
+  @@map("tbl_beneficiary_source")
+}
+
+model FieldDefinition {
+  id             Int     @id @default(autoincrement()) @db.Integer()
+  name           String  @unique
+  field_type     String // Enum
+  field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
+  is_active      Boolean @default(true)
+
+  @@map("tbl_field_definition")
+}
+
+model Group {
+  id                  Int                @id @default(autoincrement()) @db.Integer()
+  name                String             @unique
+  beneficiaries_group BeneficiaryGroup[]
+
+  @@map("tbl_groups")
+}
+
+model BeneficiaryGroup {
+  id            Int         @id @default(autoincrement()) @db.Integer()
+  beneficiary   Beneficiary @relation(fields: [beneficary_id], references: [id])
+  beneficary_id Int         @db.Integer()
+  group         Group       @relation(fields: [group_id], references: [id])
+  group_id      Int         @db.Integer()
+
+  @@map("tbl_beneficiariesgroups")
+}
+
+enum BankedStatus {
+  UNKNOWN
+  UNBANKED
+  BANKED
+  UNDER_BANKED
+}
+
+enum InternetStatus {
+  UNKNOWN
+  NO_INTERNET
+  HOME_INTERNET
+  MOBILE_INTERNET
+}
+
+enum PhoneStatus {
+  UNKNOWN
+  NO_PHONE
+  FEATURE_PHONE
+  SMART_PHONE
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+  Unknown
+}
+
+enum AuthType {
+  Email
+  Phone
+  Wallet
+}
+
+enum FieldType {
+  Checkbox
+  Dropdown
+  Number
+  Password
+  Radio
+  Text
+  Textarea
+}
+
+// ============User Management Schema============
+
 model Role {
   id        Int       @unique @default(autoincrement())
   name      String    @unique @db.VarChar()
@@ -40,98 +154,18 @@ model Permission {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   authAddress String   @unique
   authType    AuthType @default(Email)
-
-  firstName String
-  lastName  String
-
-  role   Role @relation(fields: [roleId], references: [id])
-  roleId Int  @db.Integer()
-
-  otp String?
+  firstName   String
+  lastName    String
+  role        Role     @relation(fields: [roleId], references: [id])
+  roleId      Int      @db.Integer()
+  otp         String?
 
   @@map("users")
 }
 
-model Beneficiary {
-  id Int @id @default(autoincrement()) @db.Integer()
-
-  uuid String @unique @default(uuid()) @db.Uuid()
-
-  firstName String
-  lastName  String
-  gender    Gender
-  birthDate DateTime?
-  location  String?
-  latitude  Float?
-  longitude Float?
-  phone     String?
-  email     String?
-  extras    Json?     @db.JsonB()
-  notes     String?
-  importId  String?
-  rawData   Json?
-
-  beneficiaries_group BeneficiaryGroup[]
-
-  @@map("tbl_beneficiaries")
-}
-
-model FieldDefinition {
-  id             Int     @id @default(autoincrement()) @db.Integer()
-  name           String  @unique
-  field_type     String // Enum
-  field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
-  is_active      Boolean @default(true)
-
-  @@map("tbl_field_definition")
-}
-
-model Group {
-  id Int @id @default(autoincrement()) @db.Integer()
-
-  name String @unique
-
-  beneficiaries_group BeneficiaryGroup[]
-
-  @@map("tbl_groups")
-}
-
-model BeneficiaryGroup {
-  id Int @id @default(autoincrement()) @db.Integer()
-
-  beneficiary   Beneficiary @relation(fields: [beneficary_id], references: [id])
-  beneficary_id Int         @db.Integer()
-
-  group    Group @relation(fields: [group_id], references: [id])
-  group_id Int   @db.Integer()
-
-  @@map("tbl_beneficiariesgroups")
-}
-
-enum Gender {
-  Male
-  Female
-  Others
-}
-
-enum AuthType {
-  Email
-  Phone
-  Wallet
-}
-
-enum FieldType {
-  Checkbox
-  Dropdown
-  Number
-  Password
-  Radio
-  Text
-  Textarea
-}
+// ============End User Management Schema===========

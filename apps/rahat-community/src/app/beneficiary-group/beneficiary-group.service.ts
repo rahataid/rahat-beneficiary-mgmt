@@ -53,7 +53,7 @@ export class BeneficiaryGroupService {
             gender: true,
             phone: true,
             notes: true,
-            birthDate: true,
+            birth_date: true,
           },
         },
         group: {
