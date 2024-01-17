@@ -1,11 +1,6 @@
-// import axios from 'axios';
-// import { JwtGuard } from '@rahat/user';
-// import { ForbiddenException } from '@nestjs/common';
-// import { SignupDto } from '@rahat/user';
-// import { CreatePermissionDto } from '@rahat/user';
 import request from 'supertest';
 import { faker } from '@faker-js/faker';
-const beneficiariesData = {
+const createBenefDto = {
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   birthDate: faker.date.birthdate().toLocaleDateString(),
@@ -19,7 +14,7 @@ const beneficiariesData = {
   email: faker.internet.email(),
 };
 
-const updateBeneficiariesData = {
+const updateBenefDto = {
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   birthDate: faker.date.birthdate().toLocaleDateString(),
@@ -43,53 +38,51 @@ const beneficiaryGroupData = {
 
 const PORT = 5600;
 const APP_URL = `http://localhost:${PORT}`;
+const SAMPLE_UUID = '612d8703-6458-4e28-8484-bcd851a8048f';
 
 let otp;
 let acessToken;
 
-const sampleuuid = '612d8703-6458-4e28-8484-bcd851a8048f';
+describe('Rahat Community E2E Testing', () => {
+  describe('User Module', () => {
+    const email = 'admin@mailinator.com';
+    it('Should Send OTP', (done) => {
+      request(APP_URL)
+        .post('/api/v1/auth/otp')
+        .send({
+          authAddress: email,
+        })
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
 
-describe('Api testing', () => {
-  describe('beneficiaries crud for the valid  sampleuuid ', () => {
-    describe('user', () => {
-      const email = 'admin@mailinator.com';
-
-      it('should send otp', (done) => {
-        request(APP_URL)
-          .post('/api/v1/auth/otp')
-          .send({
-            authAddress: email,
-          })
-          .expect(200)
-          .end((err, res) => {
-            if (err) return done(err);
-
-            otp = res.body.otp;
-            done();
-          });
-      });
-      it('should login using otp and get token', (done) => {
-        request(APP_URL)
-          .post('/api/v1/auth/login')
-          .send({
-            authAddress: email,
-            otp: otp,
-          })
-          .expect(200)
-          .end((err, res) => {
-            if (err) return done(err);
-
-            acessToken = res.body.accessToken;
-            done();
-          });
-      });
+          otp = res.body.otp;
+          done();
+        });
     });
+    it('Should Login using OTP', (done) => {
+      request(APP_URL)
+        .post('/api/v1/auth/login')
+        .send({
+          authAddress: email,
+          otp: otp,
+        })
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
 
-    it('should create beneficiary ', (done) => {
+          acessToken = res.body.accessToken;
+          done();
+        });
+    });
+  });
+
+  describe('Beneficiary Module', () => {
+    it('Should Create Beneficiary ', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiaries')
         .set('Authorization', `Bearer ${acessToken}`)
-        .send(beneficiariesData)
+        .send(createBenefDto)
         .expect(200)
         .end((err, res) => {
           console.log('create error', err);
@@ -100,10 +93,10 @@ describe('Api testing', () => {
         });
     });
 
-    it('should not create a beneficiary without a valid ACl', (done) => {
+    it('Should not Create Beneficiary without Valid ACL', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiaries')
-        .send(beneficiariesData)
+        .send(createBenefDto)
         .expect(401)
         .end((err, res) => {
           if (err) return done(err);
@@ -111,7 +104,7 @@ describe('Api testing', () => {
         });
     });
 
-    it('should retrive all data ', (done) => {
+    it('Should List All Beneficiaries', (done) => {
       request(APP_URL)
         .get('/api/v1/beneficiaries')
         .expect(200)
@@ -122,9 +115,9 @@ describe('Api testing', () => {
         });
     });
 
-    it('should retrive data by  sampleuuid', (done) => {
+    it('Should Get Beneficiary by SAMPLE_UUID', (done) => {
       request(APP_URL)
-        .get(`/api/v1/beneficiaries/${sampleuuid}`)
+        .get(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -133,20 +126,21 @@ describe('Api testing', () => {
         });
     });
 
-    it('should update the data by  sampleuuid', (done) => {
+    it('Should Update Benefeciary by SAMPLE_UUID', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/beneficiaries/${sampleuuid}`)
+        .patch(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
         .set('Authorization', `Bearer ${acessToken}`)
-        .send(updateBeneficiariesData)
+        .send(updateBenefDto)
         .expect(200)
         .end((updateErr, updateRes) => {
           if (updateErr) return done(updateErr);
           done();
         });
     });
-    it('should  delete data by  sampleuuid', (done) => {
+
+    it('Should  Delete Beneficiary by SAMPLE_UUID', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/beneficiaries/${sampleuuid}`)
+        .delete(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(200)
         .end((deleteErr, deleteRes) => {
@@ -154,77 +148,39 @@ describe('Api testing', () => {
           done();
         });
     });
-  });
 
-  describe('beneficiaris for the not found  sampleuuid case', () => {
-    describe('user', () => {
-      const email = 'admin@mailinator.com';
-
-      it('should send otp', (done) => {
-        request(APP_URL)
-          .post('/api/v1/auth/otp')
-          .send({
-            authAddress: email,
-          })
-          .expect(200)
-          .end((err, res) => {
-            if (err) return done(err);
-
-            otp = res.body.otp;
-            done();
-          });
-      });
-      it('should login using otp and get token', (done) => {
-        request(APP_URL)
-          .post('/api/v1/auth/login')
-          .send({
-            authAddress: email,
-            otp: otp,
-          })
-          .expect(200)
-          .end((err, res) => {
-            if (err) return done(err);
-
-            acessToken = res.body.accessToken;
-            done();
-          });
-      });
+    it('Should not Get Beneficiary if Data Not Found', (done) => {
+      request(APP_URL)
+        .get(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(404)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
     });
 
-    describe(`beneficiaries`, () => {
-      it('should not retrive data if data not found', (done) => {
-        request(APP_URL)
-          .get(`/api/v1/beneficiaries/${sampleuuid}`)
-          .set('Authorization', `Bearer ${acessToken}`)
-          .expect(404)
-          .end((err, res) => {
-            if (err) return done(err);
-            done();
-          });
-      });
+    it('Should not Update Beneficiary If Not Found', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .send(updateBenefDto)
+        .expect(404)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
 
-      it('should not update a beneficiary if not found by  sampleuuid', (done) => {
-        request(APP_URL)
-          .patch(`/api/v1/beneficiaries/${sampleuuid}`)
-          .set('Authorization', `Bearer ${acessToken}`)
-          .send(updateBeneficiariesData)
-          .expect(404)
-          .end((err, res) => {
-            if (err) return done(err);
-            done();
-          });
-      });
-
-      it('should not delete a beneficiary if not found by  sampleuuid', (done) => {
-        request(APP_URL)
-          .delete(`/api/v1/beneficiaries/${sampleuuid}`)
-          .set('Authorization', `Bearer ${acessToken}`)
-          .expect(404)
-          .end((err, res) => {
-            if (err) return done(err);
-            done();
-          });
-      });
+    it('Should not Delete Beneficiary If Not Found ', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(404)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
     });
   });
 

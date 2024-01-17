@@ -12,7 +12,7 @@ import { FieldDefinitionsModule } from './field-definitions/field-definitions.mo
 import { GroupModule } from './group/group.module';
 import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.module';
 import { MulterModule } from '@nestjs/platform-express';
-import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source.module';
+import { SourceModule } from './source/source.module';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RsUserModule,
     PrismaModule,
-    BeneficiarySourceModule,
+    SourceModule,
     BeneficiariesModule,
     FieldDefinitionsModule,
     GroupModule,

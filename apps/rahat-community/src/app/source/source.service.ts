@@ -5,7 +5,7 @@ import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
 
 @Injectable()
-export class BeneficiarySourceService {
+export class SourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateBeneficiarySourceDto) {
     try {
