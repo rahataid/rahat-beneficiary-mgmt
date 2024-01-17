@@ -10,6 +10,7 @@ export class SourceService {
   create(dto: CreateBeneficiarySourceDto) {
     console.log(dto);
     try {
+      console.log('DTO=>', dto);
       return this.prisma.source.create({ data: dto });
     } catch (err) {
       throw new Error(err);

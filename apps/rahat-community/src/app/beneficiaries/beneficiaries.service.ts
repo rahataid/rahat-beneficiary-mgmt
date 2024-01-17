@@ -10,13 +10,35 @@ import XLSX from 'xlsx';
 import { fetchSchemaFields, validateFieldAndTypes } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { deleteFileFromDisk } from '../utils/multer';
+import { SourceService } from '../source/source.service';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
+    private sourceService: SourceService,
   ) {}
+
+  async importBySourceUUID(uuid: string) {
+    const source = await this.sourceService.findOne(uuid);
+    if (!source) throw new HttpException('Source not found!', 404);
+    const { field_mapping } = source;
+    const jsonData = source.field_mapping as {
+      data: object;
+    };
+    console.log(jsonData.data);
+
+    // Remove _id & rawData fields
+    // Validate required fields
+    // Check fieldName against target field
+    // Parse values against target field
+    // CHECK: if custom_id is enabled
+    // ===>IF: enabled => custom_id = enabled_key_value
+    // ===>ELSE: custom_id = uuid()
+    // Save benefID and sourceID to BeneficiarySource
+    return source;
+  }
 
   async validateAndImport(dto: any) {
     try {

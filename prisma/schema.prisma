@@ -17,7 +17,7 @@ model Beneficiary {
 
   firstName       String
   lastName        String
-  gender          Gender             @default(Unknown)
+  gender          Gender         @default(Unknown)
   wallet_address  String?
   birth_date      DateTime?
   location        String?
@@ -25,48 +25,47 @@ model Beneficiary {
   longitude       Float?
   phone           String?
   email           String?
-  extras          Json?              @db.JsonB()
+  extras          Json?          @db.JsonB()
   notes           String?
-  banked_status   BankedStatus       @default(UNKNOWN)
-  internet_status InternetStatus     @default(UNKNOWN)
-  phone_status    PhoneStatus        @default(UNKNOWN)
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
+  banked_status   BankedStatus   @default(UNKNOWN)
+  internet_status InternetStatus @default(UNKNOWN)
+  phone_status    PhoneStatus    @default(UNKNOWN)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime?      @updatedAt()
 
   beneficiaries_group BeneficiaryGroup[]
-   beneficiary_source BeneficiarySource[]
+  beneficiary_source  BeneficiarySource[]
 
   @@map("tbl_beneficiaries")
 }
 
-
-
 model Source {
-  id            Int       @id @default(autoincrement()) @db.Integer()
-  uuid          String    @unique @default(uuid()) @db.Uuid()
-  name          String
+  id                 Int                 @id @default(autoincrement()) @db.Integer()
+  uuid               String              @unique @default(uuid()) @db.Uuid()
+  name               String
   beneficiary_source BeneficiarySource[]
-  details       Json      @db.JsonB()
-  field_mapping Json      @db.JsonB()
-  created_at    DateTime  @default(now())
-  updated_at    DateTime? @updatedAt()
+  details            Json                @db.JsonB()
+  field_mapping      Json
+  created_at         DateTime            @default(now())
+  updated_at         DateTime?           @updatedAt()
 
   @@map("tbl_source")
 }
 
 model BeneficiarySource {
-  id            Int         @id @default(autoincrement()) @db.Integer()
-  source   Source @relation(fields: [source_id], references: [id])
-  source_id Int         @db.Integer()
-  beneficiary         Beneficiary       @relation(fields: [beneficiary_id], references: [id])
-  beneficiary_id      Int         @db.Integer()
+  id             Int         @id @default(autoincrement()) @db.Integer()
+  source         Source      @relation(fields: [source_id], references: [id])
+  source_id      Int         @db.Integer()
+  beneficiary    Beneficiary @relation(fields: [beneficiary_id], references: [id])
+  beneficiary_id Int         @db.Integer()
 
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt()
 
+  @@unique([beneficiary_id, source_id])
   @@map("tbl_beneficiariessource")
-  @@unique([beneficiary_id,source_id])
 }
+
 model FieldDefinition {
   id             Int     @id @default(autoincrement()) @db.Integer()
   name           String  @unique
@@ -101,8 +100,8 @@ model BeneficiaryGroup {
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt()
 
+  @@unique([beneficary_id, group_id])
   @@map("tbl_beneficiariesgroups")
-  @@unique([beneficary_id,group_id])
 }
 
 enum BankedStatus {
