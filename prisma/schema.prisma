@@ -30,31 +30,43 @@ model Beneficiary {
   banked_status   BankedStatus       @default(UNKNOWN)
   internet_status InternetStatus     @default(UNKNOWN)
   phone_status    PhoneStatus        @default(UNKNOWN)
-  source          BeneficiarySource? @relation(fields: [sourceId], references: [id])
-  sourceId        Int                @db.Integer()
-
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt()
 
   beneficiaries_group BeneficiaryGroup[]
+   beneficiary_source BeneficiarySource[]
 
   @@map("tbl_beneficiaries")
 }
 
-model BeneficiarySource {
+
+
+model Source {
   id            Int       @id @default(autoincrement()) @db.Integer()
   uuid          String    @unique @default(uuid()) @db.Uuid()
   name          String
+  beneficiary_source BeneficiarySource[]
   details       Json      @db.JsonB()
   field_mapping Json      @db.JsonB()
   created_at    DateTime  @default(now())
   updated_at    DateTime? @updatedAt()
 
-  Beneficiary Beneficiary[]
-
-  @@map("tbl_beneficiary_source")
+  @@map("tbl_source")
 }
 
+model BeneficiarySource {
+  id            Int         @id @default(autoincrement()) @db.Integer()
+  source   Source @relation(fields: [source_id], references: [id])
+  source_id Int         @db.Integer()
+  beneficiary         Beneficiary       @relation(fields: [beneficiary_id], references: [id])
+  beneficiary_id      Int         @db.Integer()
+
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt()
+
+  @@map("tbl_beneficiariessource")
+  @@unique([beneficiary_id,source_id])
+}
 model FieldDefinition {
   id             Int     @id @default(autoincrement()) @db.Integer()
   name           String  @unique

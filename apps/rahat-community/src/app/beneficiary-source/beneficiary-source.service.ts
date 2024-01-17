@@ -9,7 +9,7 @@ export class BeneficiarySourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateBeneficiarySourceDto) {
     try {
-      return this.prisma.beneficiarySource.create({ data: dto });
+      return this.prisma.source.create({ data: dto });
     } catch (err) {
       throw new Error(err);
     }
@@ -25,7 +25,7 @@ export class BeneficiarySourceService {
     };
 
     return paginate(
-      this.prisma.beneficiarySource,
+      this.prisma.source,
       { select },
       {
         page: query?.page,
@@ -35,12 +35,12 @@ export class BeneficiarySourceService {
   }
 
   findOne(uuid: string) {
-    return this.prisma.beneficiarySource.findUnique({ where: { uuid } });
+    return this.prisma.source.findUnique({ where: { uuid } });
   }
 
   update(uuid: string, dto: UpdateBeneficiarySourceDto) {
     try {
-      return this.prisma.beneficiarySource.update({
+      return this.prisma.source.update({
         where: { uuid },
         data: dto,
       });
@@ -50,7 +50,7 @@ export class BeneficiarySourceService {
   }
 
   remove(uuid: string) {
-    return this.prisma.beneficiarySource.delete({
+    return this.prisma.source.delete({
       where: {
         uuid,
       },
