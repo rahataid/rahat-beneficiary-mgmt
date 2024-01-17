@@ -8,6 +8,7 @@ import { paginate } from '../utils/paginate';
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateBeneficiarySourceDto) {
+    console.log(dto);
     try {
       return this.prisma.source.create({ data: dto });
     } catch (err) {

@@ -27,19 +27,28 @@ const updateBenefDto = {
   email: faker.internet.email(),
 };
 
+const sourceDto = {
+  name: faker.person.fullName(),
+  details: {
+    data: faker.lorem.text(),
+  },
+  field_mapping: {
+    data: [faker.lorem.word(), faker.location.country()],
+  },
+};
 const groupData = {
   name: faker.airline.airline().name,
 };
 
 const beneficiaryGroupData = {
-  beneficiary_id: 50,
-  group_id: 2,
+  beneficiary_id: 16,
+  group_id: 1,
 };
 
 const PORT = 5600;
 const APP_URL = `http://localhost:${PORT}`;
-const SAMPLE_UUID = '612d8703-6458-4e28-8484-bcd851a8048f';
-
+const SAMPLE_UUID = 'b6f9869f-65cd-49b5-b67d-a448a3205ff5';
+const SOURCE_UUID = '02b57ade-e867-44b1-9ef3-a5b07b162803';
 let otp;
 let acessToken;
 
@@ -85,9 +94,8 @@ describe('Rahat Community E2E Testing', () => {
         .send(createBenefDto)
         .expect(200)
         .end((err, res) => {
-          console.log('create error', err);
           if (err) return done(err);
-          console.log(res.body);
+          // console.log(res.body);
 
           done();
         });
@@ -184,8 +192,8 @@ describe('Rahat Community E2E Testing', () => {
     });
   });
 
-  describe('group', () => {
-    it('should create a group name', (done) => {
+  describe('Group Module ', () => {
+    it('Should Create  Group Name', (done) => {
       request(APP_URL)
         .post('/api/v1/group')
         .send(groupData)
@@ -195,10 +203,21 @@ describe('Rahat Community E2E Testing', () => {
           done();
         });
     });
+
+    it('Should Not Create Duplicate Group Name', (done) => {
+      request(APP_URL)
+        .post('/api/v1/group')
+        .send(groupData)
+        .expect(409)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
   });
 
-  describe('beneficiaries-group for the valid id', () => {
-    it('should should create a  beneficiaries group with a group id and beneficiary id', (done) => {
+  describe('Beneficiaries Group Module', () => {
+    it('Should Create Beneficiaries Group With group_id And beneficiary_id', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
         .send({
@@ -211,10 +230,8 @@ describe('Rahat Community E2E Testing', () => {
           done();
         });
     });
-  });
 
-  describe('beneficiaries-group for the invalid id', () => {
-    it('should should not create a  beneficiaries group with a group id and beneficiary id', (done) => {
+    it('Should Not Create Beneficiaries Group With Duplication group_id And beneficiary_id', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
         .send({
@@ -222,6 +239,61 @@ describe('Rahat Community E2E Testing', () => {
           beneficiary_id: beneficiaryGroupData.beneficiary_id,
         })
         .expect(409)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+  });
+
+  describe(`Source Module`, () => {
+    it('Should Create Source Name', (done) => {
+      request(APP_URL)
+        .post('/api/v1/sources')
+        .send(sourceDto)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should List All Sources', (done) => {
+      request(APP_URL)
+        .get('/api/v1/sources')
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done(err);
+        });
+    });
+
+    it('Should Get Source By Uuid', (done) => {
+      request(APP_URL)
+        .get(`/api/v1/sources/${SOURCE_UUID}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should Update Source', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/sources/${SOURCE_UUID}`)
+        .send(sourceDto)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          done();
+        });
+    });
+
+    it('Should Remove Source ', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/sources/${SOURCE_UUID}`)
+        .expect(200)
         .end((err, res) => {
           if (err) return done(err);
           done();

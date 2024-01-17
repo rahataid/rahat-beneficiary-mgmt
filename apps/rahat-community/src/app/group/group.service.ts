@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from '@rahat/prisma';
@@ -15,7 +15,7 @@ export class GroupService {
       },
     });
 
-    if (check) throw new Error('Already inserted');
+    if (check) throw new HttpException('Already inserted', 409);
 
     await this.prisma.group.create({
       data: dto,

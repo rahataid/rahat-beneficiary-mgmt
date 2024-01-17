@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { BeneficiaryGroupService } from './beneficiary-group.service';
 import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
@@ -20,6 +22,7 @@ export class BeneficiaryGroupController {
   ) {}
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   create(@Body() dto: CreateBeneficiaryGroupDto) {
     return this.beneficiaryGroupService.create(dto);
   }

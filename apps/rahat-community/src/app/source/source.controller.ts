@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { SourceService } from './source.service';
 import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
@@ -19,6 +21,7 @@ export class SourceController {
   constructor(private readonly sourceService: SourceService) {}
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   create(@Body() dto: CreateBeneficiarySourceDto) {
     return this.sourceService.create(dto);
   }
