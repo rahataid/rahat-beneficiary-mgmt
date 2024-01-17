@@ -1,24 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNotEmptyObject, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateBeneficiarySourceDto {
   @ApiProperty({
     example: 'Kobotool',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   name: string;
 
   @ApiProperty({
     type: 'object',
     example: { data: 'any' },
   })
+  @IsOptional()
   details: any;
 
   @ApiProperty({
     type: 'object',
     example: { data: '[{key,value}]' },
   })
+  @IsOptional()
   @IsNotEmptyObject()
-  feild_apping: any;
+  field_mapping: any;
 }

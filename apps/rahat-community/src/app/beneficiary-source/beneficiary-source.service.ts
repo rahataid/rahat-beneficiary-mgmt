@@ -1,32 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
 import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
+import { PrismaService } from '@rahat/prisma';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class BeneficiarySourceService {
+  constructor(private prisma: PrismaService) {}
   create(dto: CreateBeneficiarySourceDto) {
     try {
-      return 'This action adds a new beneficiarySource';
-    } catch (err) {}
+      return this.prisma.beneficiarySource.create({ data: dto });
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
-  findAll() {
-    return `This action returns all beneficiarySource`;
+  findAll(query: any) {
+    const select = {
+      field_mapping: true,
+      uuid: true,
+      id: true,
+      name: true,
+      created_at: true,
+    };
+
+    return paginate(
+      this.prisma.beneficiarySource,
+      { select },
+      {
+        page: query?.page,
+        perPage: query?.perPage,
+      },
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} beneficiarySource`;
+  findOne(uuid: string) {
+    return this.prisma.beneficiarySource.findUnique({ where: { uuid } });
   }
 
-  update(id: number, dto: UpdateBeneficiarySourceDto) {
+  update(uuid: string, dto: UpdateBeneficiarySourceDto) {
     try {
-      return 'This action adds a new beneficiarySource';
-    } catch (err) {}
+      return this.prisma.beneficiarySource.update({
+        where: { uuid },
+        data: dto,
+      });
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
-  remove(id: number) {
-    try {
-      return 'This action adds a new beneficiarySource';
-    } catch (err) {}
+  remove(uuid: string) {
+    return this.prisma.beneficiarySource.delete({
+      where: {
+        uuid,
+      },
+    });
   }
 }

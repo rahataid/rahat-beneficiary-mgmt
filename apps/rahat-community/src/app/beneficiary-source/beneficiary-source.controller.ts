@@ -6,12 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { BeneficiarySourceService } from './beneficiary-source.service';
 import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
 import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('beneficiary-source')
+@ApiTags('Beneficiary Source')
 export class BeneficiarySourceController {
   constructor(
     private readonly beneficiarySourceService: BeneficiarySourceService,
@@ -23,22 +26,22 @@ export class BeneficiarySourceController {
   }
 
   @Get()
-  findAll() {
-    return this.beneficiarySourceService.findAll();
+  findAll(@Query() query: any) {
+    return this.beneficiarySourceService.findAll(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.beneficiarySourceService.findOne(+id);
+  @Get(':uuid')
+  findOne(@Param('uuid') uuid: string) {
+    return this.beneficiarySourceService.findOne(uuid);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateBeneficiarySourceDto) {
-    return this.beneficiarySourceService.update(+id, dto);
+  @Patch(':uuid')
+  update(@Param('uuid') uuid: string, @Body() dto: UpdateBeneficiarySourceDto) {
+    return this.beneficiarySourceService.update(uuid, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.beneficiarySourceService.remove(+id);
+  @Delete(':uuid')
+  remove(@Param('uuid') uuid: string) {
+    return this.beneficiarySourceService.remove(uuid);
   }
 }

@@ -33,17 +33,22 @@ model Beneficiary {
   source          BeneficiarySource? @relation(fields: [sourceId], references: [id])
   sourceId        Int                @db.Integer()
 
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt()
+
   beneficiaries_group BeneficiaryGroup[]
 
   @@map("tbl_beneficiaries")
 }
 
 model BeneficiarySource {
-  id            Int    @id @default(autoincrement()) @db.Integer()
-  uuid          String @unique @default(uuid()) @db.Uuid()
+  id            Int       @id @default(autoincrement()) @db.Integer()
+  uuid          String    @unique @default(uuid()) @db.Uuid()
   name          String
-  details       Json   @db.JsonB()
-  field_mapping Json   @db.JsonB()
+  details       Json      @db.JsonB()
+  field_mapping Json      @db.JsonB()
+  created_at    DateTime  @default(now())
+  updated_at    DateTime? @updatedAt()
 
   Beneficiary Beneficiary[]
 
@@ -57,6 +62,9 @@ model FieldDefinition {
   field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
   is_active      Boolean @default(true)
 
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt()
+
   @@map("tbl_field_definition")
 }
 
@@ -64,6 +72,9 @@ model Group {
   id                  Int                @id @default(autoincrement()) @db.Integer()
   name                String             @unique
   beneficiaries_group BeneficiaryGroup[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt()
 
   @@map("tbl_groups")
 }
@@ -74,6 +85,9 @@ model BeneficiaryGroup {
   beneficary_id Int         @db.Integer()
   group         Group       @relation(fields: [group_id], references: [id])
   group_id      Int         @db.Integer()
+
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt()
 
   @@map("tbl_beneficiariesgroups")
 }
