@@ -13,9 +13,6 @@ export const DB_FIELD_TYPES = {
   FLOAT: 'Float',
 };
 
-// CHECK: if custom_id is enabled
-// ===>IF: enabled => custom_id = enabled_key_value
-// ===>ELSE: custom_id = uuid()
 export const injectCustomID = (payload: any) => {
   const final = [];
   for (let p of payload) {
