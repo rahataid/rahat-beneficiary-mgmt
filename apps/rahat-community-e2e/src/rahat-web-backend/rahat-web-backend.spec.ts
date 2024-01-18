@@ -36,19 +36,30 @@ const sourceDto = {
     data: [faker.lorem.word(), faker.location.country()],
   },
 };
-const groupData = {
+const groupDto = {
   name: faker.airline.airline().name,
 };
 
-const beneficiaryGroupData = {
+const beneficiaryGroupDto = {
   beneficiary_id: 16,
   group_id: 1,
+};
+
+const beneficiarySourceDto = {
+  beneficiary_id: 16,
+  source_id: 1,
+};
+
+const updateBeneficiarySourceDto = {
+  beneficiary_id: 22,
+  source_id: 1,
 };
 
 const PORT = 5600;
 const APP_URL = `http://localhost:${PORT}`;
 const SAMPLE_UUID = 'b6f9869f-65cd-49b5-b67d-a448a3205ff5';
 const SOURCE_UUID = '02b57ade-e867-44b1-9ef3-a5b07b162803';
+const ID = 1;
 let otp;
 let acessToken;
 
@@ -196,7 +207,7 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Create  Group Name', (done) => {
       request(APP_URL)
         .post('/api/v1/group')
-        .send(groupData)
+        .send(groupDto)
         .expect(201)
         .end((err, res) => {
           if (err) return done(err);
@@ -207,7 +218,7 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Not Create Duplicate Group Name', (done) => {
       request(APP_URL)
         .post('/api/v1/group')
-        .send(groupData)
+        .send(groupDto)
         .expect(409)
         .end((err, res) => {
           if (err) return done(err);
@@ -217,12 +228,12 @@ describe('Rahat Community E2E Testing', () => {
   });
 
   describe('Beneficiaries Group Module', () => {
-    it('Should Create Beneficiaries Group With group_id And beneficiary_id', (done) => {
+    it('Should Create Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
         .send({
-          group_id: beneficiaryGroupData.group_id,
-          beneficiary_id: beneficiaryGroupData.beneficiary_id,
+          group_id: beneficiaryGroupDto.group_id,
+          beneficiary_id: beneficiaryGroupDto.beneficiary_id,
         })
         .expect(200)
         .end((err, res) => {
@@ -231,12 +242,12 @@ describe('Rahat Community E2E Testing', () => {
         });
     });
 
-    it('Should Not Create Beneficiaries Group With Duplication group_id And beneficiary_id', (done) => {
+    it('Should Not Create Duplicate Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
         .send({
-          group_id: beneficiaryGroupData.group_id,
-          beneficiary_id: beneficiaryGroupData.beneficiary_id,
+          group_id: beneficiaryGroupDto.group_id,
+          beneficiary_id: beneficiaryGroupDto.beneficiary_id,
         })
         .expect(409)
         .end((err, res) => {
@@ -278,7 +289,7 @@ describe('Rahat Community E2E Testing', () => {
         });
     });
 
-    it('Should Update Source', (done) => {
+    it('Should Update Source By Uuid', (done) => {
       request(APP_URL)
         .patch(`/api/v1/sources/${SOURCE_UUID}`)
         .send(sourceDto)
@@ -290,9 +301,54 @@ describe('Rahat Community E2E Testing', () => {
         });
     });
 
-    it('Should Remove Source ', (done) => {
+    it('Should Remove Source By Uuid', (done) => {
       request(APP_URL)
         .delete(`/api/v1/sources/${SOURCE_UUID}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+  });
+
+  describe(`Beneficiary Source Module`, () => {
+    it('Should Create Benificiary Source  ', (done) => {
+      request(APP_URL)
+        .post('/api/v1/sources/beneficiarySource')
+        .send(beneficiarySourceDto)
+        .expect(201)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should Not Create Duplicate Beneficiary Source  ', (done) => {
+      request(APP_URL)
+        .post('/api/v1/sources/beneficiarySource')
+        .send(beneficiarySourceDto)
+        .expect(409)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should Update Beneficiary Source', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/sources/${ID}/beneficiarySource`)
+        .send(updateBeneficiarySourceDto)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should Remove Beneficiary Source', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/sources/${ID}/beneficiarySource`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);

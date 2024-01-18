@@ -11,8 +11,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { SourceService } from './source.service';
-import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
-import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
+import {
+  CreateBeneficiarySourceDto,
+  CreateSourceDto,
+} from './dto/create-beneficiary-source.dto';
+import {
+  UpdateBeneficiarySourceDto,
+  UpdateSourceDto,
+} from './dto/update-beneficiary-source.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @Controller('sources')
@@ -22,8 +28,13 @@ export class SourceController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  create(@Body() dto: CreateBeneficiarySourceDto) {
+  create(@Body() dto: CreateSourceDto) {
     return this.sourceService.create(dto);
+  }
+
+  @Post('beneficiarySource')
+  createBeneficiarySource(@Body() dto: CreateBeneficiarySourceDto) {
+    return this.sourceService.createBeneficiarySource(dto);
   }
 
   @Get()
@@ -31,18 +42,41 @@ export class SourceController {
     return this.sourceService.findAll(query);
   }
 
+  @Get('beneficiarySource')
+  listAllBeneficiarySource(query: any) {
+    return this.sourceService.listAllBeneficiarySource(query);
+  }
+
   @Get(':uuid')
   findOne(@Param('uuid') uuid: string) {
     return this.sourceService.findOne(uuid);
   }
 
+  @Get(':id/beneficiarySource')
+  findOneBeneficiarySource(@Param('id') id: string) {
+    return this.sourceService.findOneBeneficiarySource(id);
+  }
+
   @Patch(':uuid')
-  update(@Param('uuid') uuid: string, @Body() dto: UpdateBeneficiarySourceDto) {
+  update(@Param('uuid') uuid: string, @Body() dto: UpdateSourceDto) {
     return this.sourceService.update(uuid, dto);
+  }
+
+  @Patch(':id/beneficiarySource')
+  updateBeneficiarySource(
+    @Param('id') id: string,
+    @Body() dto: UpdateBeneficiarySourceDto,
+  ) {
+    return this.sourceService.updateBeneficiarySource(id, dto);
   }
 
   @Delete(':uuid')
   remove(@Param('uuid') uuid: string) {
     return this.sourceService.remove(uuid);
+  }
+
+  @Delete(':id/beneficiarySource')
+  removeBeneficiarySource(@Param('id') id: string) {
+    return this.sourceService.removeBeneficiarySource(id);
   }
 }
