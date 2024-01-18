@@ -62,7 +62,6 @@ model BeneficiarySource {
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt()
 
-  @@unique([beneficiary_id, source_id])
   @@map("tbl_beneficiariessource")
 }
 

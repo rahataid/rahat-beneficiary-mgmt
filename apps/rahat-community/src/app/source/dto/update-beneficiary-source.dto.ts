@@ -1,12 +1,18 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsNotEmptyObject, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-import { CreateBeneficiarySourceDto } from './create-beneficiary-source.dto';
-
-export class UpdateBeneficiarySourceDto extends PartialType(
+import {
   CreateBeneficiarySourceDto,
-) {
+  CreateSourceDto,
+} from './create-beneficiary-source.dto';
+
+export class UpdateSourceDto extends PartialType(CreateSourceDto) {
   @ApiProperty({
     example: 'Kobotool',
   })
@@ -26,4 +32,26 @@ export class UpdateBeneficiarySourceDto extends PartialType(
   })
   @IsNotEmptyObject()
   field_mapping: any;
+}
+
+export class UpdateBeneficiarySourceDto extends PartialType(
+  CreateBeneficiarySourceDto,
+) {
+  @ApiProperty({
+    type: 'number',
+    example: '1',
+    description: 'id of beneficiary',
+    required: true,
+  })
+  @IsNumber()
+  beneficiary_id: number;
+
+  @ApiProperty({
+    type: 'number',
+    example: '1',
+    description: 'id of source',
+    required: true,
+  })
+  @IsNumber()
+  source_id: number;
 }
