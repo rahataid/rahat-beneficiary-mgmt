@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
@@ -7,7 +7,12 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
 import XLSX from 'xlsx';
-import { fetchSchemaFields, validateFieldAndTypes } from './helpers';
+import {
+  extractFieldsMatchingWithDBFields,
+  fetchSchemaFields,
+  validateFieldAndTypes,
+  validateRequiredFields,
+} from './helpers';
 import { DB_MODELS } from '../../constants';
 import { deleteFileFromDisk } from '../utils/multer';
 import { SourceService } from '../source/source.service';
@@ -22,16 +27,30 @@ export class BeneficiariesService {
 
   async importBySourceUUID(uuid: string) {
     const source = await this.sourceService.findOne(uuid);
-    if (!source) throw new HttpException('Source not found!', 404);
-    const { field_mapping } = source;
+    if (!source) {
+      throw new HttpException('Source not found!', HttpStatus.NOT_FOUND);
+    }
     const jsonData = source.field_mapping as {
       data: object;
     };
-    console.log(jsonData.data);
+    const mapped_fields = jsonData.data;
 
-    // Remove _id & rawData fields
+    // *Remove _id & rawData fields
+    const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     // Validate required fields
+    const missing_fields = validateRequiredFields(mapped_fields);
+    if (missing_fields.length) {
+      throw new HttpException(
+        `Required fields missing! [${missing_fields.toString()}]`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     // Check fieldName against target field
+    const sanitized_fields = extractFieldsMatchingWithDBFields(
+      dbFields,
+      mapped_fields,
+    );
+    console.log('Sanitized=>', sanitized_fields);
     // Parse values against target field
     // CHECK: if custom_id is enabled
     // ===>IF: enabled => custom_id = enabled_key_value
