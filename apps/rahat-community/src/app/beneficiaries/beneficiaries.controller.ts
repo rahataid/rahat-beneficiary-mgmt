@@ -39,14 +39,6 @@ export class BeneficiariesController {
     return this.beneficiariesService.create(createBeneficiaryDto);
   }
 
-  @Post('import')
-  @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
-  validateAndImport(@Body() dto: any) {
-    return this.beneficiariesService.validateAndImport(dto);
-  }
-
   @Get(':source_uuid/import')
   @HttpCode(HttpStatus.OK)
   importBySourceUUID(@Param('source_uuid') uuid: string) {

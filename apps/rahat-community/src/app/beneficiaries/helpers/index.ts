@@ -3,6 +3,7 @@ import { uuid } from 'uuidv4';
 
 export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
 
+// If not specified duplicate records will be imported!
 const CUSTOM_UNIQUE_ID = 'phone';
 
 export const DB_FIELD_TYPES = {
@@ -119,42 +120,4 @@ function parseToTargetFieldType(targetType: any, value: any) {
     return new Date(value).toISOString();
   }
   return value.toString();
-}
-
-// ==============NOT IN USE BELOW THIS====================
-
-export const validateFieldAndTypes = (dbFields: any, dto: any) => {
-  let hasInvalidfields = [];
-  for (let d of dto) {
-    const keys = Object.keys(d);
-    // const values = Object.values(d);
-    const { invalidFields } = validateKeys({
-      keys,
-      dbFields,
-    });
-    invalidFields.pop();
-    hasInvalidfields = fileterIdAndRawdataKeys(invalidFields);
-  }
-  return hasInvalidfields;
-};
-
-function validateKeys({ keys, dbFields }) {
-  const invalidFields = [];
-  for (let i = 0; i < keys.length; i++) {
-    const found = dbFields.find((f: any) => f.name === keys[i]);
-    if (!found) invalidFields.push(keys[i]);
-    else {
-      // Also check data type
-      //   const valueType = typeof values[i];
-      //   console.log('DB_Type=>', found.type);
-      //   console.log('KOBO_Type=>', valueType);
-    }
-  }
-  return { invalidFields };
-}
-
-function fileterIdAndRawdataKeys(keys: any) {
-  let idFiltered = keys.filter((k: any) => k !== '_id');
-  let rawDataFiltered = idFiltered.filter((k: any) => k !== 'rawData');
-  return rawDataFiltered;
 }

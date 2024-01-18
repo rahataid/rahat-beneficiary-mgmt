@@ -12,7 +12,6 @@ import {
   fetchSchemaFields,
   injectCustomID,
   parseValuesByTargetTypes,
-  validateFieldAndTypes,
   validateRequiredFields,
 } from './helpers';
 import { DB_MODELS } from '../../constants';
@@ -35,6 +34,7 @@ export class BeneficiariesService {
     const jsonData = source.field_mapping as {
       data: object;
     };
+    // 1. Fetch DB_Fields and validate required fields
     const mapped_fields = jsonData.data;
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const missing_fields = validateRequiredFields(mapped_fields);
@@ -45,53 +45,36 @@ export class BeneficiariesService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    // Only select fields matching with DB_Fields
+    // 2. Only select fields matching with DB_Fields
     const sanitized_fields = extractFieldsMatchingWithDBFields(
       dbFields,
       mapped_fields,
     );
-    // Parse values against target field
+    // 3. Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
+    // 4. Inject unique key based on settings
     const final_payload = injectCustomID(parsed_data);
     let count = 0;
+    // 5. Save Benef and source
     for (let p of final_payload) {
       count++;
-      await this.prisma.beneficiary.upsert({
+      const benef = await this.prisma.beneficiary.upsert({
         where: { custom_id: p.custom_id },
         update: { custom_id: p.custom_id },
         create: p,
       });
+      if (benef) {
+        await this.sourceService.createBeneficiarySource({
+          beneficiary_id: benef.id,
+          source_id: source.id,
+        });
+      }
     }
-    // Save benefID and sourceID to BeneficiarySource
     return {
       success: true,
       status: 200,
       message: `${count} out of ${final_payload.length} Beneficiaries imported!`,
     };
-  }
-
-  async validateAndImport(dto: any) {
-    try {
-      // Limit number of imports?
-      // Validate required fields
-      // Validate data types
-      // Duplicate/Upsert check?
-      const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-      const hasInvalid = validateFieldAndTypes(dbFields, dto);
-      if (hasInvalid.length)
-        throw new Error(`Please check these fields: ${hasInvalid.toString()}`);
-      const importIdMapped = dto.map((d: any) => {
-        const newItem = { ...d, gender: 'Male', importId: d._id.toString() };
-        delete newItem._id;
-        return newItem;
-      });
-      return this.prisma.beneficiary.createMany({
-        data: importIdMapped,
-        skipDuplicates: false,
-      });
-    } catch (err) {
-      throw new Error(err);
-    }
   }
 
   async create(dto: CreateBeneficiaryDto) {
@@ -145,7 +128,6 @@ export class BeneficiariesService {
     const values = Object.values(filters);
     for (let i = 0; i < keys.length; i++) {
       const searchField = keys[i].toLocaleLowerCase();
-      console.log({ searchField });
       const found = fieldNames.includes(searchField);
       if (found) {
         const fieldName = keys[i];

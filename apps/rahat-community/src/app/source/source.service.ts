@@ -68,32 +68,29 @@ export class SourceService {
   }
 
   async createBeneficiarySource(dto: CreateBeneficiarySourceDto) {
-    console.log(dto);
-    const findBeneficiarySource = await this.prisma.beneficiarySource.findFirst(
-      {
-        where: {
-          beneficiary_id: dto.beneficiary_id,
-          source_id: dto.source_id,
-        },
-      },
-    );
-
-    if (findBeneficiarySource)
-      throw new HttpException('Already connected', 409);
-    await this.prisma.beneficiarySource.create({
-      data: {
-        beneficiary: {
-          connect: {
-            id: dto.beneficiary_id,
-          },
-        },
-        source: {
-          connect: {
-            id: dto.source_id,
-          },
-        },
+    const exist = await this.prisma.beneficiarySource.findFirst({
+      where: {
+        beneficiary_id: dto.beneficiary_id,
+        source_id: dto.source_id,
       },
     });
+
+    if (!exist) {
+      await this.prisma.beneficiarySource.create({
+        data: {
+          beneficiary: {
+            connect: {
+              id: dto.beneficiary_id,
+            },
+          },
+          source: {
+            connect: {
+              id: dto.source_id,
+            },
+          },
+        },
+      });
+    }
   }
 
   async listAllBeneficiarySource(query: any) {
