@@ -13,7 +13,7 @@ datasource db {
 model Beneficiary {
   id        Int    @id @default(autoincrement()) @db.Integer()
   uuid      String @unique @default(uuid()) @db.Uuid()
-  custom_id String @unique @db.Uuid()
+  custom_id String @unique
 
   firstName       String
   lastName        String

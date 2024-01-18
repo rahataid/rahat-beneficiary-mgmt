@@ -10,6 +10,7 @@ import XLSX from 'xlsx';
 import {
   extractFieldsMatchingWithDBFields,
   fetchSchemaFields,
+  injectCustomID,
   parseValuesByTargetTypes,
   validateFieldAndTypes,
   validateRequiredFields,
@@ -35,30 +36,38 @@ export class BeneficiariesService {
       data: object;
     };
     const mapped_fields = jsonData.data;
-
-    // *Remove _id & rawData fields
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    // Validate required fields
     const missing_fields = validateRequiredFields(mapped_fields);
+
     if (missing_fields.length) {
       throw new HttpException(
         `Required fields missing! [${missing_fields.toString()}]`,
         HttpStatus.BAD_REQUEST,
       );
     }
-    // Check fieldName against target field
+    // Only select fields matching with DB_Fields
     const sanitized_fields = extractFieldsMatchingWithDBFields(
       dbFields,
       mapped_fields,
     );
     // Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
-    console.log('Parsed==>', parsed_data);
-    // CHECK: if custom_id is enabled
-    // ===>IF: enabled => custom_id = enabled_key_value
-    // ===>ELSE: custom_id = uuid()
+    const final_payload = injectCustomID(parsed_data);
+    let count = 0;
+    for (let p of final_payload) {
+      count++;
+      await this.prisma.beneficiary.upsert({
+        where: { custom_id: p.custom_id },
+        update: { custom_id: p.custom_id },
+        create: p,
+      });
+    }
     // Save benefID and sourceID to BeneficiarySource
-    return source;
+    return {
+      success: true,
+      status: 200,
+      message: `${count} out of ${final_payload.length} Beneficiaries imported!`,
+    };
   }
 
   async validateAndImport(dto: any) {

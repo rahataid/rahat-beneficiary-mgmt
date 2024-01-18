@@ -1,6 +1,9 @@
 import { Prisma } from '@prisma/client';
+import { uuid } from 'uuidv4';
 
 export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
+
+const CUSTOM_UNIQUE_ID = 'phone';
 
 export const DB_FIELD_TYPES = {
   STRING: 'String',
@@ -9,7 +12,23 @@ export const DB_FIELD_TYPES = {
   FLOAT: 'Float',
 };
 
+// CHECK: if custom_id is enabled
+// ===>IF: enabled => custom_id = enabled_key_value
+// ===>ELSE: custom_id = uuid()
+export const injectCustomID = (payload: any) => {
+  const final = [];
+  for (let p of payload) {
+    const newItem = { ...p };
+    if (CUSTOM_UNIQUE_ID) {
+      newItem.custom_id = p[CUSTOM_UNIQUE_ID];
+    } else newItem.custom_id = uuid();
+    final.push(newItem);
+  }
+  return final;
+};
+
 export const validateRequiredFields = (payload: any) => {
+  if (CUSTOM_UNIQUE_ID) BENEFICIARY_REQ_FIELDS.push(CUSTOM_UNIQUE_ID);
   const missing_fields = [];
   for (let item of payload) {
     const keys = Object.keys(item);
