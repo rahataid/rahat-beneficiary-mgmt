@@ -2,6 +2,13 @@ import { Prisma } from '@prisma/client';
 
 export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
 
+export const DB_FIELD_TYPES = {
+  STRING: 'String',
+  INTEGER: 'Int',
+  DATE_TIME: 'DateTime',
+  FLOAT: 'Float',
+};
+
 export const validateRequiredFields = (payload: any) => {
   const missing_fields = [];
   for (let item of payload) {
@@ -61,6 +68,38 @@ function extractFields(payload: any, fieldsToSelect: any) {
     return extractedObject;
   });
   return extractedArray;
+}
+
+export const parseValuesByTargetTypes = (data: any, dbFields: any) => {
+  let parsed_result = [];
+  for (let d of data) {
+    const keys = Object.keys(d);
+    const values = Object.values(d);
+    const result = getFieldTypeAndParse({ keys, values, dbFields, item: d });
+    parsed_result = [...parsed_result, result[0]];
+  }
+  return parsed_result;
+};
+
+function getFieldTypeAndParse({ keys, values, dbFields, item }) {
+  const result = [];
+  for (let i = 0; i < keys.length; i++) {
+    const newItem = { ...item };
+    const targetField = dbFields.find((f: any) => f.name === keys[i]);
+    const parsedvalue = parseToTargetFieldType(targetField.type, values[i]);
+    newItem[keys[i]] = parsedvalue;
+    result.push(newItem);
+  }
+  return result;
+}
+
+function parseToTargetFieldType(targetType: any, value: any) {
+  if (targetType === DB_FIELD_TYPES.INTEGER) return parseInt(value);
+  if (targetType === DB_FIELD_TYPES.FLOAT) return parseFloat(value);
+  if (targetType === DB_FIELD_TYPES.DATE_TIME) {
+    return new Date(value).toISOString();
+  }
+  return value.toString();
 }
 
 // ==============NOT IN USE BELOW THIS====================

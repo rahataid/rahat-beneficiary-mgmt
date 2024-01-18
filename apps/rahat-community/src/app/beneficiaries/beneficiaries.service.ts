@@ -10,6 +10,7 @@ import XLSX from 'xlsx';
 import {
   extractFieldsMatchingWithDBFields,
   fetchSchemaFields,
+  parseValuesByTargetTypes,
   validateFieldAndTypes,
   validateRequiredFields,
 } from './helpers';
@@ -50,8 +51,9 @@ export class BeneficiariesService {
       dbFields,
       mapped_fields,
     );
-    console.log('Sanitized=>', sanitized_fields);
     // Parse values against target field
+    const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
+    console.log('Parsed==>', parsed_data);
     // CHECK: if custom_id is enabled
     // ===>IF: enabled => custom_id = enabled_key_value
     // ===>ELSE: custom_id = uuid()
