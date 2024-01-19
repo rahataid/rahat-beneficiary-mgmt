@@ -52,10 +52,12 @@ export class BeneficiariesService {
     );
     // 3. Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
+    console.log('Parsed=>', parsed_data);
     // 4. Inject unique key based on settings
     const final_payload = injectCustomID(parsed_data);
     let count = 0;
-    // 5. Save Benef and source
+
+    // // 5. Save Benef and source
     for (let p of final_payload) {
       count++;
       const benef = await this.prisma.beneficiary.upsert({

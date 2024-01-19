@@ -5,6 +5,7 @@ export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
 
 // If not specified duplicate records will be imported!
 const CUSTOM_UNIQUE_ID = 'phone';
+const GENDER_DB_FIELD = 'gender';
 
 export const DB_FIELD_TYPES = {
   STRING: 'String',
@@ -47,6 +48,7 @@ export const fetchSchemaFields = (dbModelName: string) => {
     return {
       name: f.name,
       type: f.type,
+      kind: f.kind,
     };
   });
   return result;
@@ -87,34 +89,65 @@ function extractFields(payload: any, fieldsToSelect: any) {
   return extractedArray;
 }
 
+// Eg: If target is Float, convert value to Float
 export const parseValuesByTargetTypes = (data: any, dbFields: any) => {
   let parsed_result = [];
   for (let d of data) {
     const keys = Object.keys(d);
     const values = Object.values(d);
-    const result = getFieldTypeAndParse({ keys, values, dbFields, item: d });
-    parsed_result = [...parsed_result, result[0]];
+    const newItem = getFieldTypeAndParse({ keys, values, dbFields, item: d });
+    parsed_result = [...parsed_result, newItem];
   }
   return parsed_result;
 };
 
+// Get field type using fieldName
 function getFieldTypeAndParse({ keys, values, dbFields, item }) {
-  const result = [];
+  const newItem = {};
   for (let i = 0; i < keys.length; i++) {
-    const newItem = { ...item };
     const targetField = dbFields.find((f: any) => f.name === keys[i]);
-    const parsedvalue = parseToTargetFieldType(targetField.type, values[i]);
+    const parsedvalue = parseToTargetFieldType({
+      targetField: targetField.name,
+      targetType: targetField.type,
+      targetValue: values[i],
+      kind: targetField.kind,
+    });
     newItem[keys[i]] = parsedvalue;
-    result.push(newItem);
   }
-  return result;
+  return newItem;
 }
 
-function parseToTargetFieldType(targetType: any, value: any) {
-  if (targetType === DB_FIELD_TYPES.INTEGER) return parseInt(value);
-  if (targetType === DB_FIELD_TYPES.FLOAT) return parseFloat(value);
-  if (targetType === DB_FIELD_TYPES.DATE_TIME) {
-    return new Date(value).toISOString();
+// Parse value according to target field type
+function parseToTargetFieldType({
+  targetField,
+  targetType,
+  targetValue,
+  kind,
+}) {
+  if (kind === 'enum') {
+    const currentFieldEnums = ENUM_MAPPING[targetField];
+    const validEnum = currentFieldEnums.includes(targetValue);
+    if (validEnum) return targetValue;
+    const defaultValue =
+      targetField === GENDER_DB_FIELD ? 'Unknown' : 'UNKNOWN';
+    return defaultValue;
   }
-  return value.toString();
+  if (targetType === DB_FIELD_TYPES.INTEGER) return parseInt(targetValue);
+  if (targetType === DB_FIELD_TYPES.FLOAT) return parseFloat(targetValue);
+  if (targetType === DB_FIELD_TYPES.DATE_TIME) {
+    return new Date(targetValue).toISOString();
+  }
+  return targetValue.toString();
 }
+
+const ENUM_MAPPING = {
+  gender: ['Male', 'Female', 'Other', 'Unknown'],
+  phone_status: ['UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE'],
+  internet_status: [
+    'UNKNOWN',
+    'NO_INTERNET',
+    'HOME_INTERNET',
+    'MOBILE_INTERNET',
+  ],
+  banked_status: ['UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED'],
+};
