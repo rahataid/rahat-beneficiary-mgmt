@@ -207,6 +207,7 @@ export class BeneficiariesService {
           `[${nonMatching.toString()}] field/type are not allowed inside extras!`,
         );
     }
+
     return await this.prisma.beneficiary.update({
       where: {
         uuid,

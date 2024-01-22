@@ -17,10 +17,9 @@ export class GroupService {
 
     if (check) throw new HttpException('Already inserted', 409);
 
-    await this.prisma.group.create({
+    return await this.prisma.group.create({
       data: dto,
     });
-    return 'Created Succesfully';
   }
 
   async findAll(query: any) {
@@ -81,6 +80,10 @@ export class GroupService {
   }
 
   remove(id: number) {
-    return `This action removes a #${id} group`;
+    return this.prisma.group.delete({
+      where: {
+        id,
+      },
+    });
   }
 }

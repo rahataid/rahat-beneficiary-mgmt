@@ -1,5 +1,18 @@
 import request from 'supertest';
 import { faker } from '@faker-js/faker';
+
+const PORT = 5600;
+const APP_URL = `http://localhost:${PORT}`;
+let beneficiaryUuid;
+let beneficiaryId;
+let fieldDefinitionId;
+let sourceUuid;
+let sourceId;
+let groupId;
+let ID;
+let otp;
+let acessToken;
+
 const createBenefDto = {
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
@@ -41,27 +54,27 @@ const groupDto = {
 };
 
 const beneficiaryGroupDto = {
-  beneficiary_id: 16,
-  group_id: 1,
+  beneficiary_id: beneficiaryId,
+  group_id: groupId,
 };
 
 const beneficiarySourceDto = {
-  beneficiary_id: 16,
-  source_id: 1,
+  beneficiary_id: beneficiaryId,
+  source_id: sourceId,
 };
 
 const updateBeneficiarySourceDto = {
-  beneficiary_id: 22,
-  source_id: 1,
+  beneficiary_id: beneficiaryId,
+  source_id: sourceId,
 };
 
-const PORT = 5600;
-const APP_URL = `http://localhost:${PORT}`;
-const SAMPLE_UUID = 'b6f9869f-65cd-49b5-b67d-a448a3205ff5';
-const SOURCE_UUID = '02b57ade-e867-44b1-9ef3-a5b07b162803';
-const ID = 1;
-let otp;
-let acessToken;
+const fieldDefinitionDto = {
+  name: faker.person.bio(),
+  field_type: 'Text',
+  field_populate: {
+    data: faker.number.int(),
+  },
+};
 
 describe('Rahat Community E2E Testing', () => {
   describe('User Module', () => {
@@ -106,8 +119,8 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          // console.log(res.body);
-
+          beneficiaryUuid = res.body.uuid;
+          beneficiaryId = res.body.id;
           done();
         });
     });
@@ -134,22 +147,22 @@ describe('Rahat Community E2E Testing', () => {
         });
     });
 
-    it('Should Get Beneficiary by SAMPLE_UUID', (done) => {
+    it('Should Get Beneficiary by BENEFICIARY_UUID', (done) => {
       request(APP_URL)
-        .get(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .get(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          console.log(res.body.length);
           done();
         });
     });
 
-    it('Should Update Benefeciary by SAMPLE_UUID', (done) => {
+    it('Should Update Benefeciary by BENEFICIARY_UUID', (done) => {
+      console.log('benefId', beneficiaryUuid);
       request(APP_URL)
-        .patch(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
-        .send(updateBenefDto)
+        .send({ updateBenefDto })
         .expect(200)
         .end((updateErr, updateRes) => {
           if (updateErr) return done(updateErr);
@@ -157,9 +170,9 @@ describe('Rahat Community E2E Testing', () => {
         });
     });
 
-    it('Should  Delete Beneficiary by SAMPLE_UUID', (done) => {
+    it('Should  Delete Beneficiary by BENEFICIARY_UUID', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(200)
         .end((deleteErr, deleteRes) => {
@@ -170,7 +183,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should not Get Beneficiary if Data Not Found', (done) => {
       request(APP_URL)
-        .get(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .get(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(404)
         .end((err, res) => {
@@ -181,7 +194,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should not Update Beneficiary If Not Found', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .send(updateBenefDto)
         .expect(404)
@@ -193,7 +206,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should not Delete Beneficiary If Not Found ', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/beneficiaries/${SAMPLE_UUID}`)
+        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(404)
         .end((err, res) => {
@@ -211,6 +224,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(201)
         .end((err, res) => {
           if (err) return done(err);
+          groupId = res.body.id;
           done();
         });
     });
@@ -225,16 +239,23 @@ describe('Rahat Community E2E Testing', () => {
           done();
         });
     });
+
+    it('Should Remove Group Name', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/group/${groupId}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
   });
 
   describe('Beneficiaries Group Module', () => {
     it('Should Create Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
-        .send({
-          group_id: beneficiaryGroupDto.group_id,
-          beneficiary_id: beneficiaryGroupDto.beneficiary_id,
-        })
+        .send(beneficiaryGroupDto)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -245,10 +266,7 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Not Create Duplicate Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
-        .send({
-          group_id: beneficiaryGroupDto.group_id,
-          beneficiary_id: beneficiaryGroupDto.beneficiary_id,
-        })
+        .send(beneficiaryGroupDto)
         .expect(409)
         .end((err, res) => {
           if (err) return done(err);
@@ -265,6 +283,8 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
+          sourceUuid = res.body.uuid;
+          sourceId = res.body.id;
           done();
         });
     });
@@ -281,7 +301,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Get Source By Uuid', (done) => {
       request(APP_URL)
-        .get(`/api/v1/sources/${SOURCE_UUID}`)
+        .get(`/api/v1/sources/${sourceUuid}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -291,7 +311,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Update Source By Uuid', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/sources/${SOURCE_UUID}`)
+        .patch(`/api/v1/sources/${sourceUuid}`)
         .send(sourceDto)
         .expect(200)
         .end((err, res) => {
@@ -303,7 +323,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Remove Source By Uuid', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/sources/${SOURCE_UUID}`)
+        .delete(`/api/v1/sources/${sourceUuid}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -320,6 +340,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(201)
         .end((err, res) => {
           if (err) return done(err);
+          ID = res.body.id;
           done();
         });
     });
@@ -349,6 +370,56 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Remove Beneficiary Source', (done) => {
       request(APP_URL)
         .delete(`/api/v1/sources/${ID}/beneficiarySource`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+  });
+
+  describe(`Field Definition Module`, () => {
+    it('Should create the Field Definition ', (done) => {
+      request(APP_URL)
+        .post('/api/v1/field-definitions')
+        .set('Authorization', `Bearer ${acessToken}`)
+        .send(fieldDefinitionDto)
+        .expect(201)
+        .end((err, res) => {
+          if (err) return done(err);
+          fieldDefinitionId = res.body.id;
+          done();
+        });
+    });
+    it('Should List All Field Definition', (done) => {
+      request(APP_URL)
+        .get('/api/v1/field-definitions')
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          done();
+        });
+    });
+
+    it('Should Update Field Definition', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/field-definitions/${fieldDefinitionId}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .send(fieldDefinitionDto)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('Should Update Field Definition Stauts', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/field-definitions/${fieldDefinitionId}/status`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .send({ is_active: false })
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);

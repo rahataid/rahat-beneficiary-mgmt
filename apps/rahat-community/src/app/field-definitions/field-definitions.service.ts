@@ -11,11 +11,13 @@ import { paginate } from '../utils/paginate';
 export class FieldDefinitionsService {
   constructor(private prisma: PrismaService) {}
   create(createFieldDefinitionDto: CreateFieldDefinitionDto) {
+    console.log(createFieldDefinitionDto);
     try {
       const payload = {
         ...createFieldDefinitionDto,
         name: createFieldDefinitionDto.name.toLocaleLowerCase(),
       };
+      console.log('payload', payload);
       return this.prisma.fieldDefinition.create({
         data: payload,
       });
