@@ -43,5 +43,18 @@
     ],
     "sharedGlobals": []
   },
-  "nxCloudAccessToken": "Y2I4OWIzZjktZmZhNy00ZWRkLTkzNDMtYjEyMmM2ZjFhMzU3fHJlYWQtd3JpdGU="
+  "nxCloudAccessToken": "Y2I4OWIzZjktZmZhNy00ZWRkLTkzNDMtYjEyMmM2ZjFhMzU3fHJlYWQtd3JpdGU=",
+  "generators": {
+    "@nx/react": {
+      "application": {
+        "babel": true
+      }
+    },
+    "@nx/next": {
+      "application": {
+        "style": "css",
+        "linter": "eslint"
+      }
+    }
+  }
 }
