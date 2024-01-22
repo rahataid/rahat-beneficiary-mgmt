@@ -73,6 +73,7 @@ export class BeneficiariesController {
   }
 
   @Patch(':uuid')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
@@ -81,6 +82,7 @@ export class BeneficiariesController {
   }
 
   @Delete(':uuid')
+  @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string) {
     return this.beneficiariesService.remove(uuid);
   }

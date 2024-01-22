@@ -16,9 +16,7 @@ import { Prisma } from '@prisma/client';
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateSourceDto) {
-    console.log(dto);
     try {
-      console.log('DTO=>', dto);
       return this.prisma.source.create({ data: dto });
     } catch (err) {
       throw new Error(err);
@@ -74,23 +72,22 @@ export class SourceService {
         source_id: dto.source_id,
       },
     });
-
-    if (!exist) {
-      await this.prisma.beneficiarySource.create({
-        data: {
-          beneficiary: {
-            connect: {
-              id: dto.beneficiary_id,
-            },
-          },
-          source: {
-            connect: {
-              id: dto.source_id,
-            },
+    console.log('exist', exist);
+    if (exist) throw new HttpException('Already Connected', 409);
+    return await this.prisma.beneficiarySource.create({
+      data: {
+        beneficiary: {
+          connect: {
+            id: dto.beneficiary_id,
           },
         },
-      });
-    }
+        source: {
+          connect: {
+            id: dto.source_id,
+          },
+        },
+      },
+    });
   }
 
   async listAllBeneficiarySource(query: any) {

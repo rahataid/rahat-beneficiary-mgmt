@@ -33,6 +33,7 @@ export class SourceController {
   }
 
   @Post('beneficiarySource')
+  @HttpCode(HttpStatus.OK)
   createBeneficiarySource(@Body() dto: CreateBeneficiarySourceDto) {
     return this.sourceService.createBeneficiarySource(dto);
   }
@@ -76,6 +77,7 @@ export class SourceController {
   }
 
   @Delete(':id/beneficiarySource')
+  @HttpCode(HttpStatus.OK)
   removeBeneficiarySource(@Param('id') id: string) {
     return this.sourceService.removeBeneficiarySource(id);
   }

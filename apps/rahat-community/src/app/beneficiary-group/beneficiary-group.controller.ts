@@ -28,16 +28,19 @@ export class BeneficiaryGroupController {
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   findAll() {
     return this.beneficiaryGroupService.findAll();
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.beneficiaryGroupService.findOne(+id);
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
     @Body() updateBeneficiaryGroupDto: UpdateBeneficiaryGroupDto,
@@ -46,6 +49,7 @@ export class BeneficiaryGroupController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {
     return this.beneficiaryGroupService.remove(+id);
   }

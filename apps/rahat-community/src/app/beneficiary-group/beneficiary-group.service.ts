@@ -2,12 +2,13 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
 import { UpdateBeneficiaryGroupDto } from './dto/update-beneficiary-group.dto';
 import { PrismaService } from '@rahat/prisma';
+import { DeleteBeneficiaryGroupDto } from './dto/delete-beneficiary-group.dto';
 
 @Injectable()
 export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateBeneficiaryGroupDto) {
-    await this.prisma.$transaction(async (prisma) => {
+    const groupBenefData = await this.prisma.$transaction(async (prisma) => {
       const data = await prisma.beneficiaryGroup.findFirst({
         where: {
           beneficary_id: dto.beneficiary_id,
@@ -17,7 +18,7 @@ export class BeneficiaryGroupService {
 
       if (data) throw new HttpException('Already Connected', 409);
 
-      await prisma.beneficiaryGroup.create({
+      const createdBenefGroup = await prisma.beneficiaryGroup.create({
         data: {
           beneficiary: {
             connect: {
@@ -31,8 +32,10 @@ export class BeneficiaryGroupService {
           },
         },
       });
+      return createdBenefGroup;
     });
-    return 'Created Succesfully';
+
+    return groupBenefData;
   }
 
   async findAll() {
@@ -72,7 +75,19 @@ export class BeneficiaryGroupService {
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} beneficiaryGroup`;
+  async remove(id: number) {
+    const findBenefGroup = await this.prisma.beneficiaryGroup.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!findBenefGroup) throw new HttpException('Not Found', 404);
+
+    return await this.prisma.beneficiaryGroup.delete({
+      where: {
+        id,
+      },
+    });
   }
 }

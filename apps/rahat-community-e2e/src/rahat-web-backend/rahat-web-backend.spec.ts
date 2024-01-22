@@ -9,7 +9,8 @@ let fieldDefinitionId;
 let sourceUuid;
 let sourceId;
 let groupId;
-let ID;
+let beneficiarySourceId;
+let beneficiaryGroupId;
 let otp;
 let acessToken;
 
@@ -51,21 +52,6 @@ const sourceDto = {
 };
 const groupDto = {
   name: faker.airline.airline().name,
-};
-
-const beneficiaryGroupDto = {
-  beneficiary_id: beneficiaryId,
-  group_id: groupId,
-};
-
-const beneficiarySourceDto = {
-  beneficiary_id: beneficiaryId,
-  source_id: sourceId,
-};
-
-const updateBeneficiarySourceDto = {
-  beneficiary_id: beneficiaryId,
-  source_id: sourceId,
 };
 
 const fieldDefinitionDto = {
@@ -158,7 +144,7 @@ describe('Rahat Community E2E Testing', () => {
     });
 
     it('Should Update Benefeciary by BENEFICIARY_UUID', (done) => {
-      console.log('benefId', beneficiaryUuid);
+      console.log('benefId', beneficiaryId);
       request(APP_URL)
         .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
@@ -166,51 +152,6 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((updateErr, updateRes) => {
           if (updateErr) return done(updateErr);
-          done();
-        });
-    });
-
-    it('Should  Delete Beneficiary by BENEFICIARY_UUID', (done) => {
-      request(APP_URL)
-        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
-        .set('Authorization', `Bearer ${acessToken}`)
-        .expect(200)
-        .end((deleteErr, deleteRes) => {
-          if (deleteErr) return done(deleteErr);
-          done();
-        });
-    });
-
-    it('Should not Get Beneficiary if Data Not Found', (done) => {
-      request(APP_URL)
-        .get(`/api/v1/beneficiaries/${beneficiaryUuid}`)
-        .set('Authorization', `Bearer ${acessToken}`)
-        .expect(404)
-        .end((err, res) => {
-          if (err) return done(err);
-          done();
-        });
-    });
-
-    it('Should not Update Beneficiary If Not Found', (done) => {
-      request(APP_URL)
-        .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
-        .set('Authorization', `Bearer ${acessToken}`)
-        .send(updateBenefDto)
-        .expect(404)
-        .end((err, res) => {
-          if (err) return done(err);
-          done();
-        });
-    });
-
-    it('Should not Delete Beneficiary If Not Found ', (done) => {
-      request(APP_URL)
-        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
-        .set('Authorization', `Bearer ${acessToken}`)
-        .expect(404)
-        .end((err, res) => {
-          if (err) return done(err);
           done();
         });
     });
@@ -239,26 +180,17 @@ describe('Rahat Community E2E Testing', () => {
           done();
         });
     });
-
-    it('Should Remove Group Name', (done) => {
-      request(APP_URL)
-        .delete(`/api/v1/group/${groupId}`)
-        .expect(200)
-        .end((err, res) => {
-          if (err) return done(err);
-          done();
-        });
-    });
   });
 
   describe('Beneficiaries Group Module', () => {
     it('Should Create Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
-        .send(beneficiaryGroupDto)
+        .send({ beneficiary_id: beneficiaryId, group_id: groupId })
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
+          beneficiaryGroupId = res.body.id;
           done();
         });
     });
@@ -266,7 +198,7 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Not Create Duplicate Beneficiaries Group', (done) => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
-        .send(beneficiaryGroupDto)
+        .send({ beneficiary_id: beneficiaryId, group_id: groupId })
         .expect(409)
         .end((err, res) => {
           if (err) return done(err);
@@ -283,6 +215,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
+
           sourceUuid = res.body.uuid;
           sourceId = res.body.id;
           done();
@@ -320,27 +253,18 @@ describe('Rahat Community E2E Testing', () => {
           done();
         });
     });
-
-    it('Should Remove Source By Uuid', (done) => {
-      request(APP_URL)
-        .delete(`/api/v1/sources/${sourceUuid}`)
-        .expect(200)
-        .end((err, res) => {
-          if (err) return done(err);
-          done();
-        });
-    });
   });
 
   describe(`Beneficiary Source Module`, () => {
     it('Should Create Benificiary Source  ', (done) => {
       request(APP_URL)
         .post('/api/v1/sources/beneficiarySource')
-        .send(beneficiarySourceDto)
-        .expect(201)
+        .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
+        .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          ID = res.body.id;
+          beneficiarySourceId = res.body.id;
+
           done();
         });
     });
@@ -348,7 +272,7 @@ describe('Rahat Community E2E Testing', () => {
     it('Should Not Create Duplicate Beneficiary Source  ', (done) => {
       request(APP_URL)
         .post('/api/v1/sources/beneficiarySource')
-        .send(beneficiarySourceDto)
+        .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(409)
         .end((err, res) => {
           if (err) return done(err);
@@ -358,18 +282,8 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Update Beneficiary Source', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/sources/${ID}/beneficiarySource`)
-        .send(updateBeneficiarySourceDto)
-        .expect(200)
-        .end((err, res) => {
-          if (err) return done(err);
-          done();
-        });
-    });
-
-    it('Should Remove Beneficiary Source', (done) => {
-      request(APP_URL)
-        .delete(`/api/v1/sources/${ID}/beneficiarySource`)
+        .patch(`/api/v1/sources/${beneficiarySourceId}/beneficiarySource`)
+        .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -420,6 +334,88 @@ describe('Rahat Community E2E Testing', () => {
         .patch(`/api/v1/field-definitions/${fieldDefinitionId}/status`)
         .set('Authorization', `Bearer ${acessToken}`)
         .send({ is_active: false })
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          done();
+        });
+    });
+  });
+
+  describe(`Case For Delete`, () => {
+    it('Should Remove Beneficiary Group', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/beneficiary-group/${beneficiaryGroupId}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should Remove Beneficiary Source', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/sources/${beneficiarySourceId}/beneficiarySource`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should  Delete Beneficiary by BENEFICIARY_UUID', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(200)
+        .end((deleteErr, deleteRes) => {
+          if (deleteErr) return done(deleteErr);
+          done();
+        });
+    });
+    it('Should not Get Beneficiary if Data Not Found', (done) => {
+      request(APP_URL)
+        .get(`/api/v1/beneficiaries/${beneficiaryUuid}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(404)
+        .end((err, res) => {
+          console.log(beneficiaryUuid);
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should Show Not Found For Update Beneficiary', (done) => {
+      request(APP_URL)
+        .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .send(updateBenefDto)
+        .expect(404)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should Show Not Found  For Beneficiaries While Deleting ', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
+        .set('Authorization', `Bearer ${acessToken}`)
+        .expect(404)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should Remove Group Name', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/group/${groupId}`)
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+    it('Should Remove Source By Uuid', (done) => {
+      request(APP_URL)
+        .delete(`/api/v1/sources/${sourceUuid}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);

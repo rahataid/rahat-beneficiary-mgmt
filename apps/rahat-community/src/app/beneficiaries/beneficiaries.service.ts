@@ -52,7 +52,6 @@ export class BeneficiariesService {
     );
     // 3. Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
-    console.log('Parsed=>', parsed_data);
     // 4. Inject unique key based on settings
     const final_payload = injectCustomID(parsed_data);
     let count = 0;
@@ -97,7 +96,6 @@ export class BeneficiariesService {
           );
       }
 
-      console.log(dto);
       return this.prisma.beneficiary.create({
         data: {
           custom_id: uuid(),
@@ -157,8 +155,6 @@ export class BeneficiariesService {
       });
       conditions = { OR: OR_CONDITIONS };
     }
-
-    console.log('Final_Condition==>', conditions);
 
     return paginate(
       this.prisma.beneficiary,
