@@ -39,12 +39,6 @@ export class BeneficiariesController {
     return this.beneficiariesService.create(createBeneficiaryDto);
   }
 
-  @Get(':source_uuid/import')
-  @HttpCode(HttpStatus.OK)
-  importBySourceUUID(@Param('source_uuid') uuid: string) {
-    return this.beneficiariesService.importBySourceUUID(uuid);
-  }
-
   @Post('upload')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))

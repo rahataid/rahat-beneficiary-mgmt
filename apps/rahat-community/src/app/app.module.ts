@@ -13,6 +13,7 @@ import { GroupModule } from './group/group.module';
 import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { SourceModule } from './source/source.module';
+import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SourceModule } from './source/source.module';
     MulterModule.register({
       dest: './file',
     }),
+    BeneficiaryImportModule,
   ],
   controllers: [AppController],
   providers: [

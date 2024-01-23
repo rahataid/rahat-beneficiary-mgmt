@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
@@ -7,75 +7,21 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
 import XLSX from 'xlsx';
-import {
-  extractFieldsMatchingWithDBFields,
-  fetchSchemaFields,
-  injectCustomID,
-  parseValuesByTargetTypes,
-  validateRequiredFields,
-} from './helpers';
-import { DB_MODELS } from '../../constants';
 import { deleteFileFromDisk } from '../utils/multer';
-import { SourceService } from '../source/source.service';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
-    private sourceService: SourceService,
   ) {}
 
-  async importBySourceUUID(uuid: string) {
-    const source = await this.sourceService.findOne(uuid);
-    if (!source) {
-      throw new HttpException('Source not found!', HttpStatus.NOT_FOUND);
-    }
-    const jsonData = source.field_mapping as {
-      data: object;
-    };
-    // 1. Fetch DB_Fields and validate required fields
-    const mapped_fields = jsonData.data;
-    const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    const missing_fields = validateRequiredFields(mapped_fields);
-
-    if (missing_fields.length) {
-      throw new HttpException(
-        `Required fields missing! [${missing_fields.toString()}]`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    // 2. Only select fields matching with DB_Fields
-    const sanitized_fields = extractFieldsMatchingWithDBFields(
-      dbFields,
-      mapped_fields,
-    );
-    // 3. Parse values against target field
-    const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
-    // 4. Inject unique key based on settings
-    const final_payload = injectCustomID(parsed_data);
-    let count = 0;
-
-    // // 5. Save Benef and source
-    for (let p of final_payload) {
-      count++;
-      const benef = await this.prisma.beneficiary.upsert({
-        where: { custom_id: p.custom_id },
-        update: { custom_id: p.custom_id },
-        create: p,
-      });
-      if (benef) {
-        await this.sourceService.createBeneficiarySource({
-          beneficiary_id: benef.id,
-          source_id: source.id,
-        });
-      }
-    }
-    return {
-      success: true,
-      status: 200,
-      message: `${count} out of ${final_payload.length} Beneficiaries imported!`,
-    };
+  async upsertByCustomID(payload: any) {
+    return this.prisma.beneficiary.upsert({
+      where: { custom_id: payload.custom_id },
+      update: { custom_id: payload.custom_id },
+      create: payload,
+    });
   }
 
   async create(dto: CreateBeneficiaryDto) {
