@@ -51,6 +51,7 @@ export interface SourceInterface {
   id: number;
   uuid: string;
   name: string;
+  isImported?: boolean;
   details?: any;
   field_mapping: any;
   created_at: Date;
