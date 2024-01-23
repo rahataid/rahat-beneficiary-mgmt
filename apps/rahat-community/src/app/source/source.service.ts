@@ -57,6 +57,13 @@ export class SourceService {
     }
   }
 
+  updateImportFlag(uuid: string, flag: boolean) {
+    return this.prisma.source.update({
+      where: { uuid },
+      data: { isImported: flag },
+    });
+  }
+
   remove(uuid: string) {
     return this.prisma.source.delete({
       where: {

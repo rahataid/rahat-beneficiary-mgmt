@@ -43,6 +43,7 @@ model Source {
   id                 Int                 @id @default(autoincrement()) @db.Integer()
   uuid               String              @unique @default(uuid()) @db.Uuid()
   name               String
+  isImported         Boolean             @default(false)
   beneficiary_source BeneficiarySource[]
   details            Json                @db.JsonB()
   field_mapping      Json

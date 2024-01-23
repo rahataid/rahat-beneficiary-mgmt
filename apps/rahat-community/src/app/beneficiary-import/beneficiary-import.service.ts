@@ -23,6 +23,11 @@ export class BeneficiaryImportService {
     if (!source) {
       throw new HttpException('Source not found!', HttpStatus.NOT_FOUND);
     }
+    if (source.isImported)
+      throw new HttpException(
+        'Beneficiaries from this source already imported!',
+        HttpStatus.FORBIDDEN,
+      );
     const jsonData = source.field_mapping as {
       data: object;
     };
@@ -59,6 +64,7 @@ export class BeneficiaryImportService {
         });
       }
     }
+    await this.sourceService.updateImportFlag(source.uuid, true);
     return {
       success: true,
       status: 200,
