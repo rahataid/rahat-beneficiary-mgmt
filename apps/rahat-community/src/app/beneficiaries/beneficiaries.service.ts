@@ -25,42 +25,37 @@ export class BeneficiariesService {
   }
 
   async create(dto: CreateBeneficiaryDto) {
-    try {
-      const { birthDate, extras } = dto;
-      if (birthDate) {
-        const formattedDate = new Date(dto.birthDate).toISOString();
-        dto.birthDate = formattedDate;
-      }
-      if (extras) {
-        const fields = await this.fieldDefService.listActive();
-        if (!fields.length)
-          throw new Error('Please setup allowed fields first!');
-        const nonMatching = validateAllowedFieldAndTypes(extras, fields);
-        if (nonMatching.length)
-          throw new Error(
-            `[${nonMatching.toString()}] field/type are not allowed inside extras!`,
-          );
-      }
-
-      return this.prisma.beneficiary.create({
-        data: {
-          custom_id: uuid(),
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          gender: dto.gender,
-          birth_date: dto.birthDate,
-          email: dto.email,
-          extras: dto.extras,
-          location: dto.location,
-          latitude: dto.latitude,
-          longitude: dto.longitude,
-          phone: dto.phone,
-          notes: dto.notes,
-        },
-      });
-    } catch (error) {
-      console.log('beneficiaryService', error);
+    const { birthDate, extras } = dto;
+    if (birthDate) {
+      const formattedDate = new Date(dto.birthDate).toISOString();
+      dto.birthDate = formattedDate;
     }
+    if (extras) {
+      const fields = await this.fieldDefService.listActive();
+      if (!fields.length) throw new Error('Please setup allowed fields first!');
+      const nonMatching = validateAllowedFieldAndTypes(extras, fields);
+      if (nonMatching.length)
+        throw new Error(
+          `[${nonMatching.toString()}] field/type are not allowed inside extras!`,
+        );
+    }
+
+    return this.prisma.beneficiary.create({
+      data: {
+        custom_id: uuid(),
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        gender: dto.gender,
+        birth_date: dto.birthDate,
+        email: dto.email,
+        extras: dto.extras,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        phone: dto.phone,
+        notes: dto.notes,
+      },
+    });
   }
 
   async findAll(filters: any) {

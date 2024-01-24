@@ -9,18 +9,13 @@ import {
 } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
-import { CreateBeneficiaryDto } from '../beneficiaries/dto/create-beneficiary.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   create(dto: CreateSourceDto) {
-    try {
-      return this.prisma.source.create({ data: dto });
-    } catch (err) {
-      throw new Error(err);
-    }
+    return this.prisma.source.create({ data: dto });
   }
 
   findAll(query: any) {
@@ -47,14 +42,10 @@ export class SourceService {
   }
 
   update(uuid: string, dto: UpdateSourceDto) {
-    try {
-      return this.prisma.source.update({
-        where: { uuid },
-        data: dto,
-      });
-    } catch (err) {
-      throw new Error(err);
-    }
+    return this.prisma.source.update({
+      where: { uuid },
+      data: dto,
+    });
   }
 
   updateImportFlag(uuid: string, flag: boolean) {

@@ -8,7 +8,7 @@ import { NestFactory } from '@nestjs/core';
 import { json, urlencoded } from 'express';
 
 import { AppModule } from './app/app.module';
-import { RsExceptionFilter } from './app/utils/exceptions/rs-exception.filter';
+import { ResponseTransformInterceptor, RsExceptionFilter } from '@rumsan/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { PORT } from './app/config';
 
@@ -17,7 +17,14 @@ async function bootstrap() {
   app.enableCors();
 
   app.useGlobalFilters(new RsExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+  app.useGlobalInterceptors(new ResponseTransformInterceptor());
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
   const globalPrefix = 'api/v1';

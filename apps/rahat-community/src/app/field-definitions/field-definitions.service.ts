@@ -10,18 +10,14 @@ import { paginate } from '../utils/paginate';
 @Injectable()
 export class FieldDefinitionsService {
   constructor(private prisma: PrismaService) {}
-  create(createFieldDefinitionDto: CreateFieldDefinitionDto) {
-    try {
-      const payload = {
-        ...createFieldDefinitionDto,
-        name: createFieldDefinitionDto.name.toLocaleLowerCase(),
-      };
-      return this.prisma.fieldDefinition.create({
-        data: payload,
-      });
-    } catch (err) {
-      throw new Error(err);
-    }
+  create(dto: CreateFieldDefinitionDto) {
+    const payload = {
+      ...dto,
+      name: dto.name.toLocaleLowerCase(),
+    };
+    return this.prisma.fieldDefinition.create({
+      data: payload,
+    });
   }
 
   listActive() {
@@ -56,30 +52,22 @@ export class FieldDefinitionsService {
     return data;
   }
 
-  update(id: number, updateFieldDefinitionDto: UpdateFieldDefinitionDto) {
-    try {
-      const payload = {
-        ...updateFieldDefinitionDto,
-        name: updateFieldDefinitionDto.name.toLocaleLowerCase(),
-      };
-      return this.prisma.fieldDefinition.update({
-        where: { id },
-        data: payload,
-      });
-    } catch (err) {
-      throw new Error(err);
-    }
+  update(id: number, dto: UpdateFieldDefinitionDto) {
+    const payload = {
+      ...dto,
+      name: dto.name.toLocaleLowerCase(),
+    };
+    return this.prisma.fieldDefinition.update({
+      where: { id },
+      data: payload,
+    });
   }
 
   updateStatus(id: number, dto: updateStatusDto) {
-    try {
-      return this.prisma.fieldDefinition.update({
-        where: { id },
-        data: dto,
-      });
-    } catch (err) {
-      throw new Error(err);
-    }
+    return this.prisma.fieldDefinition.update({
+      where: { id },
+      data: dto,
+    });
   }
 
   remove(id: number) {
