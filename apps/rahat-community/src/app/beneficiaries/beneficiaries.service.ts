@@ -176,6 +176,6 @@ export class BeneficiariesService {
     data.forEach((element: CreateBeneficiaryDto) => {
       this.create(element);
     });
-    return 'Data Uploded Sucessfully';
+    return data;
   }
 }
