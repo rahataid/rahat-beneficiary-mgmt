@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateBeneficiaryImportDto } from './dto/update-beneficiary-import.dto';
 import { SourceService } from '../source/source.service';
 import {
@@ -20,14 +20,11 @@ export class BeneficiaryImportService {
 
   async importBySourceUUID(uuid: string) {
     const source = await this.sourceService.findOne(uuid);
-    if (!source) {
-      throw new HttpException('Source not found!', HttpStatus.NOT_FOUND);
+    if (!source) throw new Error('Source not found!');
+
+    if (source.isImported) {
+      throw new Error('Beneficiaries from this source already imported!');
     }
-    if (source.isImported)
-      throw new HttpException(
-        'Beneficiaries from this source already imported!',
-        HttpStatus.FORBIDDEN,
-      );
     const jsonData = source.field_mapping as {
       data: object;
     };
@@ -37,9 +34,8 @@ export class BeneficiaryImportService {
     const missing_fields = validateRequiredFields(mapped_fields);
 
     if (missing_fields.length) {
-      throw new HttpException(
+      throw new Error(
         `Required fields missing! [${missing_fields.toString()}]`,
-        HttpStatus.BAD_REQUEST,
       );
     }
     // 2. Only select fields matching with DB_Fields
