@@ -1,7 +1,11 @@
-export default async function Index() {
-  return (
-    <div className="text-red-500">
-      <h3>Hello Next JS!</h3>
-    </div>
-  );
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function Index() {
+  const router = useRouter();
+  useEffect(() => {
+    router.push('/auth/login');
+  }, []);
 }
