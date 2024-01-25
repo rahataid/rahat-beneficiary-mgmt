@@ -1,11 +1,12 @@
-import styles from './page.module.css';
+'use client';
 
-export default async function Index() {
-  return (
-    <div className={styles.page}>
-      <div className="wrapper">
-        <h3>Hello Next JS!</h3>
-      </div>
-    </div>
-  );
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { paths } from '@/routes/paths';
+
+export default function Index() {
+  const router = useRouter();
+  useEffect(() => {
+    router.push(paths.auth.login);
+  }, []);
 }
