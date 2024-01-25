@@ -18,7 +18,7 @@ export default function LoginView() {
   return (
     <div className="flex flex-col justify-end h-full">
       <div className="flex flex-col justify-between h-[80vh]">
-        <div className="w-96 flex flex-col gap-6 mb-20">
+        <div className="xl:w-96 flex flex-col gap-6 mb-20">
           <Image
             className="mb-5"
             src="/assets/logo/rahat-logo.png"
