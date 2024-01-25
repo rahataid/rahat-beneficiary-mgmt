@@ -16,6 +16,7 @@ export default function LoginLayout({
               alt="login-bg"
               layout="fill"
               objectFit="cover"
+              priority
             />
           </div>
         </div>

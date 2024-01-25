@@ -2,10 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { paths } from '@/routes/paths';
 
 export default function Index() {
   const router = useRouter();
   useEffect(() => {
-    router.push('/auth/login');
+    router.push(paths.auth.login);
   }, []);
 }
