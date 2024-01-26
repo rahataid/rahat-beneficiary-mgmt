@@ -14,6 +14,7 @@ import { BeneficiaryGroupModule } from './beneficiary-group/beneficiary-group.mo
 import { MulterModule } from '@nestjs/platform-express';
 import { SourceModule } from './source/source.module';
 import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
+import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import
       dest: './file',
     }),
     BeneficiaryImportModule,
+    BeneficiarySourceModule,
   ],
   controllers: [AppController],
   providers: [

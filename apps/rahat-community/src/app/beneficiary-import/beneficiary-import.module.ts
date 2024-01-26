@@ -5,6 +5,7 @@ import { PrismaService } from '@rahat/prisma';
 import { SourceService } from '../source/source.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
+import { BeneficiarySourceService } from '../beneficiary-source/beneficiary-source.service';
 
 @Module({
   controllers: [BeneficiaryImportController],
@@ -12,6 +13,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
     FieldDefinitionsService,
     BeneficiaryImportService,
     BeneficiariesService,
+    BeneficiarySourceService,
     PrismaService,
     SourceService,
   ],

@@ -35,8 +35,11 @@ export class BeneficiariesController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  create(@Body() createBeneficiaryDto: CreateBeneficiaryDto) {
-    return this.beneficiariesService.create(createBeneficiaryDto);
+  async create(@Body() createBeneficiaryDto: CreateBeneficiaryDto) {
+    const response = await this.beneficiariesService.create(
+      createBeneficiaryDto,
+    );
+    return response;
   }
 
   @Post('upload')

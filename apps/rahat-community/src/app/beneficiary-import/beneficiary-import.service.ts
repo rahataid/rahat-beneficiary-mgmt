@@ -10,10 +10,12 @@ import {
 } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { BeneficiarySourceService } from '../beneficiary-source/beneficiary-source.service';
 
 @Injectable()
 export class BeneficiaryImportService {
   constructor(
+    private benefSourceService: BeneficiarySourceService,
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
   ) {}
@@ -54,7 +56,7 @@ export class BeneficiaryImportService {
       count++;
       const benef = await this.benefService.upsertByCustomID(p);
       if (benef) {
-        await this.sourceService.createBeneficiarySource({
+        await this.benefSourceService.create({
           beneficiary_id: benef.id,
           source_id: source.id,
         });

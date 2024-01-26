@@ -40,7 +40,7 @@ export class BeneficiariesService {
         );
     }
 
-    return this.prisma.beneficiary.create({
+    return await this.prisma.beneficiary.create({
       data: {
         custom_id: uuid(),
         firstName: dto.firstName,

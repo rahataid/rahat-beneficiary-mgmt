@@ -74,8 +74,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-
-          otp = res.body.otp;
+          otp = res?.body?.data?.otp;
           done();
         });
     });
@@ -89,8 +88,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-
-          acessToken = res.body.accessToken;
+          acessToken = res?.body?.data?.accessToken;
           done();
         });
     });
@@ -105,8 +103,9 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          beneficiaryUuid = res.body.uuid;
-          beneficiaryId = res.body.id;
+          console.log(res.body);
+          beneficiaryUuid = res?.body?.data?.uuid;
+          beneficiaryId = res?.body?.data?.id;
           done();
         });
     });
@@ -165,7 +164,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(201)
         .end((err, res) => {
           if (err) return done(err);
-          groupId = res.body.id;
+          groupId = res?.body?.data?.id;
           done();
         });
     });
@@ -190,7 +189,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          beneficiaryGroupId = res.body.id;
+          beneficiaryGroupId = res?.body?.data?.id;
           done();
         });
     });
@@ -216,8 +215,8 @@ describe('Rahat Community E2E Testing', () => {
         .end((err, res) => {
           if (err) return done(err);
 
-          sourceUuid = res.body.uuid;
-          sourceId = res.body.id;
+          sourceUuid = res?.body?.data?.uuid;
+          sourceId = res?.body?.data?.id;
           done();
         });
     });
@@ -258,12 +257,12 @@ describe('Rahat Community E2E Testing', () => {
   describe(`Beneficiary Source Module`, () => {
     it('Should Create Benificiary Source  ', (done) => {
       request(APP_URL)
-        .post('/api/v1/sources/beneficiarySource')
+        .post('/api/v1/beneficiarySource')
         .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          beneficiarySourceId = res.body.id;
+          beneficiarySourceId = res?.body?.data?.id;
 
           done();
         });
@@ -271,7 +270,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Not Create Duplicate Beneficiary Source  ', (done) => {
       request(APP_URL)
-        .post('/api/v1/sources/beneficiarySource')
+        .post('/api/v1/beneficiarySource')
         .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(409)
         .end((err, res) => {
@@ -282,7 +281,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Update Beneficiary Source', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/sources/${beneficiarySourceId}/beneficiarySource`)
+        .patch(`/api/v1/${beneficiarySourceId}/beneficiarySource`)
         .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(200)
         .end((err, res) => {
@@ -301,7 +300,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(201)
         .end((err, res) => {
           if (err) return done(err);
-          fieldDefinitionId = res.body.id;
+          fieldDefinitionId = res?.body?.data?.id;
           done();
         });
     });
@@ -355,7 +354,7 @@ describe('Rahat Community E2E Testing', () => {
     });
     it('Should Remove Beneficiary Source', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/sources/${beneficiarySourceId}/beneficiarySource`)
+        .delete(`/api/v1/${beneficiarySourceId}/beneficiarySource`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);

@@ -1,15 +1,8 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import {
-  CreateBeneficiarySourceDto,
-  CreateSourceDto,
-} from './dto/create-beneficiary-source.dto';
-import {
-  UpdateBeneficiarySourceDto,
-  UpdateSourceDto,
-} from './dto/update-beneficiary-source.dto';
+import { Injectable } from '@nestjs/common';
+import { CreateSourceDto } from './dto/create-beneficiary-source.dto';
+import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SourceService {
@@ -59,85 +52,6 @@ export class SourceService {
     return this.prisma.source.delete({
       where: {
         uuid,
-      },
-    });
-  }
-
-  async createBeneficiarySource(dto: CreateBeneficiarySourceDto) {
-    const exist = await this.prisma.beneficiarySource.findFirst({
-      where: {
-        beneficiary_id: dto.beneficiary_id,
-        source_id: dto.source_id,
-      },
-    });
-    console.log('exist', exist);
-    if (exist) throw new HttpException('Already Connected', 409);
-    return await this.prisma.beneficiarySource.create({
-      data: {
-        beneficiary: {
-          connect: {
-            id: dto.beneficiary_id,
-          },
-        },
-        source: {
-          connect: {
-            id: dto.source_id,
-          },
-        },
-      },
-    });
-  }
-
-  async listAllBeneficiarySource(query: any) {
-    const select: Prisma.BeneficiarySourceSelect = {
-      beneficiary_id: true,
-      source_id: true,
-      created_at: true,
-      updated_at: true,
-    };
-    return paginate(
-      this.prisma.beneficiarySource,
-      { select },
-      {
-        page: query?.page,
-        perPage: query?.perPage,
-      },
-    );
-    // return await this.prisma.beneficiarySource.findMany({});
-  }
-
-  async updateBeneficiarySource(id: string, dto: UpdateBeneficiarySourceDto) {
-    return await this.prisma.beneficiarySource.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        beneficiary: {
-          connect: {
-            id: dto.beneficiary_id,
-          },
-        },
-        source: {
-          connect: {
-            id: dto.source_id,
-          },
-        },
-      },
-    });
-  }
-
-  async findOneBeneficiarySource(id: string) {
-    return await this.prisma.beneficiarySource.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
-  }
-
-  async removeBeneficiarySource(id: string) {
-    return await this.prisma.beneficiarySource.delete({
-      where: {
-        id: parseInt(id),
       },
     });
   }

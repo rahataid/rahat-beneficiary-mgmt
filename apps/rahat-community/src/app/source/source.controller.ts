@@ -32,20 +32,9 @@ export class SourceController {
     return this.sourceService.create(dto);
   }
 
-  @Post('beneficiarySource')
-  @HttpCode(HttpStatus.OK)
-  createBeneficiarySource(@Body() dto: CreateBeneficiarySourceDto) {
-    return this.sourceService.createBeneficiarySource(dto);
-  }
-
   @Get()
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
-  }
-
-  @Get('beneficiarySource')
-  listAllBeneficiarySource(query: any) {
-    return this.sourceService.listAllBeneficiarySource(query);
   }
 
   @Get(':uuid')
@@ -53,32 +42,13 @@ export class SourceController {
     return this.sourceService.findOne(uuid);
   }
 
-  @Get(':id/beneficiarySource')
-  findOneBeneficiarySource(@Param('id') id: string) {
-    return this.sourceService.findOneBeneficiarySource(id);
-  }
-
   @Patch(':uuid')
   update(@Param('uuid') uuid: string, @Body() dto: UpdateSourceDto) {
     return this.sourceService.update(uuid, dto);
   }
 
-  @Patch(':id/beneficiarySource')
-  updateBeneficiarySource(
-    @Param('id') id: string,
-    @Body() dto: UpdateBeneficiarySourceDto,
-  ) {
-    return this.sourceService.updateBeneficiarySource(id, dto);
-  }
-
   @Delete(':uuid')
   remove(@Param('uuid') uuid: string) {
     return this.sourceService.remove(uuid);
-  }
-
-  @Delete(':id/beneficiarySource')
-  @HttpCode(HttpStatus.OK)
-  removeBeneficiarySource(@Param('id') id: string) {
-    return this.sourceService.removeBeneficiarySource(id);
   }
 }

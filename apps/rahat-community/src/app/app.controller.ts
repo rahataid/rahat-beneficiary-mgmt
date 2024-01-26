@@ -10,4 +10,9 @@ export class AppController {
   getData() {
     return this.appService.getData();
   }
+
+  @Get('getDataFromKobo')
+  getDataFromKoboTool() {
+    return this.appService.getDataFromKoboTool();
+  }
 }
