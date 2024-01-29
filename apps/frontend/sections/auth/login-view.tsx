@@ -2,10 +2,13 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { paths } from '@/routes/paths';
 
 export default function LoginView() {
+  const router = useRouter();
   const [otp, setOtp] = useState<Boolean>(false);
 
   const onSendOtp = () => {
@@ -14,6 +17,10 @@ export default function LoginView() {
 
   const onGoBack = () => {
     setOtp(false);
+  };
+
+  const onLogin = () => {
+    router.push(paths.dashboard.root);
   };
   return (
     <div className="flex flex-col justify-end h-full">
@@ -32,7 +39,9 @@ export default function LoginView() {
           {otp ? (
             <>
               <Input className="text-md" type="email" placeholder="Enter OTP" />
-              <Button className="font-bold w-full">Login</Button>
+              <Button className="font-bold w-full" onClick={onLogin}>
+                Login
+              </Button>
             </>
           ) : (
             <>
