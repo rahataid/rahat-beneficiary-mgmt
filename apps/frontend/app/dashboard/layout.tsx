@@ -1,8 +1,8 @@
 'use client';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useNavData } from '@/layout/config-nav';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,12 @@ import {
 import { paths } from '@/routes/paths';
 import Link from 'next/link';
 
+type NavData = {
+  title: string;
+  icon: string;
+  path: string;
+};
+
 export default function DashboardLayout({
   children,
 }: {
@@ -19,6 +25,7 @@ export default function DashboardLayout({
 }) {
   const navData = useNavData();
   const router = useRouter();
+  const currentRoute = usePathname();
 
   const onGoBack = () => {
     router.back();
@@ -39,8 +46,14 @@ export default function DashboardLayout({
               />
               <div className="flex flex-col justify-between h-[82vh]">
                 <div className="flex flex-col gap-2">
-                  {navData.map((item) => (
-                    <div className="flex gap-2 p-3  rounded hover:bg-[#DDF6FC] hover:text-[#1F61AC]">
+                  {navData.map((item: NavData) => (
+                    <div
+                      className={`flex gap-2 p-3  rounded hover:bg-[#DDF6FC] hover:text-[#1F61AC] cursor-pointer ${
+                        currentRoute === item.path &&
+                        'bg-[#DDF6FC] text-[#1F61AC] '
+                      }`}
+                      onClick={() => router.push(item.path)}
+                    >
                       <Image
                         key={item.title}
                         src={item.icon}
@@ -74,7 +87,6 @@ export default function DashboardLayout({
                           src="/assets/svg/profile-icon.svg"
                           alt="profile-icon"
                         />
-                        <AvatarFallback>CN</AvatarFallback>
                       </Avatar>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>

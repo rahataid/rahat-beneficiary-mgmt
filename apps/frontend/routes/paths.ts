@@ -1,6 +1,8 @@
 const ROOTS = {
     AUTH: '/auth',
-    DASHBOARD: '/dashboard'
+    DASHBOARD: '/dashboard',
+    BENEFICIARY: '/beneficiary',
+    USER: '/user'
 }
 
 export const paths = {
@@ -9,5 +11,10 @@ export const paths = {
     },
     dashboard: {
         root: ROOTS.DASHBOARD,
-    }
+        general: {
+            beneficiary: ROOTS.BENEFICIARY,
+            user: ROOTS.USER
+        }
+    },
+
 }
