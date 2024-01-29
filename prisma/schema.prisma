@@ -104,6 +104,24 @@ model BeneficiaryGroup {
   @@map("tbl_beneficiariesgroups")
 }
 
+model TargetQuery {
+  id             Int               @id @default(autoincrement()) @db.Integer()
+  uuid           String            @unique @default(uuid()) @db.Uuid()
+  label          String?
+  query_filters  Json              @db.JsonB()
+  extras_filters Json              @db.JsonB()
+  status         TargetQueryStatus @default(PENDING)
+  created_at     DateTime          @default(now())
+  updated_at     DateTime?         @updatedAt()
+
+  @@map("tbl_target_query")
+}
+
+enum TargetQueryStatus {
+  PENDING
+  COMPLETED
+}
+
 enum BankedStatus {
   UNKNOWN
   UNBANKED
