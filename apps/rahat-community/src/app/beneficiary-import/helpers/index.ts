@@ -4,10 +4,11 @@ import { uuid } from 'uuidv4';
 export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
 
 // If not specified duplicate records will be imported!
+// TODO: Make CUSTOM_UNIQUE_ID customizeable
 const CUSTOM_UNIQUE_ID = 'phone';
 const GENDER_DB_FIELD = 'gender';
 
-export const DB_FIELD_TYPES = {
+export const PRISMA_FIELD_TYPES = {
   STRING: 'String',
   INTEGER: 'Int',
   DATE_TIME: 'DateTime',
@@ -132,14 +133,15 @@ function parseToTargetFieldType({
       targetField === GENDER_DB_FIELD ? 'Unknown' : 'UNKNOWN';
     return defaultValue;
   }
-  if (targetType === DB_FIELD_TYPES.INTEGER) return parseInt(targetValue);
-  if (targetType === DB_FIELD_TYPES.FLOAT) return parseFloat(targetValue);
-  if (targetType === DB_FIELD_TYPES.DATE_TIME) {
+  if (targetType === PRISMA_FIELD_TYPES.INTEGER) return parseInt(targetValue);
+  if (targetType === PRISMA_FIELD_TYPES.FLOAT) return parseFloat(targetValue);
+  if (targetType === PRISMA_FIELD_TYPES.DATE_TIME) {
     return new Date(targetValue).toISOString();
   }
   return targetValue.toString();
 }
 
+// Key must match with schema field name
 const ENUM_MAPPING = {
   gender: ['Male', 'Female', 'Other', 'Unknown'],
   phone_status: ['UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE'],
