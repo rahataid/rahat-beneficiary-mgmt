@@ -26,6 +26,7 @@ export class BeneficiariesService {
 
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras } = dto;
+    console.log('extras=>', extras);
     if (birthDate) {
       const formattedDate = new Date(dto.birthDate).toISOString();
       dto.birthDate = formattedDate;

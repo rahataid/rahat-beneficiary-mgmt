@@ -111,5 +111,5 @@ export class CreateBeneficiaryDto {
     },
   })
   @IsOptional()
-  extras?: string;
+  extras?: any;
 }
