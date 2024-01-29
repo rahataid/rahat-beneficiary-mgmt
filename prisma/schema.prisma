@@ -67,11 +67,11 @@ model BeneficiarySource {
 }
 
 model FieldDefinition {
-  id             Int     @id @default(autoincrement()) @db.Integer()
-  name           String  @unique
-  field_type     String // Enum
+  id             Int       @id @default(autoincrement()) @db.Integer()
+  name           String    @unique
+  field_type     FieldType
   field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
-  is_active      Boolean @default(true)
+  is_active      Boolean   @default(true)
 
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt()

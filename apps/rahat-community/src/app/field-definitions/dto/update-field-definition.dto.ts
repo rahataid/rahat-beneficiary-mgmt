@@ -3,6 +3,16 @@ import { CreateFieldDefinitionDto } from './create-field-definition.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export enum FieldType {
+  Checkbox = 'Checkbox',
+  Dropdown = 'Dropdown',
+  Number = 'Number',
+  Password = 'Password',
+  Radio = 'Radio',
+  Text = 'Text',
+  Textarea = 'Textarea',
+}
+
 export class UpdateFieldDefinitionDto extends PartialType(
   CreateFieldDefinitionDto,
 ) {
@@ -22,7 +32,7 @@ export class UpdateFieldDefinitionDto extends PartialType(
   })
   @IsString()
   @IsNotEmpty()
-  field_type: string;
+  field_type: FieldType;
 
   @ApiProperty({
     type: 'object',
