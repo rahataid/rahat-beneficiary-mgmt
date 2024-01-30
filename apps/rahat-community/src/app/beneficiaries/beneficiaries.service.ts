@@ -8,6 +8,7 @@ import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
 import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
+import { createSearchQuery } from './helpers';
 
 @Injectable()
 export class BeneficiariesService {
@@ -57,6 +58,18 @@ export class BeneficiariesService {
         notes: dto.notes,
       },
     });
+  }
+
+  async searchTargets(filters: any) {
+    const search_conditions = createSearchQuery(filters);
+    return paginate(
+      this.prisma.beneficiary,
+      { where: search_conditions },
+      {
+        page: +filters?.page,
+        perPage: +filters?.perPage || 500,
+      },
+    );
   }
 
   async findAll(filters: any) {

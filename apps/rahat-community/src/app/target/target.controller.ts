@@ -18,8 +18,8 @@ export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
   @Post()
-  create(@Body() createTargetDto: CreateTargetDto) {
-    return this.targetService.create(createTargetDto);
+  create(@Body() dto: CreateTargetDto) {
+    return this.targetService.create(dto);
   }
 
   @Get()
