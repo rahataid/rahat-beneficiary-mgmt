@@ -2,19 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { CreateTargetDto } from './dto/create-target.dto';
 import { UpdateTargetDto } from './dto/update-target.dto';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { filterExtraFieldValues } from '../beneficiaries/helpers';
 
 @Injectable()
 export class TargetService {
   constructor(private benefService: BeneficiariesService) {}
   async create(dto: CreateTargetDto) {
-    console.log('DTO=>', dto);
+    const { query, extras } = dto;
     // Create a new target
     // Fetch results from the database using the query
-    const data = await this.benefService.searchTargets(dto.query);
-    console.log('DATA=>', data);
-    // Further filter the results using the extras
+    const data = await this.benefService.searchTargets(query);
+    if (!extras || Object.keys(extras).length < 1) return data.rows;
+    // Further filter the results if extras object has keys
+    const filteredData = filterExtraFieldValues(data.rows, extras);
+    // Attach Search_UUID to the results
     // Save reults in the database
-    return data;
+    // Update target status to completed
+    return filteredData;
   }
 
   findAll() {
