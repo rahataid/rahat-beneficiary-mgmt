@@ -35,6 +35,7 @@ model Beneficiary {
 
   beneficiaries_group BeneficiaryGroup[]
   beneficiary_source  BeneficiarySource[]
+  TargetResult        TargetResult[]
 
   @@map("tbl_beneficiaries")
 }
@@ -105,16 +106,29 @@ model BeneficiaryGroup {
 }
 
 model TargetQuery {
-  id             Int               @id @default(autoincrement()) @db.Integer()
-  uuid           String            @unique @default(uuid()) @db.Uuid()
-  label          String?
-  query_filters  Json              @db.JsonB()
-  extras_filters Json              @db.JsonB()
-  status         TargetQueryStatus @default(PENDING)
-  created_at     DateTime          @default(now())
-  updated_at     DateTime?         @updatedAt()
+  id           Int               @id @default(autoincrement()) @db.Integer()
+  uuid         String            @unique @default(uuid()) @db.Uuid()
+  label        String?
+  query        Json              @db.JsonB()
+  extras       Json              @db.JsonB()
+  status       TargetQueryStatus @default(PENDING)
+  created_at   DateTime          @default(now())
+  updated_at   DateTime?         @updatedAt()
+  TargetResult TargetResult[]
 
   @@map("tbl_target_query")
+}
+
+model TargetResult {
+  id           Int         @id @default(autoincrement()) @db.Integer()
+  beneficiary  Beneficiary @relation(fields: [benf_uuid], references: [uuid])
+  benf_uuid    String      @db.Uuid()
+  target_query TargetQuery @relation(fields: [target_uuid], references: [uuid])
+  target_uuid  String      @db.Uuid()
+  created_at   DateTime    @default(now())
+  updated_at   DateTime?   @updatedAt()
+
+  @@map("tbl_target_result")
 }
 
 enum TargetQueryStatus {
