@@ -18,8 +18,8 @@ export class TargetController {
     return this.targetService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.targetService.findOne(+id);
+  @Get(':target_uuid/result')
+  findOne(@Param('target_uuid') target_uuid: string) {
+    return this.targetService.findByTargetUUID(target_uuid);
   }
 }

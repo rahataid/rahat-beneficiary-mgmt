@@ -3,11 +3,11 @@ import {
   CreateTargetDto,
   TargetQueryStatusEnum,
 } from './dto/create-target.dto';
-import { UpdateTargetDto } from './dto/update-target.dto';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
 import { TARGET_QUERY_STATUS } from '../../constants';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class TargetService {
@@ -44,7 +44,6 @@ export class TargetService {
         target_uuid: target,
         benef_uuid: d.uuid,
       };
-      console.log('Payload=>', payload);
       await this.prismaService.targetResult.create({ data: payload });
     }
   }
@@ -53,15 +52,10 @@ export class TargetService {
     return `This action returns all target`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} target`;
-  }
-
-  update(id: number, updateTargetDto: UpdateTargetDto) {
-    return `This action updates a #${id} target`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} target`;
+  findByTargetUUID(target_uuid: string) {
+    return paginate(this.prismaService.targetResult, {
+      where: { target_uuid: target_uuid },
+      include: { beneficiary: true },
+    });
   }
 }
