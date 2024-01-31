@@ -1,9 +1,7 @@
 export const filterExtraFieldValues = (query_result: any, extras: any) => {
-  console.log('query_result', query_result);
   const nonEmptyExtras = query_result.filter(
     (item: any) => item.extras !== null,
   );
-  console.log('Non Empty Extras=>', nonEmptyExtras);
   const filteredData = nonEmptyExtras.filter((item: any) => {
     // Iterate over the key-value pairs in extras
     for (const [key, value] of Object.entries(extras)) {

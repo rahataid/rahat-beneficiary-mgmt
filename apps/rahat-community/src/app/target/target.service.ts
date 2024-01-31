@@ -38,11 +38,13 @@ export class TargetService {
   }
 
   async createManySearchResult(result: any, target: string) {
+    if (!result.length) return;
     for (let d of result) {
       const payload = {
         target_uuid: target,
-        benef_id: d.id,
+        benef_uuid: d.uuid,
       };
+      console.log('Payload=>', payload);
       await this.prismaService.targetResult.create({ data: payload });
     }
   }
