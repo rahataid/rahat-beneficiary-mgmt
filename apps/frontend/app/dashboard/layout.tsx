@@ -35,7 +35,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen px-10">
-      <nav className=" hidden lg:block fixed border-x-2 w-64 p-4 h-full overflow-y-auto">
+      <nav className=" hidden lg:block fixed border-x-2 w-80 p-4 h-full overflow-y-auto">
         <div>
           <Image
             className="mb-20"
@@ -75,7 +75,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </nav>
-      <div className="flex-1 lg:ml-72">
+      <div className="flex-1 lg:ml-80">
         <div className="p-4 mb-4 w-full z-10">
           <div className="flex justify-between lg:justify-end">
             <div className="block lg:hidden">
