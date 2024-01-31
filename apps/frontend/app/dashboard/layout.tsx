@@ -48,6 +48,7 @@ export default function DashboardLayout({
                 <div className="flex flex-col gap-2">
                   {navData.map((item: NavData) => (
                     <div
+                      key={item.title}
                       className={`flex gap-2 p-3  rounded hover:bg-[#DDF6FC] hover:text-[#1F61AC] cursor-pointer ${
                         currentRoute === item.path &&
                         'bg-[#DDF6FC] text-[#1F61AC] '
@@ -94,6 +95,9 @@ export default function DashboardLayout({
                         <div className="p-2 flex flex-col">
                           <span className="font-bold">Rocket</span>
                           <span>rocket@gmail.com</span>
+                        </div>
+                        <div className="p-2">
+                          <Link href={paths.dashboard.profile}>Profile</Link>
                         </div>
                         <div className="p-2">
                           <Link href={paths.dashboard.root}>Home</Link>
