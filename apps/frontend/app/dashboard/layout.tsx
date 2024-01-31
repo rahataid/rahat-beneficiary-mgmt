@@ -34,7 +34,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <main className="px-20 h-screen">
+    <main className="px-5 lg:px-10 xl:px-20 h-screen">
       <section className="h-full">
         <div className="grid grid-cols-4 h-full">
           <div className="border-x-2 w-full h-full hidden lg:block">
