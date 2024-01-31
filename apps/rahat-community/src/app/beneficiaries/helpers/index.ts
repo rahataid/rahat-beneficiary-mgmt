@@ -1,4 +1,5 @@
 export const filterExtraFieldValues = (query_result: any, extras: any) => {
+  console.log('query_result', query_result);
   const nonEmptyExtras = query_result.filter(
     (item: any) => item.extras !== null,
   );

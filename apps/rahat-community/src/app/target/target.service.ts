@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTargetDto } from './dto/create-target.dto';
+import {
+  CreateTargetDto,
+  TargetQueryStatusEnum,
+} from './dto/create-target.dto';
 import { UpdateTargetDto } from './dto/update-target.dto';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
+import { TARGET_QUERY_STATUS } from '../../constants';
 
 @Injectable()
 export class TargetService {
@@ -15,31 +19,31 @@ export class TargetService {
     const { query, extras } = dto;
     // 1. Save the query and extras in the TargetQuery schema
     const target = await this.prismaService.targetQuery.create({ data: dto });
-    // 2. Fetch results from the database using the query
-    const data = await this.benefService.searchTargets(query);
+    // 2. Fetch results from the database using the main query
+    const data = await this.benefService.searchTargets(query); // Queue
     if (!extras || Object.keys(extras).length < 1) {
-      await this.createManySearchResult(data.rows, target.uuid);
+      await this.createManySearchResult(data.rows, target.uuid); // Queue
     } else {
       // 3. Further filter the results if extras object has keys
-      const filteredData = filterExtraFieldValues(data.rows, extras);
+      const filteredData = filterExtraFieldValues(data.rows, extras); // Queue
       // 4. Save filtered results in the TargetResult schema
-      await this.createManySearchResult(filteredData, target.uuid);
+      await this.createManySearchResult(filteredData, target.uuid); // Queue
     }
     // 5. Update the status of the target to COMPLETED
     await this.prismaService.targetQuery.update({
       where: { id: target.id },
-      data: { status: 'COMPLETED' },
+      data: { status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum },
     });
     return target;
   }
 
-  async createManySearchResult(result: any, target: any) {
+  async createManySearchResult(result: any, target: string) {
     for (let d of result) {
       const payload = {
-        target_uuid: String(target.uuid) as string,
-        benef_uuid: d.uuid,
+        target_uuid: target,
+        benef_id: d.id,
       };
-      // await this.prismaService.targetResult.create({ data: payload });
+      await this.prismaService.targetResult.create({ data: payload });
     }
   }
 

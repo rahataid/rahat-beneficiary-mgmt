@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmptyObject, IsOptional, IsString } from 'class-validator';
+import { IsOptional } from 'class-validator';
+
+export enum TargetQueryStatusEnum {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+}
 
 export class CreateTargetDto {
   @ApiProperty({

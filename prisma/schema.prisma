@@ -121,8 +121,8 @@ model TargetQuery {
 
 model TargetResult {
   id           Int         @id @default(autoincrement()) @db.Integer()
-  beneficiary  Beneficiary @relation(fields: [benf_uuid], references: [uuid])
-  benf_uuid    String      @db.Uuid()
+  beneficiary  Beneficiary @relation(fields: [benef_id], references: [id])
+  benef_id     Int         @db.Integer()
   target_query TargetQuery @relation(fields: [target_uuid], references: [uuid])
   target_uuid  String      @db.Uuid()
   created_at   DateTime    @default(now())
