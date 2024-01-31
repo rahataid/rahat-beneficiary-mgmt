@@ -28,7 +28,7 @@ export default function DashboardView() {
   return (
     <div>
       <div className="pl-5 font-bold text-4xl">Welcome to the Dashboard.</div>
-      <div className="px-5 py-12 flex gap-10">
+      <div className="px-5 py-12 flex gap-10 flex-wrap">
         {cardData.map((item: CardDataProps) => (
           <Card
             key={item.title}
