@@ -8,6 +8,7 @@ import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
 import { TARGET_QUERY_STATUS } from '../../constants';
 import { paginate } from '../utils/paginate';
+import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 
 @Injectable()
 export class TargetService {
@@ -30,11 +31,13 @@ export class TargetService {
       await this.createManySearchResult(filteredData, target.uuid); // Queue
     }
     // 5. Update the status of the target to COMPLETED
-    await this.prismaService.targetQuery.update({
+    const updated = await this.prismaService.targetQuery.update({
       where: { id: target.id },
-      data: { status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum },
+      data: {
+        status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
+      },
     });
-    return target;
+    return updated;
   }
 
   async createManySearchResult(result: any, target: string) {
@@ -46,6 +49,15 @@ export class TargetService {
       };
       await this.prismaService.targetResult.create({ data: payload });
     }
+  }
+
+  updateTargetQueryLabel(id: number, dto: updateTargetQueryLabelDTO) {
+    return this.prismaService.targetQuery.update({
+      where: { id: +id },
+      data: {
+        label: dto.label,
+      },
+    });
   }
 
   findAll() {
