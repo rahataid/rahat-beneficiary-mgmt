@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import AddUserForm from './add-user-form';
 
 export default function UserView() {
   return (
@@ -28,8 +29,9 @@ export default function UserView() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add User</DialogTitle>
+              <DialogTitle className='mb-10'>Add User</DialogTitle>
             </DialogHeader>
+            <AddUserForm />
           </DialogContent>
         </Dialog>
       </div>
