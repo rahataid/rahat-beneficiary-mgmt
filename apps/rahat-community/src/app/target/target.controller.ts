@@ -11,6 +11,7 @@ export class TargetController {
 
   @Post()
   create(@Body() dto: CreateTargetDto) {
+    console.log('Hello');
     return this.targetService.create(dto);
   }
 

@@ -6,9 +6,23 @@ import {
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
-import { TARGET_QUERY_STATUS } from '../../constants';
+import { DB_MODELS, TARGET_QUERY_STATUS } from '../../constants';
 import { paginate } from '../utils/paginate';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+
+// ==Sample query==
+// {
+//   "filter_options": [
+//      {
+//         "gender": "Male",
+//         "has_citizenship": true
+//       },
+//       { "gender": "Female", "has_citizenship": true },
+//       { "max_age": 37 }
+//   ]
+// }
 
 @Injectable()
 export class TargetService {
@@ -16,7 +30,37 @@ export class TargetService {
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
   ) {}
+
+  // 1. Create target query with DTO
+  // 2. Insert target query into QUEUE
+  // 3. QUEUE will perform => Fetch results && Save into target result
+
   async create(dto: CreateTargetDto) {
+    const { filter_options } = dto;
+    let final_result = [];
+    const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+    const primary_fields = fields.filter((f) => f.name !== 'extras');
+    for (let item of filter_options) {
+      const keys = Object.keys(item);
+      const values = Object.values(item);
+      const { primary, extra } = createPrimaryAndExtraQuery(
+        primary_fields,
+        keys,
+        values,
+      );
+      // Fetch data using primary AND query
+      const data = await this.benefService.searchTargets(primary);
+      // Filter data using extras AND query
+      const filteredData = filterExtraFieldValues(data.rows, extra);
+      // Merge result with final_result UNION filteredDta
+      final_result = createFinalResult(final_result, filteredData);
+    }
+    console.log('Final Result: ', final_result.length);
+    return final_result;
+  }
+
+  // ====OLD: Not in use!===
+  async createTarget(dto: any) {
     const { query, extras } = dto;
     // 1. Save the query and extras in the TargetQuery schema
     const target = await this.prismaService.targetQuery.create({ data: dto });
