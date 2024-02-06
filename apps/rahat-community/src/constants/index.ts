@@ -12,6 +12,6 @@ export const QUEUE = {
 };
 
 export const JOBS = {
-  CREATE_TARGET: 'create_target',
+  TARGET_BENEFICIARY: 'target_beneficiary',
   OTP: 'otp',
 };

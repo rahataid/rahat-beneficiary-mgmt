@@ -17,6 +17,7 @@ import { SourceModule } from './source/source.module';
 import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
 import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source.module';
 import { TargetModule } from './target/target.module';
+import { TargetProcessor } from './processors';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { TargetModule } from './target/target.module';
   controllers: [AppController],
   providers: [
     AppService,
+    TargetProcessor,
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
   ],

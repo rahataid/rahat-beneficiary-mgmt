@@ -41,7 +41,7 @@ export class TargetService {
   async create(dto: CreateTargetDto) {
     const { filter_options } = dto;
     const data = { id: 1, filter_options };
-    this.targetingQueue.add(JOBS.CREATE_TARGET, data);
+    this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data);
     return;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
