@@ -6,3 +6,12 @@ export const TARGET_QUERY_STATUS = {
   PENDING: 'PENDING',
   COMPLETED: 'COMPLETED',
 };
+
+export const QUEUE = {
+  TARGETING: 'targeting',
+};
+
+export const JOBS = {
+  CREATE_TARGET: 'create_target',
+  OTP: 'otp',
+};

@@ -6,6 +6,7 @@ import { PrismaModule, PrismaService } from '@rahat/prisma';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { BullModule } from '@nestjs/bull';
 import { RsUserModule } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
@@ -20,6 +21,12 @@ import { TargetModule } from './target/target.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT),
+      },
+    }),
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RsUserModule,
     PrismaModule,

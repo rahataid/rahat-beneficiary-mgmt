@@ -6,11 +6,13 @@ import {
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
-import { DB_MODELS, TARGET_QUERY_STATUS } from '../../constants';
+import { DB_MODELS, JOBS, QUEUE, TARGET_QUERY_STATUS } from '../../constants';
 import { paginate } from '../utils/paginate';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 // ==Sample query==
 // {
@@ -27,6 +29,7 @@ import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
 @Injectable()
 export class TargetService {
   constructor(
+    @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
   ) {}
@@ -37,6 +40,9 @@ export class TargetService {
 
   async create(dto: CreateTargetDto) {
     const { filter_options } = dto;
+    const data = { id: 1, filter_options };
+    this.targetingQueue.add(JOBS.CREATE_TARGET, data);
+    return;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');

@@ -106,15 +106,14 @@ model BeneficiaryGroup {
 }
 
 model TargetQuery {
-  id           Int               @id @default(autoincrement()) @db.Integer()
-  uuid         String            @unique @default(uuid()) @db.Uuid()
-  label        String?
-  query        Json              @db.JsonB()
-  extras       Json              @db.JsonB()
-  status       TargetQueryStatus @default(PENDING)
-  created_at   DateTime          @default(now())
-  updated_at   DateTime?         @updatedAt()
-  TargetResult TargetResult[]
+  id            Int               @id @default(autoincrement()) @db.Integer()
+  uuid          String            @unique @default(uuid()) @db.Uuid()
+  label         String?
+  filterOptions Json              @db.JsonB()
+  status        TargetQueryStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime?         @updatedAt()
+  TargetResult  TargetResult[]
 
   @@map("tbl_target_query")
 }
@@ -228,16 +227,15 @@ model User {
 
 // ============End User Management Schema===========
 
-
 // ============Settings Schema===========
 
 model Settings {
-  id              Int     @id @default(autoincrement())
-  name            String  @unique
-  value           Json
-  requiredFields  String[]
-  isReadOnly      Boolean  @default(false) // true? Dont allow Write from API
-  isPrivate       Boolean  @default(true) // true?  Dont allow Read from API
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  value          Json
+  requiredFields String[]
+  isReadOnly     Boolean  @default(false) // true? Dont allow Write from API
+  isPrivate      Boolean  @default(true) // true?  Dont allow Read from API
 }
 
 // ============End Settings Schema===========
