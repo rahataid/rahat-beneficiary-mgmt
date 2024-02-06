@@ -6,7 +6,7 @@ import { PrismaModule, PrismaService } from '@rahat/prisma';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { RsUserModule } from '@rahat/user';
+import { RsUserModule, SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './group/group.module';
@@ -16,6 +16,8 @@ import { SourceModule } from './source/source.module';
 import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
 import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source.module';
 import { TargetModule } from './target/target.module';
+import { AppSettingService } from './setting/setting.service';
+import { AppSettingModule } from './setting/setting.module';
 
 @Module({
   imports: [
@@ -34,12 +36,15 @@ import { TargetModule } from './target/target.module';
     BeneficiaryImportModule,
     BeneficiarySourceModule,
     TargetModule,
+    AppSettingModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
+    AppSettingService,
+    SettingsService,
   ],
 })
 export class AppModule {}
