@@ -1,16 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export enum TargetQueryStatusEnum {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
 }
 
-export class CreateTargetDto {
+export class CreateTargetQueryDto {
   @ApiProperty({
     type: 'array',
     example: [{ gender: 'Male' }, { maxAge: 30 }],
   })
   @IsOptional()
-  filter_options: any;
+  filterOptions: any;
+}
+
+export class CreateTargetResultDto {
+  @IsString()
+  target_uuid: string;
+
+  filterOptions: any;
 }

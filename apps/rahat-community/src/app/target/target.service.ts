@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
-  CreateTargetDto,
+  CreateTargetQueryDto,
+  CreateTargetResultDto,
   TargetQueryStatusEnum,
 } from './dto/create-target.dto';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
@@ -16,7 +17,7 @@ import { InjectQueue } from '@nestjs/bull';
 
 // ==Sample query==
 // {
-//   "filter_options": [
+//   "filterOptions": [
 //      {
 //         "gender": "Male",
 //         "has_citizenship": true
@@ -34,38 +35,54 @@ export class TargetService {
     private benefService: BeneficiariesService,
   ) {}
 
-  // 1. Create target query with DTO
-  // 2. Insert target query into QUEUE
-  // 3. QUEUE will perform => Fetch results && Save into target result
-
-  async create(dto: CreateTargetDto) {
-    const { filter_options } = dto;
-    const data = { id: 1, filter_options };
+  async create(dto: CreateTargetQueryDto) {
+    const { filterOptions } = dto;
+    const target = await this.prismaService.targetQuery.create({ data: dto });
+    const data = { target_uuid: target.uuid, filterOptions };
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data);
-    return;
+    return { message: 'Target query created and added to queue' };
+  }
+
+  async saveTargetResult(data: CreateTargetResultDto) {
+    const { filterOptions, target_uuid } = data;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
-    for (let item of filter_options) {
+    for (let item of filterOptions) {
       const keys = Object.keys(item);
       const values = Object.values(item);
+      // 1. Split primary and extra queries
       const { primary, extra } = createPrimaryAndExtraQuery(
         primary_fields,
         keys,
         values,
       );
-      // Fetch data using primary AND query
+      // 2. Fetch data using primary AND query
       const data = await this.benefService.searchTargets(primary);
-      // Filter data using extras AND query
+      // 3. Filter data using extras AND query
       const filteredData = filterExtraFieldValues(data.rows, extra);
-      // Merge result with final_result UNION filteredDta
+      // 4.Merge result i.e. final_result UNION filteredDta
       final_result = createFinalResult(final_result, filteredData);
     }
-    console.log('Final Result: ', final_result.length);
-    return final_result;
+    // 5. Save final result in the TargetResult && Update Status to COMPLETED
+    await this.createManySearchResult(final_result, target_uuid);
+    await this.updateTargetQuery(target_uuid, {
+      status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
+    });
+    console.log(`${final_result.length} Target result saved successfully`);
+    return {
+      message: `${final_result.length} Target result saved successfully`,
+    };
   }
 
-  // ====OLD: Not in use!===
+  async updateTargetQuery(uuid: string, dto: any) {
+    return this.prismaService.targetQuery.update({
+      where: { uuid: uuid },
+      data: dto,
+    });
+  }
+
+  // ====OLD: Not in use! Remove it later===
   async createTarget(dto: any) {
     const { query, extras } = dto;
     // 1. Save the query and extras in the TargetQuery schema
@@ -108,10 +125,6 @@ export class TargetService {
         label: dto.label,
       },
     });
-  }
-
-  findAll() {
-    return `This action returns all target`;
   }
 
   findByTargetUUID(target_uuid: string) {

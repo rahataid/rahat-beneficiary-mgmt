@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { TargetService } from './target.service';
-import { CreateTargetDto } from './dto/create-target.dto';
+import { CreateTargetQueryDto } from './dto/create-target.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 
@@ -10,8 +10,7 @@ export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
   @Post()
-  create(@Body() dto: CreateTargetDto) {
-    console.log('Hello');
+  create(@Body() dto: CreateTargetQueryDto) {
     return this.targetService.create(dto);
   }
 
@@ -21,11 +20,6 @@ export class TargetController {
     @Body() dto: updateTargetQueryLabelDTO,
   ) {
     return this.targetService.updateTargetQueryLabel(id, dto);
-  }
-
-  @Get()
-  findAll() {
-    return this.targetService.findAll();
   }
 
   @Get(':target_uuid/result')

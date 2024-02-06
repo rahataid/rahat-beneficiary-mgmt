@@ -18,6 +18,7 @@ import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import
 import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source.module';
 import { TargetModule } from './target/target.module';
 import { TargetProcessor } from './processors';
+import { ListenersModule } from './listeners/listeners.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { TargetProcessor } from './processors';
     BeneficiaryImportModule,
     BeneficiarySourceModule,
     TargetModule,
+    ListenersModule,
   ],
   controllers: [AppController],
   providers: [
