@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
-import { RsUserModule } from '@rahat/user';
+import { RsUserModule, SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './group/group.module';
@@ -19,6 +19,8 @@ import { BeneficiarySourceModule } from './beneficiary-source/beneficiary-source
 import { TargetModule } from './target/target.module';
 import { TargetProcessor } from './processors';
 import { ListenersModule } from './listeners/listeners.module';
+import { AppSettingService } from './setting/setting.service';
+import { AppSettingModule } from './setting/setting.module';
 
 @Module({
   imports: [
@@ -44,6 +46,7 @@ import { ListenersModule } from './listeners/listeners.module';
     BeneficiarySourceModule,
     TargetModule,
     ListenersModule,
+    AppSettingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -51,6 +54,8 @@ import { ListenersModule } from './listeners/listeners.module';
     TargetProcessor,
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
+    AppSettingService,
+    SettingsService,
   ],
 })
 export class AppModule {}

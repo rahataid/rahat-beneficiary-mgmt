@@ -1,10 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 
 import { AppService } from './app.service';
+import { getSetting, listSettings } from './setting/setting.config';
+import { AppSettingService } from './setting/setting.service';
 
 @Controller('app')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private appSetttingService: AppSettingService,
+  ) {}
 
   @Get()
   getData() {
@@ -14,5 +19,15 @@ export class AppController {
   @Get('getDataFromKobo')
   getDataFromKoboTool() {
     return this.appService.getDataFromKoboTool();
+  }
+
+  @Get('settings')
+  listSettings() {
+    return listSettings();
+  }
+
+  @Get('settings/:name')
+  getEmailSettings(@Param('name') name: string) {
+    return getSetting(name);
   }
 }

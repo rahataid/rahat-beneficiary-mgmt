@@ -52,13 +52,14 @@ export class SettingsService {
 
   async create(dto: CreateSettingsDto) {
     console.log(dto);
+    dto.name = dto.name.toUpperCase();
+
     const isExist = await this.prisma.settings.findUnique({
       where: {
         name: dto.name,
       },
     });
     if (isExist) throw new Error('Settings already Exist');
-    dto.name = dto.name.toUpperCase();
     // Check and convert reqFields to Array
     const reqFields = dto.requiredFields
       ? this.stringToArray(dto.requiredFields)
@@ -153,6 +154,7 @@ export class SettingsService {
   }
 
   async getByName(name: string) {
+    name = name.toUpperCase();
     const getByName = await this.prisma.settings.findMany({
       where: { name, isPrivate: false },
     });
