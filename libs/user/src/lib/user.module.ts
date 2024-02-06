@@ -12,15 +12,19 @@ import { RolesModule } from './roles/roles.module';
 import { RolesService } from './roles/roles.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaModule, PrismaService } from '@rahat/prisma';
+import { SettingsModule } from './settings/settings.module';
+import { SettingsService } from './settings/settings.service';
+import { SettingsController } from './settings/settings.controller';
 
 @Module({
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, UserController, SettingsController],
   providers: [
     AuthService,
     PrismaService,
     UserService,
     JwtService,
     RolesService,
+    SettingsService,
   ],
   imports: [
     AbilityModule,
@@ -30,7 +34,8 @@ import { PrismaModule, PrismaService } from '@rahat/prisma';
     AuthModule,
     UserModule,
     RolesModule,
+    SettingsModule,
   ],
-  exports: [AuthModule, UserModule],
+  exports: [AuthModule, UserModule, SettingsModule],
 })
 export class RsUserModule {}
