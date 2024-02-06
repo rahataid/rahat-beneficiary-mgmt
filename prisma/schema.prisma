@@ -227,3 +227,17 @@ model User {
 }
 
 // ============End User Management Schema===========
+
+
+// ============Settings Schema===========
+
+model Settings {
+  id              Int     @id @default(autoincrement())
+  name            String  @unique
+  value           Json
+  requiredFields  String[]
+  isReadOnly      Boolean  @default(false) // true? Dont allow Write from API
+  isPrivate       Boolean  @default(true) // true?  Dont allow Read from API
+}
+
+// ============End Settings Schema===========
