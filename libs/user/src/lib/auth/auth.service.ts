@@ -51,9 +51,9 @@ export class AuthService {
   async saveAndSendOTP(dto: any) {
     try {
       const OTP_SECRET = this.config.get('OTP_SECRET');
+      const DEV_ENV = this.config.get('ENV_DEV');
       const otp = totp.generate(OTP_SECRET);
 
-      console.log(typeof otp);
       const exist = await this.userService.getUserByAuthAddress(
         dto.authAddress,
       );
@@ -69,10 +69,11 @@ export class AuthService {
         subject: 'OTP for login',
         otp,
       };
-      // if (user.otp) delete user.otp;  //for testing puprpose should comment
+
+      DEV_ENV === 'dev' && user.otp ? user : delete user.otp;
+
       // EMIT EVENT
       this.eventEmitter.emit(EVENTS.SEND_OTP_EMAIL, context);
-      console.log(user);
       return user;
     } catch (err) {
       throw err;
