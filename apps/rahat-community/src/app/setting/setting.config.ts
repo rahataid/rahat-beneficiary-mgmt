@@ -20,7 +20,6 @@ export const getSetting = (name: string) => {
   const found = (settings as { value?: { data?: any } }[]).find(
     (f: any) => f.name === name,
   );
-  console.log('found', found);
   if (!found || !found.value || !found.value.data) {
     return null;
   }

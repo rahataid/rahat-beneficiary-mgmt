@@ -8,14 +8,15 @@ import { validateRequiredFields } from '../beneficiary-import/helpers';
 @Injectable()
 export class SourceService {
   constructor(private prisma: PrismaService) {}
-  create(dto: CreateSourceDto) {
+  async create(dto: CreateSourceDto) {
     const missing_fields = validateRequiredFields(dto.field_mapping.data);
     if (missing_fields.length) {
       throw new Error(
         `Required fields missing! [${missing_fields.toString()}]`,
       );
     }
-    return this.prisma.source.create({ data: dto });
+    const h = await this.prisma.source.create({ data: dto });
+    return h;
   }
 
   findAll(query: any) {

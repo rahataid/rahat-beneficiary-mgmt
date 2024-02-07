@@ -69,7 +69,6 @@ export class TargetService {
     await this.updateTargetQuery(target_uuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
-    console.log(`${final_result.length} Target result saved successfully`);
     return {
       message: `${final_result.length} Target result saved successfully`,
     };

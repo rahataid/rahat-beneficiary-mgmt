@@ -51,7 +51,6 @@ export class SettingsService {
   };
 
   async create(dto: CreateSettingsDto) {
-    console.log(dto);
     dto.name = dto.name.toUpperCase();
 
     const isExist = await this.prisma.settings.findUnique({

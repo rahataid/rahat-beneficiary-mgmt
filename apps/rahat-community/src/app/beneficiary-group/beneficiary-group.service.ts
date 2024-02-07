@@ -3,6 +3,7 @@ import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
 import { UpdateBeneficiaryGroupDto } from './dto/update-beneficiary-group.dto';
 import { PrismaService } from '@rahat/prisma';
 import { DeleteBeneficiaryGroupDto } from './dto/delete-beneficiary-group.dto';
+import { RSError } from '@rumsan/core';
 
 @Injectable()
 export class BeneficiaryGroupService {
@@ -16,7 +17,7 @@ export class BeneficiaryGroupService {
         },
       });
 
-      if (data) throw new HttpException('Already Connected', 409);
+      if (data) throw new Error('Already Created');
 
       const createdBenefGroup = await prisma.beneficiaryGroup.create({
         data: {
@@ -82,7 +83,14 @@ export class BeneficiaryGroupService {
       },
     });
 
-    if (!findBenefGroup) throw new HttpException('Not Found', 404);
+    if (!findBenefGroup) {
+      throw new RSError({
+        name: 'Not Found',
+        message: 'No Beneficiary Group to Delete',
+        type: 'Not Found',
+        httpCode: 404,
+      });
+    }
 
     return await this.prisma.beneficiaryGroup.delete({
       where: {

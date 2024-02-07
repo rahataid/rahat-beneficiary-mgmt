@@ -1,9 +1,11 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from '@rahat/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
+import { RSError } from '@rumsan/core';
+import { RSE } from '@rumsan/core/src/lib/exceptions/rs-errors';
 
 @Injectable()
 export class GroupService {
@@ -15,8 +17,7 @@ export class GroupService {
       },
     });
 
-    if (check) throw new HttpException('Already inserted', 409);
-
+    if (check) throw new Error('Already inserted');
     return await this.prisma.group.create({
       data: dto,
     });
