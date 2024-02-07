@@ -15,8 +15,7 @@ export class BeneficiarySourceService {
         source_id: dto.source_id,
       },
     });
-    console.log('exist', exist);
-    if (exist) throw new HttpException('Already Connected', 409);
+    if (exist) throw new Error('Already Connected');
     return await this.prisma.beneficiarySource.create({
       data: {
         beneficiary: {
@@ -51,10 +50,10 @@ export class BeneficiarySourceService {
     // return await this.prisma.beneficiarySource.findMany({});
   }
 
-  async update(id: string, dto: UpdateBeneficiarySourceDto) {
+  async update(id: number, dto: UpdateBeneficiarySourceDto) {
     return await this.prisma.beneficiarySource.update({
       where: {
-        id: parseInt(id),
+        id: id,
       },
       data: {
         beneficiary: {

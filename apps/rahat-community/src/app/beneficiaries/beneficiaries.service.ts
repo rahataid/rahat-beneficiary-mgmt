@@ -27,7 +27,6 @@ export class BeneficiariesService {
 
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras } = dto;
-    console.log('extras=>', extras);
     if (birthDate) {
       const formattedDate = new Date(dto.birthDate).toISOString();
       dto.birthDate = formattedDate;
@@ -128,7 +127,7 @@ export class BeneficiariesService {
       },
     });
 
-    if (!findUuid) throw new HttpException('Data not Found', 404);
+    if (!findUuid) throw new Error('Data not Found');
     return await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
@@ -143,7 +142,7 @@ export class BeneficiariesService {
       },
     });
 
-    if (!findUuid) throw new HttpException('Data not Found', 404);
+    if (!findUuid) throw new Error('Not Found');
     const { birthDate, extras } = dto;
     if (birthDate) {
       const formattedDate = new Date(dto.birthDate).toISOString();
@@ -174,7 +173,7 @@ export class BeneficiariesService {
       },
     });
 
-    if (!findUuid) throw new HttpException('Data not Found', 404);
+    if (!findUuid) throw new Error('Not Found');
     return await this.prisma.beneficiary.delete({
       where: {
         uuid,

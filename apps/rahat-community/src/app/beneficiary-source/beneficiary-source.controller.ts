@@ -38,7 +38,7 @@ export class BeneficiarySourceController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateBeneficiarySourceDto) {
+  update(@Param('id') id: number, @Body() dto: UpdateBeneficiarySourceDto) {
     return this.beneficiarySourceService.update(id, dto);
   }
 

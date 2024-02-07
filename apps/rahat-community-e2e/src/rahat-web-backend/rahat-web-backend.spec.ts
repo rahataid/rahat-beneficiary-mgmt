@@ -47,7 +47,20 @@ const sourceDto = {
     data: faker.lorem.text(),
   },
   field_mapping: {
-    data: [faker.lorem.word(), faker.location.country()],
+    data: [
+      {
+        email: faker.internet.email(),
+        phone: faker.phone.number(),
+        gender: faker.string.fromCharacters([
+          'Male',
+          'Female',
+          'Other',
+          'Unkown',
+        ]),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
+      },
+    ],
   },
 };
 const groupDto = {
@@ -103,7 +116,6 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          console.log(res.body);
           beneficiaryUuid = res?.body?.data?.uuid;
           beneficiaryId = res?.body?.data?.id;
           done();
@@ -143,7 +155,6 @@ describe('Rahat Community E2E Testing', () => {
     });
 
     it('Should Update Benefeciary by BENEFICIARY_UUID', (done) => {
-      console.log('benefId', beneficiaryId);
       request(APP_URL)
         .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
@@ -173,7 +184,7 @@ describe('Rahat Community E2E Testing', () => {
       request(APP_URL)
         .post('/api/v1/group')
         .send(groupDto)
-        .expect(409)
+        .expect(500)
         .end((err, res) => {
           if (err) return done(err);
           done();
@@ -198,7 +209,7 @@ describe('Rahat Community E2E Testing', () => {
       request(APP_URL)
         .post('/api/v1/beneficiary-group')
         .send({ beneficiary_id: beneficiaryId, group_id: groupId })
-        .expect(409)
+        .expect(500)
         .end((err, res) => {
           if (err) return done(err);
           done();
@@ -214,7 +225,6 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-
           sourceUuid = res?.body?.data?.uuid;
           sourceId = res?.body?.data?.id;
           done();
@@ -272,7 +282,7 @@ describe('Rahat Community E2E Testing', () => {
       request(APP_URL)
         .post('/api/v1/beneficiarySource')
         .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
-        .expect(409)
+        .expect(500)
         .end((err, res) => {
           if (err) return done(err);
           done();
@@ -281,7 +291,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Update Beneficiary Source', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/${beneficiarySourceId}/beneficiarySource`)
+        .patch(`/api/v1/beneficiarySource/${beneficiarySourceId}`)
         .send({ beneficiary_id: beneficiaryId, source_id: sourceId })
         .expect(200)
         .end((err, res) => {
@@ -354,7 +364,7 @@ describe('Rahat Community E2E Testing', () => {
     });
     it('Should Remove Beneficiary Source', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/${beneficiarySourceId}/beneficiarySource`)
+        .delete(`/api/v1/beneficiarySource/${beneficiarySourceId}`)
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
@@ -375,9 +385,8 @@ describe('Rahat Community E2E Testing', () => {
       request(APP_URL)
         .get(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
-        .expect(404)
+        .expect(500)
         .end((err, res) => {
-          console.log(beneficiaryUuid);
           if (err) return done(err);
           done();
         });
@@ -387,7 +396,7 @@ describe('Rahat Community E2E Testing', () => {
         .patch(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .send(updateBenefDto)
-        .expect(404)
+        .expect(500)
         .end((err, res) => {
           if (err) return done(err);
           done();
@@ -397,7 +406,7 @@ describe('Rahat Community E2E Testing', () => {
       request(APP_URL)
         .delete(`/api/v1/beneficiaries/${beneficiaryUuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
-        .expect(404)
+        .expect(500)
         .end((err, res) => {
           if (err) return done(err);
           done();

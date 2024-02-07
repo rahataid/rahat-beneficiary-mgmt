@@ -24,7 +24,18 @@ export class CreateSourceDto {
 
   @ApiProperty({
     type: 'object',
-    example: { data: '[{key,value}]' },
+    example: {
+      data: [
+        {
+          email: 'alice@mailinator.com',
+          phone: '5551234567',
+          gender: 'Female',
+          lastName: 'Smith',
+          birthDate: '1990-05-20T00:00:00.000Z',
+          firstName: 'Alice',
+        },
+      ],
+    },
   })
   @IsOptional()
   @IsNotEmptyObject()
