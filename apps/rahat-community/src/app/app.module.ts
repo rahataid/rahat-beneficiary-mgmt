@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { RsUserModule, SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
@@ -21,9 +22,11 @@ import { TargetProcessor } from './processors';
 import { ListenersModule } from './listeners/listeners.module';
 import { AppSettingService } from './setting/setting.service';
 import { AppSettingModule } from './setting/setting.module';
+import { ScheduleService } from './schedulers/schedule.provider';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
       redis: {
@@ -56,6 +59,7 @@ import { AppSettingModule } from './setting/setting.module';
     PrismaService,
     AppSettingService,
     SettingsService,
+    ScheduleService,
   ],
 })
 export class AppModule {}

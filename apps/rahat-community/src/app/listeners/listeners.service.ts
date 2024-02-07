@@ -10,4 +10,9 @@ export class ListenerService {
   async createTargetResult(data: any) {
     return await this.targetService.saveTargetResult(data);
   }
+
+  @OnEvent(EVENTS.CLEANUP_TARGET_QUERY)
+  async cleanupTargetQuery() {
+    return this.targetService.cleanTargetQueryAndResults();
+  }
 }

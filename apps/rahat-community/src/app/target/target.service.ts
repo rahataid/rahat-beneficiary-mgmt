@@ -7,25 +7,20 @@ import {
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { PrismaService } from '@rahat/prisma';
-import { DB_MODELS, JOBS, QUEUE, TARGET_QUERY_STATUS } from '../../constants';
+import {
+  APP,
+  DB_MODELS,
+  JOBS,
+  QUEUE,
+  TARGET_QUERY_STATUS,
+} from '../../constants';
 import { paginate } from '../utils/paginate';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-
-// ==Sample query==
-// {
-//   "filterOptions": [
-//      {
-//         "gender": "Male",
-//         "has_citizenship": true
-//       },
-//       { "gender": "Female", "has_citizenship": true },
-//       { "max_age": 37 }
-//   ]
-// }
+import { calculateNumberOfDays } from '../utils';
 
 @Injectable()
 export class TargetService {
@@ -82,6 +77,37 @@ export class TargetService {
     });
   }
 
+  updateTargetQueryLabel(id: number, dto: updateTargetQueryLabelDTO) {
+    return this.prismaService.targetQuery.update({
+      where: { id: +id },
+      data: {
+        label: dto.label,
+      },
+    });
+  }
+
+  async DeleteTargetQuery(queryUID: string) {
+    const found = await this.findTargetQueryById(queryUID);
+    const data = await this.findTargetResultByQueryUID(queryUID);
+    if (found && !data.length)
+      return this.prismaService.targetQuery.delete({ where: { id: found.id } });
+  }
+
+  async findTargetQueryById(queryUID: string) {
+    return this.prismaService.targetQuery.findUnique({
+      where: { uuid: queryUID },
+    });
+  }
+
+  findCompletedAndNoLabelTargetQuery() {
+    return this.prismaService.targetQuery.findMany({
+      where: {
+        label: null,
+        status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
+      },
+    });
+  }
+
   // ====OLD: Not in use! Remove it later===
   async createTarget(dto: any) {
     const { query, extras } = dto;
@@ -107,6 +133,7 @@ export class TargetService {
     return updated;
   }
 
+  // ==========TargetResult Schema Operations==========
   async createManySearchResult(result: any, target: string) {
     if (!result.length) return;
     for (let d of result) {
@@ -118,19 +145,51 @@ export class TargetService {
     }
   }
 
-  updateTargetQueryLabel(id: number, dto: updateTargetQueryLabelDTO) {
-    return this.prismaService.targetQuery.update({
-      where: { id: +id },
-      data: {
-        label: dto.label,
-      },
-    });
-  }
-
   findByTargetUUID(target_uuid: string) {
     return paginate(this.prismaService.targetResult, {
       where: { target_uuid: target_uuid },
       include: { beneficiary: true },
     });
+  }
+
+  async cleanTargetQueryAndResults() {
+    let count = 0;
+    const data = await this.findCompletedAndNoLabelTargetQuery();
+    if (!data.length) return;
+    for (let d of data) {
+      const targetResults = await this.findTargetResultByQueryUID(d.uuid);
+      count = await this.compareDateAndDelete(targetResults, d.uuid);
+    }
+    console.log(`${count} Target Results Deleted!`);
+  }
+
+  async compareDateAndDelete(targetResult: any, targetQueryUID: string) {
+    let deletedCount = 0;
+    if (!targetResult.length) return deletedCount;
+    for (let r of targetResult) {
+      const days = calculateNumberOfDays(new Date(), new Date(r.createdAt));
+      if (days > APP.DAYS_TO_DELETE_BENEF_TARGET) {
+        await this.deleteTargetResult(r.id);
+        deletedCount++;
+      }
+    }
+    await this.DeleteTargetQuery(targetQueryUID);
+    return deletedCount;
+  }
+
+  findTargetResultByQueryUID(targetUID: string) {
+    return this.prismaService.targetResult.findMany({
+      where: { target_uuid: targetUID },
+    });
+  }
+
+  async deleteTargetResult(id: number) {
+    const found = await this.findTargetResultById(id);
+    if (found)
+      await this.prismaService.targetResult.delete({ where: { id: +id } });
+  }
+
+  findTargetResultById(id: number) {
+    return this.prismaService.targetResult.findUnique({ where: { id } });
   }
 }

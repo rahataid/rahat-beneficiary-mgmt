@@ -18,4 +18,9 @@ export const JOBS = {
 
 export const EVENTS = {
   CREATE_TARGET_RESULT: 'create_target_result',
+  CLEANUP_TARGET_QUERY: 'cleanup.target.query',
+};
+
+export const APP = {
+  DAYS_TO_DELETE_BENEF_TARGET: 5,
 };

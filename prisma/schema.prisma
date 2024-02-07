@@ -124,8 +124,8 @@ model TargetResult {
   benef_uuid   String      @db.Uuid()
   target_query TargetQuery @relation(fields: [target_uuid], references: [uuid])
   target_uuid  String      @db.Uuid()
-  created_at   DateTime    @default(now())
-  updated_at   DateTime?   @updatedAt()
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime?   @updatedAt()
 
   @@map("tbl_target_result")
 }
