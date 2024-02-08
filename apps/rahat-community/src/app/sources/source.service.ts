@@ -21,11 +21,11 @@ export class SourceService {
 
   findAll(query: any) {
     const select = {
-      field_mapping: true,
+      fieldMapping: true,
       uuid: true,
       id: true,
       name: true,
-      created_at: true,
+      createdAt: true,
     };
 
     return paginate(

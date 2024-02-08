@@ -20,8 +20,8 @@ export const injectCustomID = (payload: any) => {
   for (let p of payload) {
     const newItem = { ...p };
     if (CUSTOM_UNIQUE_ID) {
-      newItem.custom_id = p[CUSTOM_UNIQUE_ID];
-    } else newItem.custom_id = uuid();
+      newItem.customId = p[CUSTOM_UNIQUE_ID];
+    } else newItem.customId = uuid();
     final.push(newItem);
   }
   return final;
@@ -144,12 +144,12 @@ function parseToTargetFieldType({
 // Key must match with schema field name
 const ENUM_MAPPING = {
   gender: ['Male', 'Female', 'Other', 'Unknown'],
-  phone_status: ['UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE'],
-  internet_status: [
+  phoneStatus: ['UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE'],
+  internetStatus: [
     'UNKNOWN',
     'NO_INTERNET',
     'HOME_INTERNET',
     'MOBILE_INTERNET',
   ],
-  banked_status: ['UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED'],
+  bankedStatus: ['UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED'],
 };
