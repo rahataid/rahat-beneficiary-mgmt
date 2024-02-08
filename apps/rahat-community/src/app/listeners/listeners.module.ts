@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ListenerService } from './listeners.service';
-import { TargetService } from '../target/target.service';
+import { TargetService } from '../targets/target.service';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
 import { PrismaService } from '@rahat/prisma';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EVENTS } from '../../constants';
-import { TargetService } from '../target/target.service';
+import { TargetService } from '../targets/target.service';
 
 @Injectable()
 export class ListenerService {

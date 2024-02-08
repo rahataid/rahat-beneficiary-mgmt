@@ -1,8 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { getSetting, listSettings } from './setting/setting.config';
-import { AppSettingService } from './setting/setting.service';
+import { getSetting, listSettings } from './settings/setting.config';
+import { AppSettingService } from './settings/setting.service';
 
 @Controller('app')
 export class AppController {

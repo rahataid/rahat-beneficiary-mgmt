@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateBeneficiaryImportDto } from './dto/update-beneficiary-import.dto';
-import { SourceService } from '../source/source.service';
+import { SourceService } from '../sources/source.service';
 import {
   extractFieldsMatchingWithDBFields,
   fetchSchemaFields,
@@ -10,7 +10,7 @@ import {
 } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-source/beneficiary-source.service';
+import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 
 @Injectable()
 export class BeneficiaryImportService {

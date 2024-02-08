@@ -3,7 +3,7 @@ import { BeneficiariesService } from './beneficiaries.service';
 import { BeneficiariesController } from './beneficiaries.controller';
 import { PrismaService } from '@rahat/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { SourceService } from '../source/source.service';
+import { SourceService } from '../sources/source.service';
 
 @Module({
   controllers: [BeneficiariesController],
