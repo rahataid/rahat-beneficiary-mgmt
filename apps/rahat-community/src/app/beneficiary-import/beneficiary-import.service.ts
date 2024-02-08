@@ -11,6 +11,7 @@ import {
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { getDynamicCustomID } from '../settings/setting.config';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -21,6 +22,7 @@ export class BeneficiaryImportService {
   ) {}
 
   async importBySourceUUID(uuid: string) {
+    const custonUniqueId = getDynamicCustomID();
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
 
@@ -33,7 +35,10 @@ export class BeneficiaryImportService {
     // 1. Fetch DB_Fields and validate required fields
     const mapped_fields = jsonData.data;
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    const missing_fields = validateRequiredFields(mapped_fields);
+    const missing_fields = validateRequiredFields(
+      custonUniqueId,
+      mapped_fields,
+    );
 
     if (missing_fields.length) {
       throw new Error(
@@ -48,7 +53,7 @@ export class BeneficiaryImportService {
     // 3. Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
     // 4. Inject unique key based on settings
-    const final_payload = injectCustomID(parsed_data);
+    const final_payload = injectCustomID(custonUniqueId, parsed_data);
     let count = 0;
 
     // // 5. Save Benef and source

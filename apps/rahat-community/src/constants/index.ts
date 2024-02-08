@@ -24,3 +24,9 @@ export const EVENTS = {
 export const APP = {
   DAYS_TO_DELETE_BENEF_TARGET: 5,
 };
+
+export const APP_SETTINGS = {
+  EMAIL_CONFIG: 'email',
+  CUSTOM_ID: 'customId',
+  APPSETTINGS: 'appSettings',
+};

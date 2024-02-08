@@ -4,12 +4,18 @@ import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
 import { validateRequiredFields } from '../beneficiary-import/helpers';
+import { getDynamicCustomID } from '../settings/setting.config';
 
 @Injectable()
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateSourceDto) {
-    const missing_fields = validateRequiredFields(dto.fieldMapping.data);
+    const custonUniqueId = getDynamicCustomID();
+
+    const missing_fields = validateRequiredFields(
+      custonUniqueId,
+      dto.fieldMapping.data,
+    );
     if (missing_fields.length) {
       throw new Error(
         `Required fields missing! [${missing_fields.toString()}]`,

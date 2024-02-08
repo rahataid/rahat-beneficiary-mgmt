@@ -27,7 +27,12 @@ export class AppController {
   }
 
   @Get('settings/:name')
-  getEmailSettings(@Param('name') name: string) {
+  getSettings(@Param('name') name: string) {
     return getSetting(name);
   }
+
+  // @Get('settings/:customkey')
+  // getSettingsData(@Param('customKey') customKey: string) {
+  //   return this.appSetttingService.getDynamicSettingForCustomId(customKey);
+  // }
 }
