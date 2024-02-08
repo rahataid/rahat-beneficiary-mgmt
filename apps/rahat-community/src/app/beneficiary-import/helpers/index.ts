@@ -3,9 +3,6 @@ import { uuid } from 'uuidv4';
 
 export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
 
-// If not specified duplicate records will be imported!
-// TODO: Make CUSTOM_UNIQUE_ID customizeable
-const CUSTOM_UNIQUE_ID = 'phone';
 const GENDER_DB_FIELD = 'gender';
 
 export const PRISMA_FIELD_TYPES = {
@@ -15,20 +12,23 @@ export const PRISMA_FIELD_TYPES = {
   FLOAT: 'Float',
 };
 
-export const injectCustomID = (payload: any) => {
+export const injectCustomID = (custonUniqueId: string, payload: any) => {
   const final = [];
   for (let p of payload) {
     const newItem = { ...p };
-    if (CUSTOM_UNIQUE_ID) {
-      newItem.customId = p[CUSTOM_UNIQUE_ID];
+    if (custonUniqueId) {
+      newItem.customId = p[custonUniqueId];
     } else newItem.customId = uuid();
     final.push(newItem);
   }
   return final;
 };
 
-export const validateRequiredFields = (payload: any) => {
-  if (CUSTOM_UNIQUE_ID) BENEFICIARY_REQ_FIELDS.push(CUSTOM_UNIQUE_ID);
+export const validateRequiredFields = (
+  custonUniqueId: string,
+  payload: any,
+) => {
+  if (custonUniqueId) BENEFICIARY_REQ_FIELDS.push(custonUniqueId);
   const missing_fields = [];
   for (let item of payload) {
     const keys = Object.keys(item);
