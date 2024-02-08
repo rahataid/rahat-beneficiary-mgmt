@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
 import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
@@ -11,8 +11,8 @@ export class BeneficiarySourceService {
   async create(dto: CreateBeneficiarySourceDto) {
     const exist = await this.prisma.beneficiarySource.findFirst({
       where: {
-        beneficiary_id: dto.beneficiary_id,
-        source_id: dto.source_id,
+        beneficiaryId: dto.beneficiaryId,
+        sourceId: dto.sourceId,
       },
     });
     if (exist) throw new Error('Already Connected');
@@ -20,12 +20,12 @@ export class BeneficiarySourceService {
       data: {
         beneficiary: {
           connect: {
-            id: dto.beneficiary_id,
+            id: dto.beneficiaryId,
           },
         },
         source: {
           connect: {
-            id: dto.source_id,
+            id: dto.sourceId,
           },
         },
       },
@@ -34,10 +34,10 @@ export class BeneficiarySourceService {
 
   async listAll(query: any) {
     const select: Prisma.BeneficiarySourceSelect = {
-      beneficiary_id: true,
-      source_id: true,
-      created_at: true,
-      updated_at: true,
+      beneficiaryId: true,
+      sourceId: true,
+      createdAt: true,
+      updatedAt: true,
     };
     return paginate(
       this.prisma.beneficiarySource,
@@ -58,12 +58,12 @@ export class BeneficiarySourceService {
       data: {
         beneficiary: {
           connect: {
-            id: dto.beneficiary_id,
+            id: dto.beneficiaryId,
           },
         },
         source: {
           connect: {
-            id: dto.source_id,
+            id: dto.sourceId,
           },
         },
       },

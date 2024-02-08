@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CreateBeneficiaryGroupDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class CreateBeneficiaryGroupDto {
     required: true,
   })
   @IsNumber()
-  beneficiary_id: number;
+  beneficiaryId: number;
 
   @ApiProperty({
     type: 'number',
@@ -18,5 +18,5 @@ export class CreateBeneficiaryGroupDto {
     required: true,
   })
   @IsNumber()
-  group_id: number;
+  groupId: number;
 }

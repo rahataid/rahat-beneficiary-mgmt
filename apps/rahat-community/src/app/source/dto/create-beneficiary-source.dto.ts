@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
   IsNotEmptyObject,
   IsNumber,
   IsOptional,
@@ -39,7 +38,7 @@ export class CreateSourceDto {
   })
   @IsOptional()
   @IsNotEmptyObject()
-  field_mapping: any;
+  fieldMapping: any;
 }
 
 export class CreateBeneficiarySourceDto {

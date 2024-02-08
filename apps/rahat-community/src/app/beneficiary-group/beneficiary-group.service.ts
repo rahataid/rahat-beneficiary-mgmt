@@ -1,8 +1,7 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
 import { UpdateBeneficiaryGroupDto } from './dto/update-beneficiary-group.dto';
 import { PrismaService } from '@rahat/prisma';
-import { DeleteBeneficiaryGroupDto } from './dto/delete-beneficiary-group.dto';
 import { RSError } from '@rumsan/core';
 
 @Injectable()
@@ -12,8 +11,8 @@ export class BeneficiaryGroupService {
     const groupBenefData = await this.prisma.$transaction(async (prisma) => {
       const data = await prisma.beneficiaryGroup.findFirst({
         where: {
-          beneficary_id: dto.beneficiary_id,
-          group_id: dto.group_id,
+          beneficiaryId: dto.beneficiaryId,
+          groupId: dto.groupId,
         },
       });
 
@@ -23,12 +22,12 @@ export class BeneficiaryGroupService {
         data: {
           beneficiary: {
             connect: {
-              id: dto.beneficiary_id,
+              id: dto.beneficiaryId,
             },
           },
           group: {
             connect: {
-              id: dto.group_id,
+              id: dto.groupId,
             },
           },
         },
@@ -57,7 +56,7 @@ export class BeneficiaryGroupService {
             gender: true,
             phone: true,
             notes: true,
-            birth_date: true,
+            birthDate: true,
           },
         },
         group: {

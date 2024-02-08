@@ -17,7 +17,7 @@ export class CreateTargetQueryDto {
 
 export class CreateTargetResultDto {
   @IsString()
-  target_uuid: string;
+  targetUuid: string;
 
   filterOptions: any;
 }

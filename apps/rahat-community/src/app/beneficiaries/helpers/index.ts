@@ -22,6 +22,7 @@ export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   return filteredData;
 };
 
+// TODO: Support more fields
 export const createSearchQuery = (filters: any) => {
   const AND_CONDITIONS = [];
   const filtersKeys = Object.keys(filters);

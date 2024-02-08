@@ -53,7 +53,7 @@ export class SettingsService {
   async create(dto: CreateSettingsDto) {
     dto.name = dto.name.toUpperCase();
 
-    const isExist = await this.prisma.settings.findUnique({
+    const isExist = await this.prisma.setting.findUnique({
       where: {
         name: dto.name,
       },
@@ -87,14 +87,14 @@ export class SettingsService {
         );
     }
     dto.value = { data: dto.value };
-    return this.prisma.settings.create({ data: dto });
+    return this.prisma.setting.create({ data: dto });
   }
 
   async updateByName(dto: EditSettingsDto) {
     if (!dto.name) throw new Error('Setting name is Required');
     dto.name = dto.name.toUpperCase();
     // Fetch existing setting
-    const setting = await this.prisma.settings.findUnique({
+    const setting = await this.prisma.setting.findUnique({
       where: { name: dto.name },
     });
     if (!setting) throw new Error('Settings not Found');
@@ -125,7 +125,7 @@ export class SettingsService {
     } else {
       dto.requiredFields = [];
     }
-    const updated = await this.prisma.settings.update({
+    const updated = await this.prisma.setting.update({
       where: { id: +setting.id },
       data: { ...dto },
     });
@@ -135,7 +135,7 @@ export class SettingsService {
   }
 
   async getById(id: number) {
-    const getById = await this.prisma.settings.findUnique({
+    const getById = await this.prisma.setting.findUnique({
       where: { id: +id },
     });
     if (!getById) throw new Error('Not Found');
@@ -144,7 +144,7 @@ export class SettingsService {
   }
 
   async getPublic(id: number) {
-    const getPublic = await this.prisma.settings.findUnique({
+    const getPublic = await this.prisma.setting.findUnique({
       where: { id: +id, isPrivate: false },
     });
 
@@ -154,7 +154,7 @@ export class SettingsService {
 
   async getByName(name: string) {
     name = name.toUpperCase();
-    const getByName = await this.prisma.settings.findMany({
+    const getByName = await this.prisma.setting.findMany({
       where: { name, isPrivate: false },
     });
 
@@ -163,12 +163,12 @@ export class SettingsService {
   }
 
   listPublic() {
-    return this.prisma.settings.findMany({ where: { isPrivate: false } });
+    return this.prisma.setting.findMany({ where: { isPrivate: false } });
   }
 
   async delete(id: number) {
     const row = await this.getById(id);
     if (!row) throw new Error('Settings does not exist!');
-    return this.prisma.settings.delete({ where: { id: +id } });
+    return this.prisma.setting.delete({ where: { id: +id } });
   }
 }

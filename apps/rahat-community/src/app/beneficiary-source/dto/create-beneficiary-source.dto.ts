@@ -9,7 +9,7 @@ export class CreateBeneficiarySourceDto {
     required: true,
   })
   @IsNumber()
-  beneficiary_id: number;
+  beneficiaryId: number;
 
   @ApiProperty({
     type: 'number',
@@ -18,5 +18,5 @@ export class CreateBeneficiarySourceDto {
     required: true,
   })
   @IsNumber()
-  source_id: number;
+  sourceId: number;
 }

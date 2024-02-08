@@ -1,20 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export enum FieldType {
-  Checkbox = 'Checkbox',
-  Dropdown = 'Dropdown',
-  Number = 'Number',
-  Password = 'Password',
-  Radio = 'Radio',
-  Text = 'Text',
-  Textarea = 'Textarea',
+export enum FieldTypeEnum {
+  Checkbox = 'CHECKBOX',
+  Dropdown = 'DROPDOWN',
+  Number = 'NUMBER',
+  Password = 'PASSWORD',
+  Radio = 'RADIO',
+  Text = 'TEXT',
+  Textarea = 'TEXTAREA',
 }
 
 export class CreateFieldDefinitionDto {
   @ApiProperty({
     type: 'string',
-    example: 'citizenship_number',
+    example: 'citizenshipNumber',
   })
   @IsString()
   @IsNotEmpty()
@@ -24,16 +24,16 @@ export class CreateFieldDefinitionDto {
     type: 'string',
     example: 'Text',
     description:
-      'Valid prisma data type Eg:  Checkbox/Dropdown/Number/Password/Radio/Text/Textarea',
+      'Valid data types:  CHECKBOX/DROPDOWN/NUMBER/PASSWORD/RADIO/TEXT/TEXTAREA',
   })
   @IsString()
   @IsNotEmpty()
-  field_type: FieldType;
+  fieldType: FieldTypeEnum;
 
   @ApiProperty({
     type: 'object',
     example: { data: 'any' },
   })
   @IsOptional()
-  field_populate: any;
+  fieldPopulate: any;
 }

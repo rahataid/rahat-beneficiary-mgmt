@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
@@ -19,8 +19,8 @@ export class BeneficiariesService {
 
   async upsertByCustomID(payload: any) {
     return this.prisma.beneficiary.upsert({
-      where: { custom_id: payload.custom_id },
-      update: { custom_id: payload.custom_id },
+      where: { customId: payload.customId },
+      update: { customId: payload.customId },
       create: payload,
     });
   }
@@ -43,11 +43,11 @@ export class BeneficiariesService {
 
     return await this.prisma.beneficiary.create({
       data: {
-        custom_id: uuid(),
+        customId: uuid(),
         firstName: dto.firstName,
         lastName: dto.lastName,
         gender: dto.gender,
-        birth_date: dto.birthDate,
+        birthDate: dto.birthDate,
         email: dto.email,
         extras: dto.extras,
         location: dto.location,

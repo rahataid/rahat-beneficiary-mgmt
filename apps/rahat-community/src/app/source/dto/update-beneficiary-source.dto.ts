@@ -31,7 +31,7 @@ export class UpdateSourceDto extends PartialType(CreateSourceDto) {
     example: { data: '[{key,value}]' },
   })
   @IsNotEmptyObject()
-  field_mapping: any;
+  fieldMapping: any;
 }
 
 export class UpdateBeneficiarySourceDto extends PartialType(
@@ -44,7 +44,7 @@ export class UpdateBeneficiarySourceDto extends PartialType(
     required: true,
   })
   @IsNumber()
-  beneficiary_id: number;
+  beneficiaryId: number;
 
   @ApiProperty({
     type: 'number',
@@ -53,5 +53,5 @@ export class UpdateBeneficiarySourceDto extends PartialType(
     required: true,
   })
   @IsNumber()
-  source_id: number;
+  sourceId: number;
 }

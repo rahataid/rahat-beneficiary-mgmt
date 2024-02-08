@@ -1,11 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from '@rahat/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
-import { RSError } from '@rumsan/core';
-import { RSE } from '@rumsan/core/src/lib/exceptions/rs-errors';
 
 @Injectable()
 export class GroupService {
@@ -27,7 +25,7 @@ export class GroupService {
     const select: Prisma.GroupSelect = {
       name: true,
       id: true,
-      beneficiaries_group: {
+      beneficiariesGroup: {
         select: {
           beneficiary: {
             select: {
@@ -61,7 +59,7 @@ export class GroupService {
         id,
       },
       select: {
-        beneficiaries_group: {
+        beneficiariesGroup: {
           include: {
             beneficiary: true,
           },

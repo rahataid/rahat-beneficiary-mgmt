@@ -13,7 +13,7 @@ export class UpdateBeneficiarySourceDto extends PartialType(
     required: true,
   })
   @IsNumber()
-  beneficiary_id: number;
+  beneficiaryId: number;
 
   @ApiProperty({
     type: 'number',
@@ -22,5 +22,5 @@ export class UpdateBeneficiarySourceDto extends PartialType(
     required: true,
   })
   @IsNumber()
-  source_id: number;
+  sourceId: number;
 }

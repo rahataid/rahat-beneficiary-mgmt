@@ -9,7 +9,7 @@ export class DeleteBeneficiaryGroupDto {
     required: true,
   })
   @IsNumber()
-  beneficiary_id: number;
+  beneficiaryId: number;
 
   @ApiProperty({
     type: 'number',
@@ -18,5 +18,5 @@ export class DeleteBeneficiaryGroupDto {
     required: true,
   })
   @IsNumber()
-  group_id: number;
+  groupId: number;
 }

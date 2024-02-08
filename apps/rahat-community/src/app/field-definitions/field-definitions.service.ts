@@ -22,7 +22,7 @@ export class FieldDefinitionsService {
 
   listActive() {
     return this.prisma.fieldDefinition.findMany({
-      where: { is_active: true },
+      where: { isActive: true },
     });
   }
 
@@ -30,8 +30,8 @@ export class FieldDefinitionsService {
     const select = {
       id: true,
       name: true,
-      field_type: true,
-      is_active: true,
+      fieldType: true,
+      isActive: true,
     };
 
     return paginate(

@@ -33,13 +33,13 @@ export class TargetService {
   async create(dto: CreateTargetQueryDto) {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
-    const data = { target_uuid: target.uuid, filterOptions };
+    const data = { targetUuid: target.uuid, filterOptions };
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data);
     return { message: 'Target query created and added to queue' };
   }
 
   async saveTargetResult(data: CreateTargetResultDto) {
-    const { filterOptions, target_uuid } = data;
+    const { filterOptions, targetUuid } = data;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
@@ -60,8 +60,8 @@ export class TargetService {
       final_result = createFinalResult(final_result, filteredData);
     }
     // 5. Save final result in the TargetResult && Update Status to COMPLETED
-    await this.createManySearchResult(final_result, target_uuid);
-    await this.updateTargetQuery(target_uuid, {
+    await this.createManySearchResult(final_result, targetUuid);
+    await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
     return {
@@ -112,16 +112,16 @@ export class TargetService {
     if (!result.length) return;
     for (let d of result) {
       const payload = {
-        target_uuid: target,
-        benef_uuid: d.uuid,
+        targetUuid: target,
+        benefUuid: d.uuid,
       };
       await this.prismaService.targetResult.create({ data: payload });
     }
   }
 
-  findByTargetUUID(target_uuid: string) {
+  findByTargetUUID(targetUuid: string) {
     return paginate(this.prismaService.targetResult, {
-      where: { target_uuid: target_uuid },
+      where: { targetUuid: targetUuid },
       include: { beneficiary: true },
     });
   }
@@ -153,7 +153,7 @@ export class TargetService {
 
   findTargetResultByQueryUID(targetUID: string) {
     return this.prismaService.targetResult.findMany({
-      where: { target_uuid: targetUID },
+      where: { targetUuid: targetUID },
     });
   }
 

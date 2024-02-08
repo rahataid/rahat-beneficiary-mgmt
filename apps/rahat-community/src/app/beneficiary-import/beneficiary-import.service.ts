@@ -27,7 +27,7 @@ export class BeneficiaryImportService {
     if (source.isImported) {
       throw new Error('Beneficiaries from this source already imported!');
     }
-    const jsonData = source.field_mapping as {
+    const jsonData = source.fieldMapping as {
       data: object;
     };
     // 1. Fetch DB_Fields and validate required fields
@@ -57,8 +57,8 @@ export class BeneficiaryImportService {
       const benef = await this.benefService.upsertByCustomID(p);
       if (benef) {
         await this.benefSourceService.create({
-          beneficiary_id: benef.id,
-          source_id: source.id,
+          beneficiaryId: benef.id,
+          sourceId: source.id,
         });
       }
     }

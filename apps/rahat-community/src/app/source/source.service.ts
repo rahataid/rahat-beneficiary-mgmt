@@ -9,7 +9,7 @@ import { validateRequiredFields } from '../beneficiary-import/helpers';
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateSourceDto) {
-    const missing_fields = validateRequiredFields(dto.field_mapping.data);
+    const missing_fields = validateRequiredFields(dto.fieldMapping.data);
     if (missing_fields.length) {
       throw new Error(
         `Required fields missing! [${missing_fields.toString()}]`,
