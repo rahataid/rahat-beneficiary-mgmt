@@ -11,98 +11,98 @@ datasource db {
 }
 
 model Beneficiary {
-  id        Int    @id @default(autoincrement()) @db.Integer()
-  uuid      String @unique @default(uuid()) @db.Uuid()
-  custom_id String @unique
+  id       Int    @id @default(autoincrement()) @db.Integer()
+  uuid     String @unique @default(uuid()) @db.Uuid()
+  customId String @unique
 
-  firstName       String
-  lastName        String
-  gender          Gender         @default(Unknown)
-  wallet_address  String?
-  birth_date      DateTime?
-  location        String?
-  latitude        Float?
-  longitude       Float?
-  phone           String?
-  email           String?
-  extras          Json?          @db.JsonB()
-  notes           String?
-  banked_status   BankedStatus   @default(UNKNOWN)
-  internet_status InternetStatus @default(UNKNOWN)
-  phone_status    PhoneStatus    @default(UNKNOWN)
-  created_at      DateTime       @default(now())
-  updated_at      DateTime?      @updatedAt()
+  firstName      String
+  lastName       String
+  gender         Gender         @default(Unknown)
+  walletAddress  String?
+  birthDate      DateTime?
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  phone          String?
+  email          String?
+  extras         Json?          @db.JsonB()
+  notes          String?
+  bankedStatus   BankedStatus   @default(UNKNOWN)
+  internetStatus InternetStatus @default(UNKNOWN)
+  phoneStatus    PhoneStatus    @default(UNKNOWN)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime?      @updatedAt()
 
-  beneficiaries_group BeneficiaryGroup[]
-  beneficiary_source  BeneficiarySource[]
-  TargetResult        TargetResult[]
+  beneficiariesGroup BeneficiaryGroup[]
+  beneficiarySource  BeneficiarySource[]
+  TargetResult       TargetResult[]
 
   @@map("tbl_beneficiaries")
 }
 
 model Source {
-  id                 Int                 @id @default(autoincrement()) @db.Integer()
-  uuid               String              @unique @default(uuid()) @db.Uuid()
-  name               String
-  isImported         Boolean             @default(false)
-  beneficiary_source BeneficiarySource[]
-  details            Json                @db.JsonB()
-  field_mapping      Json
-  created_at         DateTime            @default(now())
-  updated_at         DateTime?           @updatedAt()
+  id                Int                 @id @default(autoincrement()) @db.Integer()
+  uuid              String              @unique @default(uuid()) @db.Uuid()
+  name              String
+  isImported        Boolean             @default(false)
+  beneficiarySource BeneficiarySource[]
+  details           Json                @db.JsonB()
+  fieldMapping      Json
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime?           @updatedAt()
 
-  @@map("tbl_source")
+  @@map("tbl_sources")
 }
 
 model BeneficiarySource {
-  id             Int         @id @default(autoincrement()) @db.Integer()
-  source         Source      @relation(fields: [source_id], references: [id])
-  source_id      Int         @db.Integer()
-  beneficiary    Beneficiary @relation(fields: [beneficiary_id], references: [id])
-  beneficiary_id Int         @db.Integer()
+  id            Int         @id @default(autoincrement()) @db.Integer()
+  source        Source      @relation(fields: [sourceId], references: [id])
+  sourceId      Int         @db.Integer()
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  beneficiaryId Int         @db.Integer()
 
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
 
-  @@map("tbl_beneficiariessource")
+  @@map("tbl_beneficiary_sources")
 }
 
 model FieldDefinition {
-  id             Int       @id @default(autoincrement()) @db.Integer()
-  name           String    @unique
-  field_type     FieldType
-  field_populate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
-  is_active      Boolean   @default(true)
+  id            Int       @id @default(autoincrement()) @db.Integer()
+  name          String    @unique
+  fieldType     FieldType
+  fieldPopulate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
+  isActive      Boolean   @default(true)
 
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
 
-  @@map("tbl_field_definition")
+  @@map("tbl_field_definitions")
 }
 
 model Group {
-  id                  Int                @id @default(autoincrement()) @db.Integer()
-  name                String             @unique
-  beneficiaries_group BeneficiaryGroup[]
+  id                 Int                @id @default(autoincrement()) @db.Integer()
+  name               String             @unique
+  beneficiariesGroup BeneficiaryGroup[]
 
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
 
   @@map("tbl_groups")
 }
 
 model BeneficiaryGroup {
-  id            Int         @id @default(autoincrement()) @db.Integer()
-  beneficiary   Beneficiary @relation(fields: [beneficary_id], references: [id])
-  beneficary_id Int         @db.Integer()
-  group         Group       @relation(fields: [group_id], references: [id])
-  group_id      Int         @db.Integer()
+  id           Int         @id @default(autoincrement()) @db.Integer()
+  beneficiary  Beneficiary @relation(fields: [beneficaryId], references: [id])
+  beneficaryId Int         @db.Integer()
+  group        Group       @relation(fields: [groupId], references: [id])
+  groupId      Int         @db.Integer()
 
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
 
-  @@unique([beneficary_id, group_id])
-  @@map("tbl_beneficiariesgroups")
+  @@unique([beneficaryId, groupId])
+  @@map("tbl_beneficiary_groups")
 }
 
 model TargetQuery {
@@ -115,19 +115,19 @@ model TargetQuery {
   updatedAt     DateTime?         @updatedAt()
   TargetResult  TargetResult[]
 
-  @@map("tbl_target_query")
+  @@map("tbl_target_queries")
 }
 
 model TargetResult {
-  id           Int         @id @default(autoincrement()) @db.Integer()
-  beneficiary  Beneficiary @relation(fields: [benef_uuid], references: [uuid])
-  benef_uuid   String      @db.Uuid()
-  target_query TargetQuery @relation(fields: [target_uuid], references: [uuid])
-  target_uuid  String      @db.Uuid()
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime?   @updatedAt()
+  id          Int         @id @default(autoincrement()) @db.Integer()
+  beneficiary Beneficiary @relation(fields: [benefUuid], references: [uuid])
+  benefUuid   String      @db.Uuid()
+  targetQuery TargetQuery @relation(fields: [targetUuid], references: [uuid])
+  targetUuid  String      @db.Uuid()
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime?   @updatedAt()
 
-  @@map("tbl_target_result")
+  @@map("tbl_target_results")
 }
 
 enum TargetQueryStatus {
@@ -164,19 +164,19 @@ enum Gender {
 }
 
 enum AuthType {
-  Email
-  Phone
-  Wallet
+  EMAIL
+  PHONE
+  WALLET
 }
 
 enum FieldType {
-  Checkbox
-  Dropdown
-  Number
-  Password
-  Radio
-  Text
-  Textarea
+  CHECKBOX
+  DROPDOWN
+  NUMBER
+  PASSWORD
+  RADIO
+  TEXT
+  TEXTAREA
 }
 
 // ============User Management Schema============
@@ -215,7 +215,7 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   authAddress String   @unique
-  authType    AuthType @default(Email)
+  authType    AuthType @default(EMAIL)
   firstName   String
   lastName    String
   role        Role     @relation(fields: [roleId], references: [id])
@@ -229,13 +229,15 @@ model User {
 
 // ============Settings Schema===========
 
-model Settings {
+model Setting {
   id             Int      @id @default(autoincrement())
   name           String   @unique
   value          Json
   requiredFields String[]
   isReadOnly     Boolean  @default(false) // true? Dont allow Write from API
   isPrivate      Boolean  @default(true) // true?  Dont allow Read from API
+
+  @@map("settings")
 }
 
 // ============End Settings Schema===========
