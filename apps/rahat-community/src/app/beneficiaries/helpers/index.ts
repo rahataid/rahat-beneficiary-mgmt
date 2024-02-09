@@ -1,6 +1,6 @@
 export const FILTER_KEY = {
-  MIN_AGE: 'min_age',
-  MAX_AGE: 'max_age',
+  MIN_AGE: 'minAge',
+  MAX_AGE: 'maxAge',
 };
 
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
@@ -14,7 +14,7 @@ export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
       // Check if the key exists in extras and the value matches
       if (key === FILTER_KEY.MAX_AGE) return item.extras['age'] < value;
       if (key === FILTER_KEY.MIN_AGE) return item.extras['age'] > value;
-      if (item.extras[key] !== value) return false;
+      if (item.extras[key] != value) return false;
     }
     // If all conditions pass, keep the item
     return true;
