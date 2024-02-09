@@ -18,7 +18,10 @@ import {
 import { BeneficiariesService } from './beneficiaries.service';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
+import {
+  BulkInsertDto,
+  CreateBeneficiaryDto,
+} from './dto/create-beneficiary.dto';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
 import { ACTIONS, SUBJECTS } from '@rahat/user';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -37,6 +40,15 @@ export class BeneficiariesController {
   @UseGuards(JwtGuard, AbilitiesGuard)
   async create(@Body() dto: CreateBeneficiaryDto) {
     return this.beneficiariesService.create(dto);
+  }
+
+  @Post('bulk')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  async bulkInsert(@Body() dto: BulkInsertDto) {
+    console.log('dto', dto.data);
+    return this.beneficiariesService.addBulk(dto);
   }
 
   @Post('upload')

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
-import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
+import {
+  BulkInsertDto,
+  CreateBeneficiaryDto,
+} from './dto/create-beneficiary.dto';
 import { PrismaService } from '@rahat/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
@@ -179,6 +182,13 @@ export class BeneficiariesService {
         uuid,
       },
     });
+  }
+
+  addBulk(dto: BulkInsertDto) {
+    const withCustomID = dto.data.map((d: any) => {
+      return { ...d, customId: uuid() };
+    });
+    return this.prisma.beneficiary.createMany({ data: withCustomID });
   }
 
   async uploadFile(file: any) {

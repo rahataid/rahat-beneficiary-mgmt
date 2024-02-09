@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 enum Gender {
   Male = 'Male',
@@ -7,6 +7,16 @@ enum Gender {
   Others = 'Other',
   Unknown = 'Unknown',
 }
+
+export class BulkInsertDto {
+  @ApiProperty({
+    type: 'array',
+    example: [{ gender: 'Male' }, { maxAge: 30 }],
+  })
+  @IsOptional()
+  data: any;
+}
+
 export class CreateBeneficiaryDto {
   @ApiProperty({
     type: 'string',
