@@ -1,8 +1,22 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 
 import { AppService } from './app.service';
 import { getSetting, listSettings } from './settings/setting.config';
 import { AppSettingService } from './settings/setting.service';
+import {
+  ACTIONS,
+  AbilitiesGuard,
+  CheckAbilities,
+  JwtGuard,
+  SUBJECTS,
+} from '@rahat/user';
 
 @Controller('app')
 export class AppController {
@@ -17,6 +31,9 @@ export class AppController {
   }
 
   @Get('getDataFromKobo')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   getDataFromKoboTool() {
     return this.appService.getDataFromKoboTool();
   }

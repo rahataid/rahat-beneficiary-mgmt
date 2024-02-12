@@ -21,8 +21,8 @@ import { ACTIONS, SUBJECTS } from '@rahat/user';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')
-// @ApiBearerAuth('JWT')
-// @UseGuards(JwtGuard, AbilitiesGuard)
+@ApiBearerAuth('JWT')
+@UseGuards(JwtGuard, AbilitiesGuard)
 export class FieldDefinitionsController {
   constructor(private readonly fieldDefService: FieldDefinitionsService) {}
 
