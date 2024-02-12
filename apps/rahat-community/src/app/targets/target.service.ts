@@ -69,6 +69,30 @@ export class TargetService {
     };
   }
 
+  async searchTagetBeneficiaries(query: any) {
+    const { filterOptions } = query;
+    let final_result = [];
+    const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+    const primary_fields = fields.filter((f) => f.name !== 'extras');
+    for (let item of filterOptions) {
+      const keys = Object.keys(item);
+      const values = Object.values(item);
+      // 1. Split primary and extra queries
+      const { primary, extra } = createPrimaryAndExtraQuery(
+        primary_fields,
+        keys,
+        values,
+      );
+      // 2. Fetch data using primary AND query
+      const data = await this.benefService.searchTargets(primary);
+      // 3. Filter data using extras AND query
+      const filteredData = filterExtraFieldValues(data.rows, extra);
+      // 4.Merge result i.e. final_result UNION filteredDta
+      final_result = createFinalResult(final_result, filteredData);
+    }
+    return final_result;
+  }
+
   async updateTargetQuery(uuid: string, dto: any) {
     return this.prismaService.targetQuery.update({
       where: { uuid: uuid },
