@@ -12,7 +12,7 @@ export class AppService {
     return { message: 'Hello API' };
   }
 
-  async rgetDataFromKoboTool() {
+  async getDataFromKoboTool() {
     const KOBO_URL = this.config.get('KOBO_URL');
     const AUTH_TOKEN_KOBO = this.config.get('AUTH_TOKEN');
     const response = await axios.get(KOBO_URL, {
