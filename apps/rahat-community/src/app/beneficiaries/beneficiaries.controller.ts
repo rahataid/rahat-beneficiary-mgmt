@@ -47,7 +47,6 @@ export class BeneficiariesController {
   @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   async bulkInsert(@Body() dto: BulkInsertDto) {
-    console.log('dto', dto.data);
     return this.beneficiariesService.addBulk(dto);
   }
 

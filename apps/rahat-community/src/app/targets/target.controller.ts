@@ -1,6 +1,9 @@
 import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { TargetService } from './target.service';
-import { CreateTargetQueryDto } from './dto/create-target.dto';
+import {
+  CreateTargetQueryDto,
+  CreateTargetResultDto,
+} from './dto/create-target.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 
@@ -12,6 +15,16 @@ export class TargetController {
   @Post()
   create(@Body() dto: CreateTargetQueryDto) {
     return this.targetService.create(dto);
+  }
+
+  @Post('search')
+  search(@Body() data: CreateTargetQueryDto) {
+    return this.targetService.searchTargetBeneficiaries(data);
+  }
+
+  @Post('targetResult')
+  target(@Body() data: CreateTargetResultDto) {
+    return this.targetService.saveTargetResult(data);
   }
 
   @Patch(':id/label')
