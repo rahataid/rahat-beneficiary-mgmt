@@ -52,6 +52,8 @@ export class BeneficiariesController {
   }
 
   @Post('upload')
+  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadAsset(
@@ -68,18 +70,24 @@ export class BeneficiariesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   // @ApiFilterQuery('filters', BeneficiaryFilterDto)
   findAll(@Query('') filters: any) {
     return this.beneficiariesService.findAll(filters);
   }
 
   @Get(':uuid')
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
   }
 
   @Patch(':uuid')
   @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   update(
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
@@ -88,6 +96,8 @@ export class BeneficiariesController {
   }
 
   @Delete(':uuid')
+  @CheckAbilities({ action: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string) {
     return this.beneficiariesService.remove(uuid);
