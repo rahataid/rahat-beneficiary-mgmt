@@ -69,7 +69,7 @@ export class TargetService {
     };
   }
 
-  async searchTagetBeneficiaries(query: any) {
+  async searchTargetBeneficiaries(query: any) {
     const { filterOptions } = query;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
