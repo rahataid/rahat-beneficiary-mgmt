@@ -15,6 +15,8 @@ export class FieldDefinitionsService {
       ...dto,
       name: dto.name.toLocaleLowerCase(),
     };
+    console.log('FieldDefinition=>', payload);
+
     return this.prisma.fieldDefinition.create({
       data: payload,
     });
