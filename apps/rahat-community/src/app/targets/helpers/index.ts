@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export const createPrimaryAndExtraQuery = (
   primary_fields: any,
   keys: any,
@@ -22,4 +24,28 @@ export const createFinalResult = (final_result: any, filteredData: any) => {
     if (!found) existing_data.push(f);
   }
   return existing_data;
+};
+
+export const exportBulkBeneficiary = async (
+  appUrl: string,
+  bufferData: Buffer,
+): Promise<any> => {
+  if (!appUrl) throw new Error('App URL is required');
+  const apiEndpoint = `${appUrl}/v1/beneficiaries/upload-json`;
+  const axiosConfig = {
+    method: 'post',
+    url: apiEndpoint,
+    data: bufferData,
+    headers: {
+      'Content-Type': 'application/octet-stream', // Set content type to octet-stream for buffer data
+    },
+  };
+
+  axios(axiosConfig)
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      throw new Error(error);
+    });
 };

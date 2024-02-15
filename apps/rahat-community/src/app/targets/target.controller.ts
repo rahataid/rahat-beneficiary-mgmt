@@ -29,12 +29,27 @@ import {
 export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
+  @Get()
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  findAll() {
+    return this.targetService.list();
+  }
+
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateTargetQueryDto) {
     return this.targetService.create(dto);
+  }
+
+  @Post('export/:targetUUID')
+  @HttpCode(HttpStatus.OK)
+  // @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
+  exportBeneficiaries(@Param('targetUUID') targetUUID: string) {
+    return this.targetService.exportTargetBeneficiaries(targetUUID);
   }
 
   @Post('search')
