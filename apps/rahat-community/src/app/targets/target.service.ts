@@ -17,7 +17,11 @@ import {
 import { paginate } from '../utils/paginate';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+import {
+  createFinalResult,
+  createPrimaryAndExtraQuery,
+  exportBulkBeneficiary,
+} from './helpers';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { calculateNumberOfDays } from '../utils';
@@ -132,6 +136,20 @@ export class TargetService {
   }
 
   // ==========TargetResult Schema Operations==========
+  async exportTargetBeneficiaries(targetUUID: string) {
+    const { rows } = await this.findByTargetUUID(targetUUID);
+    if (!rows.length) throw new Error('No beneficiaries found for this target');
+    const beneficiaries = rows.map((r: any) => r.beneficiary);
+    const buffer = Buffer.from(JSON.stringify(beneficiaries));
+    // Send to rahat server
+    const appUrl = process.env.RAHAT_APP_URL;
+    await exportBulkBeneficiary(appUrl, buffer);
+    return {
+      success: true,
+      message: `Exported ${beneficiaries.length} beneficiaries`,
+    };
+  }
+
   async createManySearchResult(result: any, target: string) {
     if (!result.length) return;
     for (let d of result) {
@@ -189,5 +207,9 @@ export class TargetService {
 
   findTargetResultById(id: number) {
     return this.prismaService.targetResult.findUnique({ where: { id } });
+  }
+
+  list() {
+    return paginate(this.prismaService.targetResult, { where: {} });
   }
 }
