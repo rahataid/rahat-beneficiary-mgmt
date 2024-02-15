@@ -30,3 +30,5 @@ export const APP_SETTINGS = {
   CUSTOM_ID: 'customId',
   APPSETTINGS: 'appSettings',
 };
+
+export const KOBURL: string = 'https://kf.kobotoolbox.org/api/v2/assets';
