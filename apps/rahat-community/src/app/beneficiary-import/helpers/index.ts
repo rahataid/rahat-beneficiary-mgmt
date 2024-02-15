@@ -129,8 +129,7 @@ function parseToTargetFieldType({
     const currentFieldEnums = ENUM_MAPPING[targetField];
     const validEnum = currentFieldEnums.includes(targetValue);
     if (validEnum) return targetValue;
-    const defaultValue =
-      targetField === GENDER_DB_FIELD ? 'Unknown' : 'UNKNOWN';
+    const defaultValue = 'UNKNOWN';
     return defaultValue;
   }
   if (targetType === PRISMA_FIELD_TYPES.INTEGER) return parseInt(targetValue);
@@ -143,7 +142,7 @@ function parseToTargetFieldType({
 
 // Key must match with schema field name
 const ENUM_MAPPING = {
-  gender: ['Male', 'Female', 'Other', 'Unknown'],
+  gender: ['MALE', 'FEMALE', 'OTHER', 'UNKNOWN'],
   phoneStatus: ['UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE'],
   internetStatus: [
     'UNKNOWN',

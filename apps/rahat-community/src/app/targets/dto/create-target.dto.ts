@@ -9,7 +9,7 @@ export enum TargetQueryStatusEnum {
 export class CreateTargetQueryDto {
   @ApiProperty({
     type: 'array',
-    example: [{ gender: 'Male' }, { maxAge: 30 }],
+    example: [{ gender: 'MALE' }, { maxAge: 30 }],
   })
   @IsOptional()
   filterOptions: any;
@@ -25,7 +25,7 @@ export class CreateTargetResultDto {
 
   @ApiProperty({
     type: 'array',
-    example: [{ gender: 'Male' }, { maxAge: 30 }],
+    example: [{ gender: 'MALE' }, { maxAge: 30 }],
   })
   @IsOptional()
   filterOptions: any;

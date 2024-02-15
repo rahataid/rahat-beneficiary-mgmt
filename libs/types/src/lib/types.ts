@@ -1,8 +1,8 @@
 enum Gender {
-  Male,
-  Female,
-  Other,
-  Unknown,
+  MALE,
+  FEMALE,
+  OTHER,
+  UNKNOWN,
 }
 enum BankedStatus {
   UNKNOWN,

@@ -31,4 +31,4 @@ export const APP_SETTINGS = {
   APPSETTINGS: 'appSettings',
 };
 
-export const KOBURL: string = 'https://kf.kobotoolbox.org/api/v2/assets';
+export const KOBO_URL: string = 'https://kf.kobotoolbox.org/api/v2/assets';

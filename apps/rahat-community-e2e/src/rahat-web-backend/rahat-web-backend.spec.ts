@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { faker } from '@faker-js/faker';
 
+const GENDER_OPTIONS = ['MALE', 'FEMALE', 'OTHER', 'UNKNOWN'];
+
 const PORT = 5600;
 const APP_URL = `http://localhost:${PORT}`;
 let beneficiaryUuid;
@@ -18,7 +20,7 @@ const createBenefDto = {
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   birthDate: faker.date.birthdate().toLocaleDateString(),
-  gender: faker.string.fromCharacters(['Male', 'Female', 'Other', 'Unknown']),
+  gender: faker.string.fromCharacters(GENDER_OPTIONS),
   location: faker.location.country(),
   latitude: faker.location.latitude(),
 
@@ -32,7 +34,7 @@ const updateBenefDto = {
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   birthDate: faker.date.birthdate().toLocaleDateString(),
-  gender: faker.string.fromCharacters(['Male', 'Female', 'Other', 'Unkown']),
+  gender: faker.string.fromCharacters(GENDER_OPTIONS),
   location: faker.location.country(),
   latitude: faker.location.latitude(),
   longitude: faker.location.longitude(),
@@ -51,12 +53,7 @@ const sourceDto = {
       {
         email: faker.internet.email(),
         phone: faker.phone.number(),
-        gender: faker.string.fromCharacters([
-          'Male',
-          'Female',
-          'Other',
-          'Unkown',
-        ]),
+        gender: faker.string.fromCharacters(GENDER_OPTIONS),
         lastName: faker.person.lastName(),
         firstName: faker.person.firstName(),
       },

@@ -17,7 +17,7 @@ model Beneficiary {
 
   firstName      String
   lastName       String
-  gender         Gender         @default(Unknown)
+  gender         Gender         @default(UNKNOWN)
   walletAddress  String?
   birthDate      DateTime?
   location       String?
@@ -157,10 +157,10 @@ enum PhoneStatus {
 }
 
 enum Gender {
-  Male
-  Female
-  Other
-  Unknown
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
 }
 
 enum AuthType {

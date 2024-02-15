@@ -28,7 +28,7 @@ export class CreateSourceDto {
         {
           email: 'alice@mailinator.com',
           phone: '5551234567',
-          gender: 'Female',
+          gender: 'FEMALE',
           lastName: 'Smith',
           birthDate: '1990-05-20T00:00:00.000Z',
           firstName: 'Alice',

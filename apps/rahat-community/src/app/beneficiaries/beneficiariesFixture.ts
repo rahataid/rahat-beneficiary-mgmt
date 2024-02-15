@@ -25,7 +25,7 @@ const mockBeneficiaries: Beneficiaries[] = [
     firstName: 'Ram',
     lastName: 'Sharma',
     birthDate: '1997-03-08',
-    gender: 'Male',
+    gender: 'MALE',
     location: 'lalitpur',
     latitude: 26.24,
     longitude: 86.24,

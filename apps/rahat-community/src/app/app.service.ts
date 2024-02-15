@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rahat/prisma';
 import axios from 'axios';
 import { getSetting } from './settings/setting.config';
-import { KOBURL } from '../constants';
+import { KOBO_URL } from '../constants';
 
 @Injectable()
 export class AppService {
@@ -17,7 +17,7 @@ export class AppService {
     const data = getSetting(name);
     const koboid = data.URLID;
     const tokenid = data.AUTHTOKEN;
-    const response = await axios.get(`${KOBURL}/${koboid}/data.json`, {
+    const response = await axios.get(`${KOBO_URL}/${koboid}/data.json`, {
       headers: {
         Authorization: `Token ${tokenid}`,
       },
