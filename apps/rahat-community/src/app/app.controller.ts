@@ -17,8 +17,10 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rahat/user';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('app')
+@ApiTags('APP')
 export class AppController {
   constructor(
     private readonly appService: AppService,
@@ -30,12 +32,13 @@ export class AppController {
     return this.appService.getData();
   }
 
-  @Get('getDataFromKobo')
+  @ApiBearerAuth('JWT')
+  @Get('getDataFromKobo/:name')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  getDataFromKoboTool() {
-    return this.appService.getDataFromKoboTool();
+  getDataFromKoboTool(@Param('name') name: string) {
+    return this.appService.getDataFromKoboTool(name);
   }
 
   @Get('settings')

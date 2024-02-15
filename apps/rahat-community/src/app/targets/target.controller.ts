@@ -14,7 +14,7 @@ import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
 } from './dto/create-target.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import {
   ACTIONS,
@@ -25,7 +25,8 @@ import {
 } from '@rahat/user';
 
 @Controller('targets')
-@ApiTags('Target')
+@ApiTags('Targets')
+@ApiBearerAuth('JWT')
 export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 

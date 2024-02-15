@@ -1,23 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@rahat/prisma';
 import axios from 'axios';
+import { getSetting } from './settings/setting.config';
+import { KOBURL } from '../constants';
 
 @Injectable()
 export class AppService {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
+  constructor(private prisma: PrismaService) {}
 
   async getData() {
     // const d = await this.prisma.;
     return { message: 'Hello API' };
   }
 
-  async getDataFromKoboTool() {
-    const KOBO_URL = this.config.get('KOBO_URL');
-    const AUTH_TOKEN_KOBO = this.config.get('AUTH_TOKEN');
-    const response = await axios.get(KOBO_URL, {
+  async getDataFromKoboTool(name: string) {
+    const data = getSetting(name);
+    const koboid = data.URLID;
+    const tokenid = data.AUTHTOKEN;
+    const response = await axios.get(`${KOBURL}/${koboid}/data.json`, {
       headers: {
-        Authorization: `Token ${AUTH_TOKEN_KOBO}`,
+        Authorization: `Token ${tokenid}`,
       },
     });
 
