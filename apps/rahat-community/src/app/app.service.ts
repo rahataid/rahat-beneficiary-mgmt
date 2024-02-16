@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rahat/prisma';
 import axios from 'axios';
-import { getSetting } from './settings/setting.config';
+import { getSetting, listSettings } from './settings/setting.config';
 import { KOBO_URL } from '../constants';
 
 @Injectable()
@@ -24,5 +24,21 @@ export class AppService {
     });
 
     return response;
+  }
+
+  async filterSettingByType(typeName: string) {
+    const listSettings = this.prisma.setting.findMany({
+      where: {
+        AND: [
+          {
+            value: {
+              path: ['data', 'TYPE'],
+              string_contains: typeName,
+            },
+          },
+        ],
+      },
+    });
+    return listSettings;
   }
 }

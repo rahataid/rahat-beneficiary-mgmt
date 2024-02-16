@@ -46,6 +46,11 @@ export class AppController {
     return listSettings();
   }
 
+  @Get('filter-settings/:typeName')
+  filterSettingByType(@Param('typeName') typeName: string) {
+    return this.appService.filterSettingByType(typeName);
+  }
+
   @Get('settings/:name')
   getSettings(@Param('name') name: string) {
     return getSetting(name);
