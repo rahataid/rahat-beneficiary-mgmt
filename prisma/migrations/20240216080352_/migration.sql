@@ -11,7 +11,7 @@ CREATE TYPE "InternetStatus" AS ENUM ('UNKNOWN', 'NO_INTERNET', 'HOME_INTERNET',
 CREATE TYPE "PhoneStatus" AS ENUM ('UNKNOWN', 'NO_PHONE', 'FEATURE_PHONE', 'SMART_PHONE');
 
 -- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('Male', 'Female', 'Other', 'Unknown');
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER', 'UNKNOWN');
 
 -- CreateEnum
 CREATE TYPE "AuthType" AS ENUM ('EMAIL', 'PHONE', 'WALLET');
@@ -26,7 +26,7 @@ CREATE TABLE "tbl_beneficiaries" (
     "customId" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
-    "gender" "Gender" NOT NULL DEFAULT 'Unknown',
+    "gender" "Gender" NOT NULL DEFAULT 'UNKNOWN',
     "walletAddress" TEXT,
     "birthDate" TIMESTAMP(3),
     "location" TEXT,
@@ -96,7 +96,7 @@ CREATE TABLE "tbl_groups" (
 -- CreateTable
 CREATE TABLE "tbl_beneficiary_groups" (
     "id" SERIAL NOT NULL,
-    "beneficaryId" INTEGER NOT NULL,
+    "beneficiaryId" INTEGER NOT NULL,
     "groupId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -193,7 +193,7 @@ CREATE UNIQUE INDEX "tbl_field_definitions_name_key" ON "tbl_field_definitions"(
 CREATE UNIQUE INDEX "tbl_groups_name_key" ON "tbl_groups"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tbl_beneficiary_groups_beneficaryId_groupId_key" ON "tbl_beneficiary_groups"("beneficaryId", "groupId");
+CREATE UNIQUE INDEX "tbl_beneficiary_groups_beneficiaryId_groupId_key" ON "tbl_beneficiary_groups"("beneficiaryId", "groupId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_target_queries_uuid_key" ON "tbl_target_queries"("uuid");
@@ -220,7 +220,7 @@ ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_so
 ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_beneficiaryId_fkey" FOREIGN KEY ("beneficiaryId") REFERENCES "tbl_beneficiaries"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_beneficaryId_fkey" FOREIGN KEY ("beneficaryId") REFERENCES "tbl_beneficiaries"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_beneficiaryId_fkey" FOREIGN KEY ("beneficiaryId") REFERENCES "tbl_beneficiaries"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "tbl_groups"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
