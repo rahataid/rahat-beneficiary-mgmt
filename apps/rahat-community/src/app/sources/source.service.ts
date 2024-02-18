@@ -12,8 +12,7 @@ import { JOBS, QUEUE } from '../../constants';
 @Injectable()
 export class SourceService {
   constructor(
-    // @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
-
+    @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
     private prisma: PrismaService,
   ) {}
 
@@ -36,7 +35,7 @@ export class SourceService {
     });
     console.log('Upserted=>', row);
     // Add souceUUID to Queue
-    // this.queueClient.add(JOBS.BENEFICIARY.IMPORT, { sourceUUID: row.uuid });
+    this.queueClient.add(JOBS.BENEFICIARY.IMPORT, { sourceUUID: row.uuid });
     // Get source details from queue using sourceUUID
     // Import beneficiaries
     // Update status to imported
