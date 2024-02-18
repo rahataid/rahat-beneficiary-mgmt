@@ -46,9 +46,9 @@ export class AppController {
     return listSettings();
   }
 
-  @Get('settings/:type')
-  filterSettingByType(@Param('type') type: string) {
-    return this.appService.filterSettingByType(type);
+  @Get('settings/kobotool')
+  filterSettingByType() {
+    return this.appService.findKobotoolSettings();
   }
 
   @Get('settings/:name')

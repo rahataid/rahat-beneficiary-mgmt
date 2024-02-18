@@ -44,10 +44,10 @@ model Source {
   id                Int                 @id @default(autoincrement()) @db.Integer()
   uuid              String              @unique @default(uuid()) @db.Uuid()
   name              String
-  importId          String // formID or excelID
+  importId          String              @unique
   isImported        Boolean             @default(false)
   beneficiarySource BeneficiarySource[]
-  details           Json                @db.JsonB()
+  details           Json?               @db.JsonB()
   fieldMapping      Json
   createdAt         DateTime            @default(now())
   updatedAt         DateTime?           @updatedAt()

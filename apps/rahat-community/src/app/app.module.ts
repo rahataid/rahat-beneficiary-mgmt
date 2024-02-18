@@ -18,7 +18,7 @@ import { SourceModule } from './sources/source.module';
 import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
 import { BeneficiarySourceModule } from './beneficiary-sources/beneficiary-source.module';
 import { TargetModule } from './targets/target.module';
-import { TargetProcessor } from './processors';
+import { BeneficiaryProcessor, TargetProcessor } from './processors';
 import { ListenersModule } from './listeners/listeners.module';
 import { AppSettingService } from './settings/setting.service';
 import { AppSettingModule } from './settings/setting.module';
@@ -28,6 +28,7 @@ import { ScheduleService } from './schedulers/schedule.provider';
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST,
@@ -37,8 +38,8 @@ import { ScheduleService } from './schedulers/schedule.provider';
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RsUserModule,
     PrismaModule,
-    SourceModule,
     BeneficiariesModule,
+    SourceModule,
     FieldDefinitionsModule,
     GroupModule,
     BeneficiaryGroupModule,
@@ -55,6 +56,7 @@ import { ScheduleService } from './schedulers/schedule.provider';
   providers: [
     AppService,
     TargetProcessor,
+    BeneficiaryProcessor,
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     AppSettingService,

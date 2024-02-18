@@ -9,10 +9,14 @@ export const TARGET_QUERY_STATUS = {
 
 export const QUEUE = {
   TARGETING: 'targeting',
+  BENEFICIARY: {
+    IMPORT: 'queue.beneficiary.import',
+  },
 };
 
 export const JOBS = {
   TARGET_BENEFICIARY: 'target_beneficiary',
+  BENEFICIARY: { IMPORT: 'job.beneficiary.import' },
   OTP: 'otp',
 };
 

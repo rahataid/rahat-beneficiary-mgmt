@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rahat/prisma';
 import axios from 'axios';
-import { getSetting, listSettings } from './settings/setting.config';
+import { getSetting } from './settings/setting.config';
 import { KOBO_URL } from '../constants';
 
 @Injectable()
@@ -18,23 +18,22 @@ export class AppService {
     if (!settings) throw new Error('Setting not found');
     const formId = settings.FORMID;
     const tokenId = settings.TOKENID;
-    const response = await axios.get(`${KOBO_URL}/${formId}/data.json`, {
+    return axios.get(`${KOBO_URL}/${formId}/data.json`, {
       headers: {
         Authorization: `Token ${tokenId}`,
       },
     });
-
-    return response;
   }
 
-  async filterSettingByType(typeName: string) {
-    const listSettings = this.prisma.setting.findMany({
+  // TODO: Move this to settings module
+  async findKobotoolSettings() {
+    const res: any[] = await this.prisma.setting.findMany({
       where: {
         AND: [
           {
             value: {
               path: ['data', 'TYPE'],
-              string_contains: typeName.toUpperCase(),
+              string_contains: 'KOBOTOOL',
             },
           },
         ],
@@ -42,8 +41,17 @@ export class AppService {
       select: {
         name: true,
         id: true,
+        value: true,
       },
     });
-    return listSettings;
+    if (!res.length) return [];
+    const sanitized = res.map((item) => {
+      return {
+        id: item.id,
+        name: item.name,
+        formId: item.value.data.FORMID,
+      };
+    });
+    return sanitized;
   }
 }

@@ -19,17 +19,14 @@ export const listSettings = () => app.settings;
 export const getSetting = (name: string) => {
   if (!name) return null;
   name = name.toUpperCase();
-  console.log({ name });
   const { settings } = app;
   if (!settings) return null;
   const found = (settings as { value?: { data?: any } }[]).find(
     (f: any) => f.name === name,
   );
 
-  if (!found || !found.value) {
-    return null;
-  }
-  return found.value.data;
+  if (!found) return null;
+  return found.value?.data || 'null';
 };
 
 export const getCustomUniqueId = () => {

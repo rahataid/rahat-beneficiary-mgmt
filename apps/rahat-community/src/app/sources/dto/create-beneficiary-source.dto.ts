@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsNotEmpty,
   IsNotEmptyObject,
   IsNumber,
   IsOptional,
@@ -11,8 +12,14 @@ export class CreateSourceDto {
     example: 'Kobotool',
   })
   @IsString()
-  @IsOptional()
   name: string;
+
+  @ApiProperty({
+    example: 'Kobotool',
+  })
+  @IsString()
+  @IsNotEmpty()
+  importId: string;
 
   @ApiProperty({
     type: 'object',
