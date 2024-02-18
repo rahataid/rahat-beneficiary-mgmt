@@ -15,7 +15,7 @@ export class BeneficiarySourceService {
         sourceId: dto.sourceId,
       },
     });
-    if (exist) throw new Error('Already Connected');
+    if (exist) return;
     return await this.prisma.beneficiarySource.create({
       data: {
         beneficiary: {

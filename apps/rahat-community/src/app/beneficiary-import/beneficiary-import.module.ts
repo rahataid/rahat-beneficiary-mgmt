@@ -6,8 +6,11 @@ import { SourceService } from '../sources/source.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { BullModule } from '@nestjs/bull';
+import { QUEUE } from '../../constants';
 
 @Module({
+  imports: [BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT })],
   controllers: [BeneficiaryImportController],
   providers: [
     FieldDefinitionsService,

@@ -23,7 +23,7 @@ export class BeneficiariesService {
   async upsertByCustomID(payload: any) {
     return this.prisma.beneficiary.upsert({
       where: { customId: payload.customId },
-      update: { customId: payload.customId },
+      update: payload,
       create: payload,
     });
   }

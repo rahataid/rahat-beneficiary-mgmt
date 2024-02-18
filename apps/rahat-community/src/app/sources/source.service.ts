@@ -4,16 +4,30 @@ import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
 import { validateRequiredFields } from '../beneficiary-import/helpers';
-import { getDynamicCustomID } from '../settings/setting.config';
+import { getCustomUniqueId } from '../settings/setting.config';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 
 @Injectable()
 export class SourceService {
-  constructor(private prisma: PrismaService) {}
-  async create(dto: CreateSourceDto) {
-    const custonUniqueId = getDynamicCustomID();
+  constructor(
+    @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
+    private prisma: PrismaService,
+  ) {}
 
+  async getMappingsByImportId(importId: string) {
+    const res: any = await this.prisma.source.findUnique({
+      where: { importId },
+    });
+    if (!res) return null;
+    return res.fieldMapping?.sourceTargetMappings || null;
+  }
+
+  async create(dto: CreateSourceDto) {
+    const customUID = getCustomUniqueId();
     const missing_fields = validateRequiredFields(
-      custonUniqueId,
+      customUID,
       dto.fieldMapping.data,
     );
     if (missing_fields.length) {
@@ -21,8 +35,17 @@ export class SourceService {
         `Required fields missing! [${missing_fields.toString()}]`,
       );
     }
-    const h = await this.prisma.source.create({ data: dto });
-    return h;
+    const row = await this.prisma.source.upsert({
+      where: { importId: dto.importId },
+      update: { ...dto, isImported: false },
+      create: dto,
+    });
+    this.queueClient.add(
+      JOBS.BENEFICIARY.IMPORT,
+      { sourceUUID: row.uuid },
+      QUEUE_RETRY_OPTIONS,
+    );
+    return { message: 'Source created and added to queue' };
   }
 
   findAll(query: any) {

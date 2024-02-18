@@ -33,10 +33,10 @@ export class AppController {
   }
 
   @ApiBearerAuth('JWT')
-  @Get('getDataFromKobo/:name')
-  @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  @Get('kobo-import/:name')
+  // @HttpCode(HttpStatus.OK)
+  // @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   getDataFromKoboTool(@Param('name') name: string) {
     return this.appService.getDataFromKoboTool(name);
   }
@@ -46,9 +46,9 @@ export class AppController {
     return listSettings();
   }
 
-  @Get('filter-settings/:typeName')
-  filterSettingByType(@Param('typeName') typeName: string) {
-    return this.appService.filterSettingByType(typeName);
+  @Get('settings/kobotool')
+  filterSettingByType() {
+    return this.appService.findKobotoolSettings();
   }
 
   @Get('settings/:name')

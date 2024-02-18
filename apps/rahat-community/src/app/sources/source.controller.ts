@@ -22,7 +22,6 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rahat/user';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 @Controller('sources')
 @ApiTags('Sources')
@@ -44,6 +43,14 @@ export class SourceController {
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
+  }
+
+  @Get(':importId/mappings')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  getMappings(@Param('importId') importId: string) {
+    return this.sourceService.getMappingsByImportId(importId);
   }
 
   @Get(':uuid')
