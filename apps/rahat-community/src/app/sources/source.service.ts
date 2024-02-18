@@ -16,6 +16,14 @@ export class SourceService {
     private prisma: PrismaService,
   ) {}
 
+  async getMappingsByImportId(importId: string) {
+    const res: any = await this.prisma.source.findUnique({
+      where: { importId },
+    });
+    if (!res) return null;
+    return res.fieldMapping?.sourceTargetMappings || null;
+  }
+
   async create(dto: CreateSourceDto) {
     const customUID = getCustomUniqueId();
     const missing_fields = validateRequiredFields(

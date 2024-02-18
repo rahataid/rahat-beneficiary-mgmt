@@ -31,8 +31,8 @@ export class SourceController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateSourceDto) {
     return this.sourceService.create(dto);
   }
@@ -43,6 +43,14 @@ export class SourceController {
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
+  }
+
+  @Get(':importId/mappings')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  getMappings(@Param('importId') importId: string) {
+    return this.sourceService.getMappingsByImportId(importId);
   }
 
   @Get(':uuid')
