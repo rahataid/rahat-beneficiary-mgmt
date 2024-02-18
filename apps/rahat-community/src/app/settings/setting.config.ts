@@ -3,11 +3,11 @@ import { APP_SETTINGS } from '../../constants';
 const app: {
   name: string;
   settings: [];
-  dynamicCustomId: string;
+  customId: string;
 } = {
   name: 'Rumsan App',
   settings: [],
-  dynamicCustomId: '',
+  customId: '',
 };
 
 export const setSettings = (data: any) => {
@@ -18,7 +18,8 @@ export const listSettings = () => app.settings;
 
 export const getSetting = (name: string) => {
   if (!name) return null;
-  name = name.toUpperCase().replace(' ', '-');
+  name = name.toUpperCase();
+  console.log({ name });
   const { settings } = app;
   if (!settings) return null;
   const found = (settings as { value?: { data?: any } }[]).find(
@@ -31,12 +32,9 @@ export const getSetting = (name: string) => {
   return found.value.data;
 };
 
-export const getDynamicCustomID = () => {
-  const getCustomID = getSetting(APP_SETTINGS.CUSTOM_ID);
-  const value = Object.values(getCustomID)[0];
-  if (typeof value === 'string') {
-    app.dynamicCustomId = value;
-  }
-
-  return app.dynamicCustomId;
+export const getCustomUniqueId = () => {
+  const data = getSetting(APP_SETTINGS.CUSTOM_ID);
+  if (!data) return '';
+  if (typeof data === 'string') app.customId = data;
+  return app.customId;
 };

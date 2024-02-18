@@ -14,12 +14,13 @@ export class AppService {
   }
 
   async getDataFromKoboTool(name: string) {
-    const data = getSetting(name);
-    const koboid = data.URLID;
-    const tokenid = data.AUTHTOKEN;
-    const response = await axios.get(`${KOBO_URL}/${koboid}/data.json`, {
+    const settings = getSetting(name);
+    if (!settings) throw new Error('Setting not found');
+    const formId = settings.FORMID;
+    const tokenId = settings.TOKENID;
+    const response = await axios.get(`${KOBO_URL}/${formId}/data.json`, {
       headers: {
-        Authorization: `Token ${tokenid}`,
+        Authorization: `Token ${tokenId}`,
       },
     });
 
@@ -33,10 +34,14 @@ export class AppService {
           {
             value: {
               path: ['data', 'TYPE'],
-              string_contains: typeName,
+              string_contains: typeName.toUpperCase(),
             },
           },
         ],
+      },
+      select: {
+        name: true,
+        id: true,
       },
     });
     return listSettings;

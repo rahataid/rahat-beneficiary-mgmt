@@ -44,6 +44,7 @@ model Source {
   id                Int                 @id @default(autoincrement()) @db.Integer()
   uuid              String              @unique @default(uuid()) @db.Uuid()
   name              String
+  importId          String // formID or excelID
   isImported        Boolean             @default(false)
   beneficiarySource BeneficiarySource[]
   details           Json                @db.JsonB()

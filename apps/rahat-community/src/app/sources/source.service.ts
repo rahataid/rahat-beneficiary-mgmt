@@ -4,16 +4,16 @@ import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
 import { PrismaService } from '@rahat/prisma';
 import { paginate } from '../utils/paginate';
 import { validateRequiredFields } from '../beneficiary-import/helpers';
-import { getDynamicCustomID } from '../settings/setting.config';
+import { getCustomUniqueId } from '../settings/setting.config';
 
 @Injectable()
 export class SourceService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateSourceDto) {
-    const custonUniqueId = getDynamicCustomID();
-
+    const customUID = getCustomUniqueId();
+    console.log({ customUID });
     const missing_fields = validateRequiredFields(
-      custonUniqueId,
+      customUID,
       dto.fieldMapping.data,
     );
     if (missing_fields.length) {
@@ -21,8 +21,14 @@ export class SourceService {
         `Required fields missing! [${missing_fields.toString()}]`,
       );
     }
-    const h = await this.prisma.source.create({ data: dto });
-    return h;
+    console.log('DTO=>', dto);
+    // Pass importID from frontend
+    // Upsert source by importID
+    // Add souceUUID to Queue
+    // Get source details from queue using sourceUUID
+    // Import beneficiaries
+    // Update status to imported
+    // return this.prisma.source.create({ data: dto });
   }
 
   findAll(query: any) {

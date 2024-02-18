@@ -11,7 +11,7 @@ import {
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
-import { getDynamicCustomID } from '../settings/setting.config';
+import { getCustomUniqueId } from '../settings/setting.config';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -22,7 +22,7 @@ export class BeneficiaryImportService {
   ) {}
 
   async importBySourceUUID(uuid: string) {
-    const custonUniqueId = getDynamicCustomID();
+    const custonUniqueId = getCustomUniqueId();
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
 
