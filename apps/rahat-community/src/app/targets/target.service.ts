@@ -12,6 +12,7 @@ import {
   DB_MODELS,
   JOBS,
   QUEUE,
+  QUEUE_RETRY_OPTIONS,
   TARGET_QUERY_STATUS,
 } from '../../constants';
 import { paginate } from '../utils/paginate';
@@ -38,7 +39,7 @@ export class TargetService {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
-    this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data);
+    this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
     return { message: 'Target query created and added to queue' };
   }
 

@@ -7,7 +7,7 @@ import { validateRequiredFields } from '../beneficiary-import/helpers';
 import { getCustomUniqueId } from '../settings/setting.config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { JOBS, QUEUE } from '../../constants';
+import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 
 @Injectable()
 export class SourceService {
@@ -27,18 +27,16 @@ export class SourceService {
         `Required fields missing! [${missing_fields.toString()}]`,
       );
     }
-    // Upsert source by importID
     const row = await this.prisma.source.upsert({
       where: { importId: dto.importId },
       update: { ...dto, isImported: false },
       create: dto,
     });
-    console.log('Upserted=>', row);
-    // Add souceUUID to Queue
-    this.queueClient.add(JOBS.BENEFICIARY.IMPORT, { sourceUUID: row.uuid });
-    // Get source details from queue using sourceUUID
-    // Import beneficiaries
-    // Update status to imported
+    this.queueClient.add(
+      JOBS.BENEFICIARY.IMPORT,
+      { sourceUUID: row.uuid },
+      QUEUE_RETRY_OPTIONS,
+    );
     return { message: 'Source created and added to queue' };
   }
 
