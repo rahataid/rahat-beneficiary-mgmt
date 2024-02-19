@@ -196,10 +196,12 @@ export class BeneficiariesService {
     const workbook = XLSX.readFile(file.path);
     await deleteFileFromDisk(file.path);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const sheetId = workbook.SheetNames[0].toLowerCase().replace(/\s/g, '_');
     const data = {
       workbookData: XLSX.utils.sheet_to_json(sheet),
-      sheetId: workbook.SheetNames[0],
+      sheetId,
     };
+    console.log(data);
     return data;
   }
 }
