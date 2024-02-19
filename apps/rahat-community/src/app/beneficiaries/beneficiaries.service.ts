@@ -12,6 +12,7 @@ import { paginate } from '../utils/paginate';
 import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
 import { createSearchQuery } from './helpers';
+import { GenderEnum } from '../../constants';
 
 @Injectable()
 export class BeneficiariesService {
@@ -49,7 +50,7 @@ export class BeneficiariesService {
         customId: uuid(),
         firstName: dto.firstName,
         lastName: dto.lastName,
-        gender: dto.gender,
+        gender: dto.gender.toUpperCase() as GenderEnum,
         birthDate: dto.birthDate,
         email: dto.email,
         extras: dto.extras,
@@ -195,10 +196,10 @@ export class BeneficiariesService {
     const workbook = XLSX.readFile(file.path);
     await deleteFileFromDisk(file.path);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
-    data.forEach((element: CreateBeneficiaryDto) => {
-      this.create(element);
-    });
+    const data = {
+      workbookData: XLSX.utils.sheet_to_json(sheet),
+      sheetId: workbook.SheetNames[0],
+    };
     return data;
   }
 }
