@@ -8,12 +8,14 @@ import { getCustomUniqueId } from '../settings/setting.config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SourceService {
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
     private prisma: PrismaService,
+    private config: ConfigService,
   ) {}
 
   async getMappingsByImportId(importId: string) {
@@ -25,6 +27,8 @@ export class SourceService {
   }
 
   async create(dto: CreateSourceDto) {
+    const DEV_ENV = this.config.get('ENV_DEV');
+
     const customUID = getCustomUniqueId();
     const missing_fields = validateRequiredFields(
       customUID,
@@ -45,6 +49,8 @@ export class SourceService {
       { sourceUUID: row.uuid },
       QUEUE_RETRY_OPTIONS,
     );
+
+    if (DEV_ENV === 'dev') return row;
     return { message: 'Source created and added to queue' };
   }
 

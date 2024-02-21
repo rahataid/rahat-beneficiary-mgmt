@@ -8,7 +8,7 @@ const APP_URL = `http://localhost:${PORT}`;
 let beneficiaryUuid;
 let beneficiary_id;
 let fieldDefinition_id;
-let sourceUuid;
+let source_uuid;
 let source_id;
 let group_id;
 let beneficiarysource_id;
@@ -48,6 +48,7 @@ const sourceDto = {
   details: {
     data: faker.lorem.text(),
   },
+  importId: faker.string.hexadecimal({ length: 8 }),
   fieldMapping: {
     data: [
       {
@@ -233,7 +234,7 @@ describe('Rahat Community E2E Testing', () => {
         .expect(200)
         .end((err, res) => {
           if (err) return done(err);
-          sourceUuid = res?.body?.data?.uuid;
+          source_uuid = res?.body?.data?.uuid;
           source_id = res?.body?.data?.id;
           done();
         });
@@ -252,7 +253,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Get Source By Uuid', (done) => {
       request(APP_URL)
-        .get(`/api/v1/sources/${sourceUuid}`)
+        .get(`/api/v1/sources/${source_uuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(200)
         .end((err, res) => {
@@ -263,7 +264,7 @@ describe('Rahat Community E2E Testing', () => {
 
     it('Should Update Source By Uuid', (done) => {
       request(APP_URL)
-        .patch(`/api/v1/sources/${sourceUuid}`)
+        .patch(`/api/v1/sources/${source_uuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .send(sourceDto)
         .expect(200)
@@ -440,7 +441,7 @@ describe('Rahat Community E2E Testing', () => {
     });
     it('Should Remove Source By Uuid', (done) => {
       request(APP_URL)
-        .delete(`/api/v1/sources/${sourceUuid}`)
+        .delete(`/api/v1/sources/${source_uuid}`)
         .set('Authorization', `Bearer ${acessToken}`)
         .expect(200)
         .end((err, res) => {
