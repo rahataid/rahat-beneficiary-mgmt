@@ -18,8 +18,8 @@ try {
   packageData.scripts = {
     ...packageData.scripts,
     start: 'node main.js',
-    'app:migrate': 'prisma migrate dev',
-    'app:generate': 'prisma generate',
+    'prisma:migrate': 'prisma migrate dev',
+    'prisma:generate': 'prisma generate',
   };
 
   packageData.dependencies = {
@@ -29,6 +29,7 @@ try {
     prisma: '^5.10.2',
     'ts-node': '10.9.1',
     '@prisma/client': '^5.1.0',
+    lodash: '^4.17.21',
   };
 
   packageData.prisma = {
