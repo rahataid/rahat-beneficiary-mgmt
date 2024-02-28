@@ -5,6 +5,10 @@
   "projectType": "application",
   "targets": {
     "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["mainBuild"]
+    },
+    "mainBuild": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
