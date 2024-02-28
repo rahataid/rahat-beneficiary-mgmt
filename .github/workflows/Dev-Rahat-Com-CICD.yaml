@@ -3,14 +3,16 @@ on:
   push:
     branches:
       - 'dev'
-    paths-ignore:
-      - 'apps/frontend/**'
+    paths:
+      - 'apps/rahat-community/**'
+      - 'apps/rahat-community-e2e/**'
 
   pull_request:
     branches:
       - 'dev'
-    paths-ignore:
-      - 'apps/frontend/**'
+    paths:
+      - 'apps/rahat-community/**'
+      - 'apps/rahat-community-e2e/**'
 
 env:
   CI: false
