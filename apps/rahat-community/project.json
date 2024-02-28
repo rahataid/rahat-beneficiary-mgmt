@@ -5,6 +5,13 @@
   "projectType": "application",
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["mainBuild"],
+      "options": {
+        "commands": ["cp -r prisma dist/apps/rahat-community/prisma"]
+      }
+    },
+    "mainBuild": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
@@ -12,6 +19,7 @@
         "target": "node",
         "compiler": "tsc",
         "outputPath": "dist/apps/rahat-community",
+        "generatePackageJson": true,
         "main": "apps/rahat-community/src/main.ts",
         "tsConfig": "apps/rahat-community/tsconfig.app.json",
         "assets": ["apps/rahat-community/src/assets"],
