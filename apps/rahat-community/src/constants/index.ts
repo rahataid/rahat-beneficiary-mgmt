@@ -39,3 +39,9 @@ export const APP_SETTINGS = {
 export const QUEUE_RETRY_OPTIONS = { attempts: 3, backoff: 2000 };
 
 export const KOBO_URL: string = 'https://kf.kobotoolbox.org/api/v2/assets';
+
+export enum GenderEnum {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
+}
