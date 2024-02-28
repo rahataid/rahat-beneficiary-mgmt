@@ -30,6 +30,7 @@ try {
     'ts-node': '10.9.1',
     '@prisma/client': '^5.1.0',
     lodash: '^4.17.21',
+    '@types/lodash': '^4.14.202',
   };
 
   packageData.prisma = {
