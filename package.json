@@ -8,8 +8,10 @@
   "scripts": {
     "clean": "rm -rf dist node_modules tmp",
     "build:all": "npx nx run-many --target=build --all",
-    "dev": "npx nx serve rahat-community",
-    "frontend": "npx nx serve frontend",
+    "build:frontend": "npx nx build frontend",
+    "build:rahat-com": "npx nx build rahat-community",
+    "serve:rahat-com": "npx nx serve rahat-community",
+    "serve:frontend": "npx nx serve frontend",
     "test": "npx nx test rahat-community-e2e:e2e",
     "prisma:generate": "npx prisma generate"
   },
