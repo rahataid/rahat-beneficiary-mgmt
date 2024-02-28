@@ -18,8 +18,8 @@ try {
   packageData.scripts = {
     ...packageData.scripts,
     start: 'node main.js',
-    'prisma:migrate': 'prisma migrate dev',
-    'prisma:generate': 'prisma generate',
+    'prisma:migrate': 'npx prisma migrate dev',
+    'prisma:generate': 'npx prisma generate',
   };
 
   packageData.dependencies = {

@@ -2,11 +2,12 @@
 FROM node:18-alpine3.17 AS deps
 WORKDIR /usr/src/app
 COPY ./dist/apps/rahat-community/package.json .npmrc ./
-RUN npm install -g pnpm && pnpm install
+RUN npm install && npm cache clean --force 
+
 
 FROM node:18-alpine3.17 AS builder
 WORKDIR /usr/src/app
 COPY ./dist/apps/rahat-community/ ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
-RUN npm install -g pnpm && pnpm prisma:generate
+RUN npm run prisma:generate
 CMD [ "node", "main.js" ]
