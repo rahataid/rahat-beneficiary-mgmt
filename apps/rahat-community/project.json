@@ -16,10 +16,10 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "generatePackageJson": true,
         "target": "node",
         "compiler": "tsc",
         "outputPath": "dist/apps/rahat-community",
-        "generatePackageJson": true,
         "main": "apps/rahat-community/src/main.ts",
         "tsConfig": "apps/rahat-community/tsconfig.app.json",
         "assets": ["apps/rahat-community/src/assets"],
