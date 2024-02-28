@@ -8,7 +8,9 @@
       "executor": "nx:run-commands",
       "dependsOn": ["mainBuild"],
       "options": {
-        "commands": ["cp -r prisma dist/apps/rahat-community/prisma"]
+        "commands": [
+          "cp -r prisma dist/apps/rahat-community/prisma && node apps/rahat-community/src/script.ts"
+        ]
       }
     },
     "mainBuild": {
