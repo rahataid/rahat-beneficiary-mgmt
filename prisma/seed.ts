@@ -1,5 +1,33 @@
-import { PrismaClient } from '@prisma/client';
-import { cloneDeep } from 'lodash';
+import { PrismaClient, Service } from '@prisma/client';
+
+function cloneDeep<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (obj instanceof Date) {
+    return new Date(obj.getTime()) as T;
+  }
+
+  if (Array.isArray(obj)) {
+    const arrCopy: any[] = [];
+    obj.forEach((val, i) => {
+      arrCopy[i] = cloneDeep(val);
+    });
+    return arrCopy as T;
+  }
+
+  if (obj instanceof Object) {
+    const objCopy: { [key: string]: any } = {};
+    Object.keys(obj).forEach((key) => {
+      objCopy[key] = cloneDeep((obj as { [key: string]: any })[key]);
+    });
+    return objCopy as T;
+  }
+
+  throw new Error("Unable to copy obj! Its type isn't supported.");
+}
+
 export const roles: Array<{ id?: number; name: string; isSystem?: boolean }> = [
   {
     id: 1,
@@ -30,125 +58,107 @@ export const permissions: Array<{
   },
   {
     id: 2,
-    roleId: 1,
-    action: 'create',
-    subject: 'role',
-  },
-  {
-    id: 3,
-    roleId: 1,
-    action: 'read',
-    subject: 'role',
-  },
-  {
-    id: 4,
-    roleId: 1,
-    action: 'update',
-    subject: 'role',
-  },
-  {
-    id: 5,
-    roleId: 1,
-    action: 'create',
-    subject: 'role',
-  },
-  {
-    id: 6,
-    roleId: 1,
-    action: 'read',
-    subject: 'role',
-  },
-  {
-    id: 7,
-    roleId: 1,
-    action: 'update',
-    subject: 'role',
-  },
-  {
-    id: 8,
     roleId: 2,
     action: 'manage',
-    subject: 'permission',
-  },
-  {
-    id: 9,
-    roleId: 3,
-    action: 'read',
     subject: 'user',
   },
   {
-    id: 10,
+    id: 4,
     roleId: 3,
-    action: 'update',
+    action: 'read',
     subject: 'user',
   },
 ];
 
 export const users: Array<{
   id?: number;
-  firstName: string;
-  lastName: string;
-  roleId: number;
-  authAddress: string;
+  name?: string;
+  email?: string;
+  wallet?: string;
 }> = [
   {
     id: 1,
-    firstName: 'Mr',
-    lastName: 'Admin',
-    roleId: 1,
-    authAddress: 'admin@mailinator.com',
+    name: 'Rumsan Admin',
+    email: 'rumsan@mailinator.com',
   },
   {
     id: 2,
-    firstName: 'Mr',
-    lastName: 'Manager',
-    roleId: 2,
-    authAddress: 'manager@mailinator.com',
+    name: 'Ms Manager',
+    wallet: '0xAC6bFaf10e89202c293dD795eCe180BBf1430d7B',
   },
   {
     id: 3,
-    firstName: 'Mr',
-    lastName: 'User',
+    name: 'Mr User',
+    email: 'user@mailinator.com',
+  },
+];
+
+export const userRoles: Array<{
+  id?: number;
+  userId: number;
+  roleId: number;
+}> = [
+  {
+    id: 1,
+    userId: 1,
+    roleId: 1,
+  },
+  {
+    id: 2,
+    userId: 2,
+    roleId: 2,
+  },
+  {
+    id: 3,
+    userId: 3,
     roleId: 3,
-    authAddress: 'user@mailinator.com',
+  },
+];
+
+export const auths: Array<{
+  id?: number;
+  userId: number;
+  service: Service;
+  serviceId: string;
+}> = [
+  {
+    id: 1,
+    userId: 1,
+    service: Service.EMAIL,
+    serviceId: 'rumsan@mailinator.com',
+  },
+  {
+    id: 2,
+    userId: 2,
+    service: Service.WALLET,
+    serviceId: '0xAC6bFaf10e89202c293dD795eCe180BBf1430d7B',
+  },
+  {
+    id: 3,
+    userId: 3,
+    service: Service.EMAIL,
+    serviceId: 'user@mailinator.com',
+  },
+];
+
+const projectTypes: Array<{
+  id?: number;
+  name: string;
+  description?: string;
+}> = [
+  {
+    id: 1,
+    name: 'anticipatory-action',
+  },
+  {
+    id: 2,
+    name: 'cva',
   },
 ];
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // const category1 = await prisma.category.createMany({
-  //   data: [
-  //     {
-  //       name: 'Charitable Organization',
-  //       id: 1,
-  //     },
-  //     {
-  //       name: 'Chepang Community',
-  //       id: 2,
-  //     },
-  //     {
-  //       name: 'Daily Wage Earners',
-  //       id: 3,
-  //     },
-  //     {
-  //       name: 'Physically Challenged',
-  //       id: 4,
-  //     },
-  //     {
-  //       name: 'Senior Citizens',
-  //       id: 5,
-  //     },
-  //     {
-  //       name: 'Squattered Families',
-  //       id: 6,
-  //     },
-  //     {
-  //       name: 'Underprivileged Community',
-  //       id: 7,
-  //     },
-  //   ],
-  // });
   // ===========Create Roles=============
   for await (const role of roles) {
     const roleAttrs = cloneDeep(role);
@@ -185,6 +195,32 @@ async function main() {
       },
       create: userAttrs,
       update: userAttrs,
+    });
+  }
+
+  // ==============Create Auths===============
+  for await (const auth of auths) {
+    const authAttrs = cloneDeep(auth);
+    delete authAttrs.id;
+    await prisma.auth.upsert({
+      where: {
+        id: auth.id,
+      },
+      create: authAttrs,
+      update: authAttrs,
+    });
+  }
+
+  // ==============Create User Roles===============
+  for await (const userRole of userRoles) {
+    const userRoleAttrs = cloneDeep(userRole);
+    delete userRoleAttrs.id;
+    await prisma.userRole.upsert({
+      where: {
+        id: userRole.id,
+      },
+      create: userRoleAttrs,
+      update: userRoleAttrs,
     });
   }
 }
