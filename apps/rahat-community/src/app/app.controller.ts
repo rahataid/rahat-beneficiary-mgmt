@@ -16,10 +16,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @Controller('app')
 @ApiTags('APP')
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private appSetttingService: AppSettingService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getData() {

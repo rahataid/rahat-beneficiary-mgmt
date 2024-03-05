@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import axios from 'axios';
 import { getSetting } from './settings/setting.config';
 import { KOBO_URL } from '../constants';
