@@ -21,7 +21,7 @@ import {
   CheckAbilities,
   JwtGuard,
   SUBJECTS,
-} from '@rahat/user';
+} from '@rumsan/user';
 
 @Controller('sources')
 @ApiTags('Sources')
@@ -31,7 +31,7 @@ export class SourceController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateSourceDto) {
     return this.sourceService.create(dto);
@@ -39,7 +39,7 @@ export class SourceController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
@@ -47,7 +47,7 @@ export class SourceController {
 
   @Get(':importId/mappings')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   getMappings(@Param('importId') importId: string) {
     return this.sourceService.getMappingsByImportId(importId);
@@ -55,7 +55,7 @@ export class SourceController {
 
   @Get(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
     return this.sourceService.findOne(uuid);
@@ -63,7 +63,7 @@ export class SourceController {
 
   @Patch(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(@Param('uuid') uuid: string, @Body() dto: UpdateSourceDto) {
     return this.sourceService.update(uuid, dto);
@@ -71,7 +71,7 @@ export class SourceController {
 
   @Delete(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   remove(@Param('uuid') uuid: string) {
     return this.sourceService.remove(uuid);

@@ -20,7 +20,7 @@ import {
   CheckAbilities,
   JwtGuard,
   SUBJECTS,
-} from '@rahat/user';
+} from '@rumsan/user';
 
 @Controller('beneficiarySource')
 @ApiBearerAuth('JWT')
@@ -32,7 +32,7 @@ export class BeneficiarySourceController {
 
   @Post('')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiarySourceDto) {
     return this.beneficiarySourceService.create(dto);
@@ -40,7 +40,7 @@ export class BeneficiarySourceController {
 
   @Get('')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(query: any) {
     return this.beneficiarySourceService.listAll(query);
@@ -48,7 +48,7 @@ export class BeneficiarySourceController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('id') id: string) {
     return this.beneficiarySourceService.findOne(id);
@@ -56,7 +56,7 @@ export class BeneficiarySourceController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(@Param('id') id: number, @Body() dto: UpdateBeneficiarySourceDto) {
     return this.beneficiarySourceService.update(id, dto);
@@ -64,7 +64,7 @@ export class BeneficiarySourceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {

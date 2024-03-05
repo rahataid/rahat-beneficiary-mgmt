@@ -10,13 +10,7 @@ import {
 import { AppService } from './app.service';
 import { getSetting, listSettings } from './settings/setting.config';
 import { AppSettingService } from './settings/setting.service';
-import {
-  ACTIONS,
-  AbilitiesGuard,
-  CheckAbilities,
-  JwtGuard,
-  SUBJECTS,
-} from '@rahat/user';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('app')
@@ -35,7 +29,7 @@ export class AppController {
   @ApiBearerAuth('JWT')
   @Get('kobo-import/:name')
   // @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   // @UseGuards(JwtGuard, AbilitiesGuard)
   getDataFromKoboTool(@Param('name') name: string) {
     return this.appService.getDataFromKoboTool(name);

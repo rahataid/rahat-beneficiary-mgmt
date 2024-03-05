@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SettingsService } from '@rahat/user';
+import { SettingsService } from '@rumsan/settings';
 import { setSettings } from './setting.config';
 
 @Injectable()

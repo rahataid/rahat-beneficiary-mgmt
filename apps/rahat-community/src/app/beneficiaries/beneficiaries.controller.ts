@@ -22,8 +22,13 @@ import {
   BulkInsertDto,
   CreateBeneficiaryDto,
 } from './dto/create-beneficiary.dto';
-import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rahat/user';
-import { ACTIONS, SUBJECTS } from '@rahat/user';
+import {
+  AbilitiesGuard,
+  CheckAbilities,
+  JwtGuard,
+  ACTIONS,
+  SUBJECTS,
+} from '@rumsan/user';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { multerOptions } from '../utils/multer';
@@ -36,7 +41,7 @@ export class BeneficiariesController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
   @UseGuards(JwtGuard, AbilitiesGuard)
   async create(@Body() dto: CreateBeneficiaryDto) {
     return this.beneficiariesService.create(dto);
@@ -44,14 +49,14 @@ export class BeneficiariesController {
 
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   async bulkInsert(@Body() dto: BulkInsertDto) {
     return this.beneficiariesService.addBulk(dto);
   }
 
   @Post('upload')
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
@@ -69,7 +74,7 @@ export class BeneficiariesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   // @ApiFilterQuery('filters', BeneficiaryFilterDto)
   findAll(@Query('') filters: any) {
@@ -77,7 +82,7 @@ export class BeneficiariesController {
   }
 
   @Get(':uuid')
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
@@ -85,7 +90,7 @@ export class BeneficiariesController {
 
   @Patch(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(
     @Param('uuid') uuid: string,
@@ -95,7 +100,7 @@ export class BeneficiariesController {
   }
 
   @Delete(':uuid')
-  @CheckAbilities({ action: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string) {

@@ -8,7 +8,7 @@ import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RsUserModule, SettingsService } from '@rahat/user';
+// import { SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './groups/group.module';
@@ -23,7 +23,8 @@ import { ListenersModule } from './listeners/listeners.module';
 import { AppSettingService } from './settings/setting.service';
 import { AppSettingModule } from './settings/setting.module';
 import { ScheduleService } from './schedulers/schedule.provider';
-
+import { RSUserModule } from '@rumsan/user';
+import { SettingsService } from '@rumsan/settings';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -36,7 +37,7 @@ import { ScheduleService } from './schedulers/schedule.provider';
       },
     }),
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
-    RsUserModule,
+    RSUserModule,
     PrismaModule,
     BeneficiariesModule,
     SourceModule,

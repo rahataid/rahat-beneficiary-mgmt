@@ -14,7 +14,7 @@ import {
   CheckAbilities,
   JwtGuard,
   SUBJECTS,
-} from '@rahat/user';
+} from '@rumsan/user';
 
 @ApiTags('Beneficiary Import')
 @ApiBearerAuth('JWT')
@@ -27,7 +27,7 @@ export class BeneficiaryImportController {
 
   @Get(':source_uuid/import')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   importBySourceUUID(@Param('source_uuid') uuid: string) {
     return this.beneficiaryImportService.importBySourceUUID(uuid);
   }
