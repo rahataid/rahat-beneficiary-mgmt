@@ -74,15 +74,15 @@ export class BeneficiariesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   // @ApiFilterQuery('filters', BeneficiaryFilterDto)
   findAll(@Query('') filters: any) {
     return this.beneficiariesService.findAll(filters);
   }
 
   @Get(':uuid')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);

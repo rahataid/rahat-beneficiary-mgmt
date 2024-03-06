@@ -39,7 +39,7 @@ export class BeneficiaryGroupService {
   }
 
   async findAll() {
-    await this.prisma.beneficiaryGroup.findMany({});
+    return await this.prisma.beneficiaryGroup.findMany({});
   }
 
   async findOne(id: number) {
