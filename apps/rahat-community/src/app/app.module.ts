@@ -2,13 +2,13 @@ import { Module, ValidationPipe } from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule, PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RsUserModule, SettingsService } from '@rahat/user';
+// import { SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './groups/group.module';
@@ -20,10 +20,14 @@ import { BeneficiarySourceModule } from './beneficiary-sources/beneficiary-sourc
 import { TargetModule } from './targets/target.module';
 import { BeneficiaryProcessor, TargetProcessor } from './processors';
 import { ListenersModule } from './listeners/listeners.module';
-import { AppSettingService } from './settings/setting.service';
-import { AppSettingModule } from './settings/setting.module';
 import { ScheduleService } from './schedulers/schedule.provider';
-
+import {
+  AuthsModule,
+  RSUserModule,
+  RolesModule,
+  UsersModule,
+} from '@rumsan/user';
+import { SettingsModule } from '@rumsan/settings';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -33,11 +37,11 @@ import { ScheduleService } from './schedulers/schedule.provider';
       redis: {
         host: process.env.REDIS_HOST,
         port: parseInt(process.env.REDIS_PORT),
+        password: process.env.REDIS_PASSWORD,
       },
     }),
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
-    RsUserModule,
-    PrismaModule,
+    RSUserModule.forRoot([AuthsModule, UsersModule, RolesModule]),
     BeneficiariesModule,
     SourceModule,
     FieldDefinitionsModule,
@@ -50,7 +54,7 @@ import { ScheduleService } from './schedulers/schedule.provider';
     BeneficiarySourceModule,
     TargetModule,
     ListenersModule,
-    AppSettingModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -59,8 +63,6 @@ import { ScheduleService } from './schedulers/schedule.provider';
     BeneficiaryProcessor,
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
-    AppSettingService,
-    SettingsService,
     ScheduleService,
   ],
 })

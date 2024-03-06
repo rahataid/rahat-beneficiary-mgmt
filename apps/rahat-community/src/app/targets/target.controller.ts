@@ -22,7 +22,7 @@ import {
   CheckAbilities,
   JwtGuard,
   SUBJECTS,
-} from '@rahat/user';
+} from '@rumsan/user';
 
 @Controller('targets')
 @ApiTags('Targets')
@@ -31,7 +31,7 @@ export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
   @Get()
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll() {
     return this.targetService.list();
@@ -39,7 +39,7 @@ export class TargetController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateTargetQueryDto) {
     return this.targetService.create(dto);
@@ -54,21 +54,21 @@ export class TargetController {
   }
 
   @Post('search')
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   search(@Body() data: CreateTargetQueryDto) {
     return this.targetService.searchTargetBeneficiaries(data);
   }
 
   @Post('targetResult')
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   target(@Body() data: CreateTargetResultDto) {
     return this.targetService.saveTargetResult(data);
   }
 
   @Patch(':id/label')
-  @CheckAbilities({ action: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   updateTargetQueryLabel(
     @Param('id') id: number,
@@ -78,7 +78,7 @@ export class TargetController {
   }
 
   @Get(':target_uuid/result')
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('target_uuid') target_uuid: string) {
     return this.targetService.findByTargetUUID(target_uuid);
