@@ -33,7 +33,7 @@ export class BeneficiaryGroupController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiaryGroupDto) {
     console.log(dto);
     return this.beneficiaryGroupService.create(dto);
@@ -41,8 +41,8 @@ export class BeneficiaryGroupController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   findAll() {
     return this.beneficiaryGroupService.findAll();
   }

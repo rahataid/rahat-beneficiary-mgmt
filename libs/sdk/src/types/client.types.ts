@@ -8,6 +8,7 @@ import {
 } from '../beneficiary/beneficiary.types';
 import { FileResponse, Stats } from './response.types';
 import { TFile } from './file.types';
+import { BeneficiaryGroup } from '../beneficiarygroup';
 
 export type BeneficiaryClient = {
   create: (
@@ -26,7 +27,7 @@ export type BeneficiaryClient = {
   ) => Promise<FormattedResponse<Beneficiary[]>>;
 
   listById: (
-    uuid: string,
+    uuid: UUID,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
@@ -49,4 +50,36 @@ export type BeneficiaryClient = {
     source_uuid: UUID,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ImportBeneficiary>>;
+};
+
+export type BeneficiaryGroupClient = {
+  create: (
+    data?: BeneficiaryGroup,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BeneficiaryGroup>>;
+
+  list: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BeneficiaryGroup[]>>;
+
+  listById: (
+    id: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BeneficiaryGroup>>;
+
+  update: (
+    {
+      id,
+      data,
+    }: {
+      id: string;
+      data: BeneficiaryGroup;
+    },
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BeneficiaryGroup>>;
+
+  remove: (
+    id: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 };

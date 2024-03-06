@@ -23,8 +23,8 @@ import {
 
 @Controller('group')
 @ApiTags('Group')
-@ApiBearerAuth('JWT')
-@UseGuards(JwtGuard, AbilitiesGuard)
+// @ApiBearerAuth('JWT')
+// @UseGuards(JwtGuard, AbilitiesGuard)
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
