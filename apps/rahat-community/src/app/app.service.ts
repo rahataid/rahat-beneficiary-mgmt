@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import axios from 'axios';
 import { getSetting } from './settings/setting.config';
 import { KOBO_URL } from '../constants';
@@ -40,14 +40,13 @@ export class AppService {
       },
       select: {
         name: true,
-        id: true,
+
         value: true,
       },
     });
     if (!res.length) return [];
     const sanitized = res.map((item) => {
       return {
-        id: item.id,
         name: item.name,
         formId: item.value.data.FORMID,
       };

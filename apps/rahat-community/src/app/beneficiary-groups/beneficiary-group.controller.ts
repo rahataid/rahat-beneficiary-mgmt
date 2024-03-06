@@ -20,7 +20,7 @@ import {
   CheckAbilities,
   JwtGuard,
   SUBJECTS,
-} from '@rahat/user';
+} from '@rumsan/user';
 
 @Controller('beneficiary-group')
 @ApiTags('BeneficiaryGroup')
@@ -32,7 +32,7 @@ export class BeneficiaryGroupController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiaryGroupDto) {
     console.log(dto);
@@ -41,7 +41,7 @@ export class BeneficiaryGroupController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll() {
     return this.beneficiaryGroupService.findAll();
@@ -49,7 +49,7 @@ export class BeneficiaryGroupController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('id') id: string) {
     return this.beneficiaryGroupService.findOne(+id);
@@ -57,7 +57,7 @@ export class BeneficiaryGroupController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ action: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(
     @Param('id') id: string,
@@ -67,7 +67,7 @@ export class BeneficiaryGroupController {
   }
 
   @Delete(':id')
-  @CheckAbilities({ action: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {

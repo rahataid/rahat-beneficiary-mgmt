@@ -181,64 +181,174 @@ enum FieldType {
 }
 
 // ============User Management Schema============
+model User {
+  id     Int     @id @default(autoincrement())
+  uuid   String  @unique @default(uuid())
+  name   String?
+  gender Gender  @default(UNKNOWN)
+  email  String?
+  phone  String?
+  wallet String?
+  extras Json?   @db.JsonB()
 
-model Role {
-  id        Int       @unique @default(autoincrement())
-  name      String    @unique @db.VarChar()
-  isSystem  Boolean   @default(false)
+  Auth     Auth[]
+  UserRole UserRole[]
+  Signup   Signup[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
+  deletedAt DateTime?
+  createdBy Int?
+  updatedBy Int?
+
+  @@map("tbl_users")
+}
+
+model Role {
+  id       Int       @unique @default(autoincrement())
+  name     String    @unique @db.VarChar()
+  isSystem Boolean   @default(false)
+  expiry   DateTime?
 
   Permission Permission[]
-  User       User[]
+  UserRole   UserRole[]
 
-  @@map("roles")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+  createdBy Int?
+  updatedBy Int?
+
+  @@map("tbl_auth_roles")
 }
 
 model Permission {
   id         Int     @unique @default(autoincrement())
-  role       Role    @relation(fields: [roleId], references: [id])
-  roleId     Int     @db.Integer()
+  roleId     Int
   action     String  @db.VarChar()
   subject    String  @db.VarChar()
   inverted   Boolean @default(false)
   conditions Json?   @db.JsonB()
   reason     String? @db.Text()
 
+  Role Role @relation(fields: [roleId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 
-  @@map("permissions")
+  @@map("tbl_auth_permissions")
 }
 
-model User {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  authAddress String   @unique
-  authType    AuthType @default(EMAIL)
-  firstName   String
-  lastName    String
-  role        Role     @relation(fields: [roleId], references: [id])
-  roleId      Int      @db.Integer()
-  otp         String?
+model UserRole {
+  id     Int       @id @default(autoincrement())
+  userId Int
+  roleId Int
+  expiry DateTime?
 
-  @@map("users")
+  User User @relation(fields: [userId], references: [id])
+  Role Role @relation(fields: [roleId], references: [id])
+
+  createdAt DateTime @default(now())
+  createdBy Int?
+
+  @@unique([userId, roleId], name: "userRoleIdentifier")
+  @@map("tbl_users_roles")
 }
 
+model Auth {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  service       Service
+  serviceId     String
+  details       Json?     @db.JsonB()
+  challenge     String?
+  falseAttempts Int       @default(0)
+  isLocked      Boolean   @default(false)
+  lockedOnAt    DateTime?
+  lastLoginAt   DateTime?
+
+  User    User          @relation(fields: [userId], references: [id])
+  AuthLog AuthSession[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  @@unique([service, serviceId], name: "authIdentifier")
+  @@map("tbl_auth")
+}
+
+model AuthSession {
+  id        Int     @id @default(autoincrement())
+  clientId  String
+  sessionId String  @unique @default(uuid())
+  authId    Int
+  ip        String?
+  details   Json?   @db.JsonB()
+  userAgent String?
+
+  Auth Auth @relation(fields: [authId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("tbl_auth_sessions")
+}
+
+enum Service {
+  EMAIL
+  PHONE
+  WALLET
+  GOOGLE
+  APPLE
+  FACEBOOK
+  TWITTER
+  GITHUB
+  LINKEDIN
+}
 // ============End User Management Schema===========
+// ++++++++++++++++++ START: @rumsan/user - Signup +++++++++++++++++++++++++
 
+model Signup {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(uuid())
+  userIdentifier String?
+  data           Json?        @db.JsonB()
+  status         SignupStatus @default(PENDING)
+  rejectedReason String?
+  approvedBy     Int?
+  approvedAt     DateTime?
+
+  User User? @relation(fields: [approvedBy], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  @@map("tbl_users_signups")
+}
+
+enum SignupStatus {
+  PENDING
+  APPROVED
+  FAILED
+  REJECTED
+}
+
+// ++++++++++++++++++ END: @rumsan/user - Signup +++++++++++++++++++++++++++
 // ============Settings Schema===========
-
 model Setting {
-  id             Int      @id @default(autoincrement())
-  name           String   @unique
+  name           String          @id @unique
   value          Json
+  dataType       SettingDataType
   requiredFields String[]
-  isReadOnly     Boolean  @default(false) // true? Dont allow Write from API
-  isPrivate      Boolean  @default(true) // true?  Dont allow Read from API
+  isReadOnly     Boolean         @default(false)
+  isPrivate      Boolean         @default(true)
 
-  @@map("settings")
+  @@map("tbl_settings")
+}
+
+enum SettingDataType {
+  STRING
+  NUMBER
+  BOOLEAN
+  OBJECT
 }
 
 // ============End Settings Schema===========
