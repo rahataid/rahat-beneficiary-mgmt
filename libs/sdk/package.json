@@ -1,16 +1,10 @@
 {
-  "name": "@communtiytools/sdk",
-  "version": "0.0.12",
-  "license": "AGPL-3.0",
-  "licenses": [
-    {
-      "type": "AGPL-3.0",
-      "url": "https://opensource.org/licenses/AGPL-3.0"
-    },
-    {
-      "type": "Commercial License",
-      "url": "https://www.rumsan.com"
-    }
-  ],
+  "name": "@rahat/sdk",
+  "version": "0.0.1",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
   "typings": "./src/index.d.ts"
 }
