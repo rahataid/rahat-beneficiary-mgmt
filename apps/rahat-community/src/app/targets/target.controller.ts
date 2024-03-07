@@ -32,7 +32,7 @@ export class TargetController {
 
   @Get()
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   findAll() {
     return this.targetService.list();
   }
@@ -40,7 +40,7 @@ export class TargetController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateTargetQueryDto) {
     return this.targetService.create(dto);
   }
@@ -55,21 +55,21 @@ export class TargetController {
 
   @Post('search')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   search(@Body() data: CreateTargetQueryDto) {
     return this.targetService.searchTargetBeneficiaries(data);
   }
 
   @Post('targetResult')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   target(@Body() data: CreateTargetResultDto) {
     return this.targetService.saveTargetResult(data);
   }
 
   @Patch(':id/label')
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   updateTargetQueryLabel(
     @Param('id') id: number,
     @Body() dto: updateTargetQueryLabelDTO,
@@ -79,7 +79,7 @@ export class TargetController {
 
   @Get(':target_uuid/result')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('target_uuid') target_uuid: string) {
     return this.targetService.findByTargetUUID(target_uuid);
   }

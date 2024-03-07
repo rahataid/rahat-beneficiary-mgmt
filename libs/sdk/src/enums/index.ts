@@ -32,3 +32,8 @@ export enum UploadFileType {
   API = 'API',
   KOBO = 'KOBO',
 }
+
+export enum TargetQueryStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+}
