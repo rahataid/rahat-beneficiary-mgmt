@@ -9,6 +9,7 @@ import {
 import { FileResponse, Stats } from './response.types';
 import { TFile } from './file.types';
 import { BeneficiaryGroup } from '../beneficiarygroup';
+import { Groups } from '../groups';
 
 export type BeneficiaryClient = {
   create: (
@@ -82,4 +83,24 @@ export type BeneficiaryGroupClient = {
     id: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
+};
+
+export type GroupClient = {
+  create: (
+    data?: Groups,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Groups>>;
+  list: (config?: AxiosRequestConfig) => Promise<FormattedResponse<Groups[]>>;
+  listById: (
+    id: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Groups>>;
+  update: (
+    { id, data }: { id?: string; data?: Groups },
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Groups>>;
+  remove: (
+    id: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Groups>>;
 };
