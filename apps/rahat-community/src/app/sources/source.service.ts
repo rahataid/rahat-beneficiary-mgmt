@@ -23,7 +23,9 @@ export class SourceService {
       where: { importId },
     });
     if (!res) return null;
-    return res.fieldMapping?.sourceTargetMappings || null;
+    console.log(res);
+
+    return res?.fieldMapping || null;
   }
 
   async create(dto: CreateSourceDto) {

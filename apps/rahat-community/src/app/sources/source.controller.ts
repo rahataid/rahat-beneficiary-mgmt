@@ -32,7 +32,7 @@ export class SourceController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateSourceDto) {
     return this.sourceService.create(dto);
   }
@@ -40,7 +40,7 @@ export class SourceController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
   }

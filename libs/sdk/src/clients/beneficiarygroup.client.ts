@@ -7,7 +7,7 @@ export const getBeneficiaryGroupClient = (
   client: AxiosInstance,
 ): BeneficiaryGroupClient => {
   return {
-    create: async (data: BeneficiaryGroup, config?: AxiosRequestConfig) => {
+    create: async (data?: BeneficiaryGroup, config?: AxiosRequestConfig) => {
       const response = await client.post('/beneficiary-group', data, config);
       return formatResponse<BeneficiaryGroup>(response);
     },
