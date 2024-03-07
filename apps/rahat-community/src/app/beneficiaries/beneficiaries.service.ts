@@ -59,6 +59,7 @@ export class BeneficiariesService {
         longitude: dto.longitude,
         phone: dto.phone,
         notes: dto.notes,
+        walletAddress: dto.walletAddress,
       },
     });
   }

@@ -6,6 +6,8 @@ tmp
 /out-tsc
 .npmrc
 
+play
+
 .env*
 
 # dependencies

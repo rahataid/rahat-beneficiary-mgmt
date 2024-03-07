@@ -36,6 +36,13 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
+    example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
+  })
+  @IsString()
+  walletAddress?: string;
+
+  @ApiProperty({
+    type: 'string',
     example: '1997-03-08',
     description: 'Date of birth in the YYYY-MM-DD format.',
   })
