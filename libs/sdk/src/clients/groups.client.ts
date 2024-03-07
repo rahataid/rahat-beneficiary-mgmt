@@ -5,7 +5,7 @@ import { formatResponse } from '@rumsan/sdk/utils';
 
 export const getGroupClient = (client: AxiosInstance): GroupClient => {
   return {
-    create: async (data: Groups, config?: AxiosRequestConfig) => {
+    create: async (data?: Groups, config?: AxiosRequestConfig) => {
       const response = await client.post('/group', data, config);
       return formatResponse<Groups>(response);
     },
@@ -21,7 +21,7 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
     },
 
     update: async (
-      { id, data }: { id: string; data: Groups },
+      { id, data }: { id?: string; data?: Groups },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.put(`/group/${id}`, data, config);

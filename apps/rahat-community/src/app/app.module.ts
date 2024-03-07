@@ -8,7 +8,6 @@ import { APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
-// import { SettingsService } from '@rahat/user';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './groups/group.module';
