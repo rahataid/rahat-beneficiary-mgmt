@@ -7,8 +7,8 @@ export type Source = {
   isImported?: boolean;
   details?: any;
   fieldMapping: any;
-  created_at?: Date;
-  updated_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type SourceResponse = {
