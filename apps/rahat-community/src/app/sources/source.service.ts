@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSourceDto } from './dto/create-beneficiary-source.dto';
-import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
-import { PrismaService } from '@rahat/prisma';
+
+import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
 import { validateRequiredFields } from '../beneficiary-import/helpers';
 import { getCustomUniqueId } from '../settings/setting.config';
@@ -9,6 +8,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 import { ConfigService } from '@nestjs/config';
+import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 
 @Injectable()
 export class SourceService {

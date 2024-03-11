@@ -11,8 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BeneficiarySourceService } from './beneficiary-source.service';
-import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
-import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   ACTIONS,
@@ -21,6 +19,10 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rumsan/user';
+import {
+  CreateBeneficiarySourceDto,
+  UpdateBeneficiarySourceDto,
+} from '@community-tool/extentions';
 
 @Controller('beneficiarySource')
 @ApiBearerAuth('JWT')

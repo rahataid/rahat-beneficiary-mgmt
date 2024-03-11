@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BeneficiaryImportService } from './beneficiary-import.service';
 import { BeneficiaryImportController } from './beneficiary-import.controller';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { SourceService } from '../sources/source.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';

@@ -16,10 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@community-tool/extentions": ["libs/extentions/src/index.ts"],
-      "@rahat/prisma": ["libs/prisma/src/index.ts"],
-      "@community-tool/sdk": ["libs/sdk/src/index.ts"],
-      "@rahat/types": ["libs/types/src/index.ts"],
-      "@rahat/user": ["libs/user/src/index.ts"]
+      "@community-tool/sdk": ["libs/sdk/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

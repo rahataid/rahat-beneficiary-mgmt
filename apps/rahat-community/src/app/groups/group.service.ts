@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
+import { CreateGroupDto, UpdateGroupDto } from '@community-tool/extentions';
 
 @Injectable()
 export class GroupService {
