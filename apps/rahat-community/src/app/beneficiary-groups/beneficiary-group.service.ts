@@ -1,7 +1,9 @@
+import {
+  CreateBeneficiaryGroupDto,
+  UpdateBeneficiaryGroupDto,
+} from '@community-tool/extentions';
 import { Injectable } from '@nestjs/common';
-import { CreateBeneficiaryGroupDto } from './dto/create-beneficiary-group.dto';
-import { UpdateBeneficiaryGroupDto } from './dto/update-beneficiary-group.dto';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { RSError } from '@rumsan/core';
 
 @Injectable()

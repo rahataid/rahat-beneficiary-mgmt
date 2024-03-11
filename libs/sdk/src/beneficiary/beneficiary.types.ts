@@ -2,6 +2,8 @@ import { UUID } from 'crypto';
 import { BankedStatus, Gender, InternetStatus, PhoneStatus } from '../enums';
 
 export type Beneficiary = {
+  firstName?: string;
+  lastName?: string;
   id?: number;
   uuid?: UUID;
   gender?: Gender;

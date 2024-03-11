@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
-import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
-import {
-  BulkInsertDto,
-  CreateBeneficiaryDto,
-} from './dto/create-beneficiary.dto';
-import { PrismaService } from '@rahat/prisma';
+
+import { PrismaService } from '@rumsan/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { paginate } from '../utils/paginate';
@@ -13,6 +9,11 @@ import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
 import { createSearchQuery } from './helpers';
 import { GenderEnum } from '../../constants';
+import {
+  BulkInsertDto,
+  CreateBeneficiaryDto,
+  UpdateBeneficiaryDto,
+} from '@community-tool/extentions';
 
 @Injectable()
 export class BeneficiariesService {

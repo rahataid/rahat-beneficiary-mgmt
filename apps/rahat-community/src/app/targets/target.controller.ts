@@ -10,12 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TargetService } from './target.service';
-import {
-  CreateTargetQueryDto,
-  CreateTargetResultDto,
-} from './dto/create-target.dto';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -23,6 +19,11 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rumsan/user';
+import {
+  CreateTargetQueryDto,
+  CreateTargetResultDto,
+  updateTargetQueryLabelDTO,
+} from '@community-tool/extentions';
 
 @Controller('targets')
 @ApiTags('Targets')

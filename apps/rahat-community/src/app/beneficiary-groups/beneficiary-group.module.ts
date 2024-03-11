@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BeneficiaryGroupService } from './beneficiary-group.service';
 import { BeneficiaryGroupController } from './beneficiary-group.controller';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 
 @Module({
   controllers: [BeneficiaryGroupController],

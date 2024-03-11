@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CreateBeneficiarySourceDto } from './dto/create-beneficiary-source.dto';
-import { UpdateBeneficiarySourceDto } from './dto/update-beneficiary-source.dto';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
+import {
+  CreateBeneficiarySourceDto,
+  UpdateBeneficiarySourceDto,
+} from '@community-tool/extentions';
 
 @Injectable()
 export class BeneficiarySourceService {

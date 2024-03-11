@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateBeneficiaryImportDto } from './dto/update-beneficiary-import.dto';
 import { SourceService } from '../sources/source.service';
 import {
   extractFieldsMatchingWithDBFields,
@@ -77,7 +76,7 @@ export class BeneficiaryImportService {
     return `This action returns a #${id} beneficiaryImport`;
   }
 
-  update(id: number, updateBeneficiaryImportDto: UpdateBeneficiaryImportDto) {
+  update(id: number) {
     return `This action updates a #${id} beneficiaryImport`;
   }
 

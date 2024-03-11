@@ -12,8 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SourceService } from './source.service';
-import { CreateSourceDto } from './dto/create-beneficiary-source.dto';
-import { UpdateSourceDto } from './dto/update-beneficiary-source.dto';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   ACTIONS,
@@ -22,6 +21,7 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rumsan/user';
+import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 
 @Controller('sources')
 @ApiTags('Sources')

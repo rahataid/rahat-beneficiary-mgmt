@@ -16,12 +16,8 @@ import {
   MaxFileSizeValidator,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
-import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import {
-  BulkInsertDto,
-  CreateBeneficiaryDto,
-} from './dto/create-beneficiary.dto';
+
 import {
   AbilitiesGuard,
   CheckAbilities,
@@ -32,6 +28,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { multerOptions } from '../utils/multer';
+import {
+  BulkInsertDto,
+  CreateBeneficiaryDto,
+  UpdateBeneficiaryDto,
+} from '@community-tool/extentions';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -41,9 +42,10 @@ export class BeneficiariesController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   async create(@Body() dto: CreateBeneficiaryDto) {
+    console.log(dto);
     return this.beneficiariesService.create(dto);
   }
 

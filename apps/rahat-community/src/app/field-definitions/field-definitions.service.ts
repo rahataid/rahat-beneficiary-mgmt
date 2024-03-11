@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CreateFieldDefinitionDto } from './dto/create-field-definition.dto';
-import {
-  UpdateFieldDefinitionDto,
-  updateStatusDto,
-} from './dto/update-field-definition.dto';
-import { PrismaService } from '@rahat/prisma';
+
+import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
+import {
+  CreateFieldDefinitionDto,
+  UpdateFieldDefinitionDto,
+  updateFieldStatusDto,
+} from '@community-tool/extentions';
 
 @Injectable()
 export class FieldDefinitionsService {
@@ -65,7 +66,7 @@ export class FieldDefinitionsService {
     });
   }
 
-  updateStatus(id: number, dto: updateStatusDto) {
+  updateStatus(id: number, dto: updateFieldStatusDto) {
     return this.prisma.fieldDefinition.update({
       where: { id },
       data: dto,

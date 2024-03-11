@@ -10,14 +10,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { FieldDefinitionsService } from './field-definitions.service';
-import { CreateFieldDefinitionDto } from './dto/create-field-definition.dto';
-import {
-  UpdateFieldDefinitionDto,
-  updateStatusDto,
-} from './dto/update-field-definition.dto';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rumsan/user';
 import { ACTIONS, SUBJECTS } from '@rumsan/user';
+import {
+  CreateFieldDefinitionDto,
+  UpdateFieldDefinitionDto,
+  updateFieldStatusDto,
+} from '@community-tool/extentions';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')
@@ -58,7 +59,7 @@ export class FieldDefinitionsController {
 
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() dto: updateStatusDto) {
+  updateStatus(@Param('id') id: string, @Body() dto: updateFieldStatusDto) {
     return this.fieldDefService.updateStatus(+id, dto);
   }
 }

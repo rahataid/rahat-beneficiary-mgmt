@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CreateTargetQueryDto,
-  CreateTargetResultDto,
-  TargetQueryStatusEnum,
-} from './dto/create-target.dto';
+
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import {
   APP,
   DB_MODELS,
@@ -16,7 +12,6 @@ import {
   TARGET_QUERY_STATUS,
 } from '../../constants';
 import { paginate } from '../utils/paginate';
-import { updateTargetQueryLabelDTO } from './dto/update-target.dto';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import {
   createFinalResult,
@@ -26,6 +21,12 @@ import {
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { calculateNumberOfDays } from '../utils';
+import {
+  CreateTargetQueryDto,
+  CreateTargetResultDto,
+  TargetQueryStatusEnum,
+  updateTargetQueryLabelDTO,
+} from '@community-tool/extentions';
 
 @Injectable()
 export class TargetService {

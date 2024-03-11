@@ -3,7 +3,7 @@ import { ListenerService } from './listeners.service';
 import { TargetService } from '../targets/target.service';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
-import { PrismaService } from '@rahat/prisma';
+import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
