@@ -8,12 +8,17 @@ import { paginate } from '../utils/paginate';
 import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
 import { createSearchQuery } from './helpers';
-import { GenderEnum } from '../../constants';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@community-tool/extentions';
+import {
+  BankedStatus,
+  Gender,
+  InternetStatus,
+  PhoneStatus,
+} from '@rahataid/community-tool-sdk/enums';
 
 @Injectable()
 export class BeneficiariesService {
@@ -51,7 +56,7 @@ export class BeneficiariesService {
         customId: uuid(),
         firstName: dto.firstName,
         lastName: dto.lastName,
-        gender: dto.gender.toUpperCase() as GenderEnum,
+        gender: dto.gender.toUpperCase() as Gender,
         birthDate: dto.birthDate,
         email: dto.email,
         extras: dto.extras,
@@ -61,6 +66,9 @@ export class BeneficiariesService {
         phone: dto.phone,
         notes: dto.notes,
         walletAddress: dto.walletAddress,
+        bankedStatus: dto.bankedStatus.toUpperCase() as BankedStatus,
+        internetStatus: dto.internetStatus.toUpperCase() as InternetStatus,
+        phoneStatus: dto.phoneStatus.toUpperCase() as PhoneStatus,
       },
     });
   }

@@ -1,12 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
-
-enum GenderEnum {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-  OTHER = 'OTHER',
-  UNKNOWN = 'UNKNOWN',
-}
+import {
+  BankedStatus,
+  Gender,
+  InternetStatus,
+  PhoneStatus,
+} from '@rahataid/community-tool-sdk/enums/';
+// enum GenderEnum {
+//   MALE = 'MALE',
+//   FEMALE = 'FEMALE',
+//   OTHER = 'OTHER',
+//   UNKNOWN = 'UNKNOWN',
+// }
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -57,7 +62,34 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
-  gender?: GenderEnum;
+  gender?: Gender;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'home_internet',
+    description: 'Type of internet use ',
+  })
+  @IsString()
+  @IsOptional()
+  internetStatus?: InternetStatus;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'under_banked',
+    description: 'bankedStatus ',
+  })
+  @IsString()
+  @IsOptional()
+  bankedStatus?: BankedStatus;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'featuresPhone',
+    description: 'phoneStatus ',
+  })
+  @IsString()
+  @IsOptional()
+  phoneStatus?: PhoneStatus;
 
   @ApiProperty({
     type: 'string',
