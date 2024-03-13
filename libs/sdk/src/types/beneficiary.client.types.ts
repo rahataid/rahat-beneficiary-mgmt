@@ -1,10 +1,10 @@
 import { Pagination } from '@rumsan/sdk/types';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import { UUID } from 'crypto';
 import {
   Beneficiary,
   ImportBeneficiary,
+  UpdateBeneficiary,
 } from '../beneficiary/beneficiary.types';
 import { FileResponse } from './response.types';
 import { TFile } from './file.types';
@@ -26,7 +26,7 @@ export type BeneficiaryClient = {
   ) => Promise<FormattedResponse<Beneficiary[]>>;
 
   listById: (
-    uuid: UUID,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
@@ -36,17 +36,17 @@ export type BeneficiaryClient = {
   ) => Promise<FormattedResponse<FileResponse>>;
 
   update: (
-    { uuid, data }: { uuid: UUID; data: Beneficiary },
+    { uuid, payload }: { uuid: string; payload: UpdateBeneficiary },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
   remove: (
-    uuid: UUID,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
   import_beneficiary: (
-    source_uuid: UUID,
+    source_uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ImportBeneficiary>>;
 };

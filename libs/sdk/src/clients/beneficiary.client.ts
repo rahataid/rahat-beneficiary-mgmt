@@ -1,8 +1,11 @@
 import { Pagination } from '@rumsan/sdk/types';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { UUID } from 'crypto';
-import { Beneficiary, ImportBeneficiary } from '../beneficiary';
+import {
+  Beneficiary,
+  ImportBeneficiary,
+  UpdateBeneficiary,
+} from '../beneficiary';
 import { BeneficiaryClient, FileResponse, TFile } from '../types';
 
 export const getBeneficiaryClient = (
@@ -27,7 +30,7 @@ export const getBeneficiaryClient = (
       return formatResponse<Beneficiary[]>(response);
     },
 
-    listById: async (uuid: UUID, config?: AxiosRequestConfig) => {
+    listById: async (uuid: string, config?: AxiosRequestConfig) => {
       const response = await client.get(`/beneficiaries/${uuid}`, config);
       return formatResponse<Beneficiary>(response);
     },
@@ -38,20 +41,24 @@ export const getBeneficiaryClient = (
     },
 
     update: async (
-      { uuid, data }: { uuid: UUID; data: Beneficiary },
+      { uuid, payload }: { uuid: string; payload: any },
       config?: AxiosRequestConfig,
     ) => {
-      const response = await client.put(`/beneficiaries/${uuid}`, data, config);
+      const response = await client.put(
+        `/beneficiaries/${uuid}`,
+        payload,
+        config,
+      );
       return formatResponse<Beneficiary>(response);
     },
 
-    remove: async (uuid: UUID, config?: AxiosRequestConfig) => {
+    remove: async (uuid: string, config?: AxiosRequestConfig) => {
       const response = await client.delete(`/beneficiaries/${uuid}`, config);
       return formatResponse<Beneficiary>(response);
     },
 
     import_beneficiary: async (
-      source_uuid: UUID,
+      source_uuid: string,
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.get(

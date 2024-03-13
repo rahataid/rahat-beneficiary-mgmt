@@ -14,6 +14,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
+  Put,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -90,14 +91,15 @@ export class BeneficiariesController {
     return this.beneficiariesService.findOne(uuid);
   }
 
-  @Patch(':uuid')
+  @Put(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   update(
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
   ) {
+    console.log(updateBeneficiaryDto);
     return this.beneficiariesService.update(uuid, updateBeneficiaryDto);
   }
 

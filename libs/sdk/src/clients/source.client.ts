@@ -2,7 +2,6 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { SourceClient } from '../types';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Source } from '../source';
-import { UUID } from 'crypto';
 
 export const getSourceClient = (client: AxiosInstance): SourceClient => {
   return {
@@ -16,20 +15,20 @@ export const getSourceClient = (client: AxiosInstance): SourceClient => {
       return formatResponse<Source[]>(response);
     },
 
-    listById: async (uuid: UUID, config?: AxiosRequestConfig) => {
+    listById: async (uuid: string, config?: AxiosRequestConfig) => {
       const response = await client.get(`/sources/${uuid}`, config);
       return formatResponse<Source>(response);
     },
 
     update: async (
-      { uuid, data }: { uuid?: UUID; data?: Source },
+      { uuid, data }: { uuid?: string; data?: Source },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.put(`/sources/${uuid}`, data, config);
       return formatResponse<Source>(response);
     },
 
-    remove: async (uuid: UUID, config?: AxiosRequestConfig) => {
+    remove: async (uuid: string, config?: AxiosRequestConfig) => {
       const response = await client.delete(`/sources/${uuid}`, config);
       return formatResponse<Source>(response);
     },

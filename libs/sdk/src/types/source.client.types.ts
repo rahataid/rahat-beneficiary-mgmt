@@ -1,7 +1,6 @@
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
 import { Source } from '../source';
-import { UUID } from 'crypto';
 
 export type SourceClient = {
   create: (
@@ -10,15 +9,15 @@ export type SourceClient = {
   ) => Promise<FormattedResponse<Source>>;
   list: (config?: AxiosRequestConfig) => Promise<FormattedResponse<Source[]>>;
   listById: (
-    uuid: UUID,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Source>>;
   update: (
-    { uuid, data }: { uuid?: UUID; data?: Source },
+    { uuid, data }: { uuid?: string; data?: Source },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Source>>;
   remove: (
-    uuid: UUID,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Source>>;
 

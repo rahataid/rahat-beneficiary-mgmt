@@ -1,6 +1,5 @@
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import { UUID } from 'crypto';
 import {
   PatchResult,
   Result,
@@ -23,7 +22,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<PaginatedResult<TargetList>>>;
 
   listByTargetUuid: (
-    target_uuid: UUID,
+    target_uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PaginatedResult<Result>>>;
 
@@ -43,7 +42,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<PatchResult>>;
 
   export: (
-    targetUUID?: UUID,
+    targetUUID?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<TargetResults>>;
 };
