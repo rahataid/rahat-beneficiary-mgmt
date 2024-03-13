@@ -1,7 +1,5 @@
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { formatResponse } from '@rumsan/sdk/utils';
-import { Source } from '../source';
-import { UUID } from 'crypto';
 import { TargetClient } from '../types';
 import {
   PatchResult,
@@ -27,7 +25,7 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     listByTargetUuid: async (
-      target_uuid: UUID,
+      target_uuid: string,
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.get(
@@ -58,7 +56,7 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
       );
       return formatResponse<PatchResult>(response);
     },
-    export: async (targetUUID?: UUID, config?: AxiosRequestConfig) => {
+    export: async (targetUUID?: string, config?: AxiosRequestConfig) => {
       const response = await client.post(
         `/targets/export/${targetUUID}`,
         config,
