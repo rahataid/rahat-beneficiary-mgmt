@@ -2,11 +2,11 @@ import { APP_SETTINGS } from '../../constants';
 
 const app: {
   name: string;
-  settings: [];
+  settings: {};
   customId: string;
 } = {
   name: 'Rumsan App',
-  settings: [],
+  settings: {},
   customId: '',
 };
 
@@ -18,15 +18,7 @@ export const listSettings = () => app.settings;
 
 export const getSetting = (name: string) => {
   if (!name) return null;
-  name = name.toUpperCase();
-  const { settings } = app;
-  if (!settings) return null;
-  const found = (settings as { value?: { data?: any } }[]).find(
-    (f: any) => f.name === name,
-  );
-
-  if (!found) return null;
-  return found.value?.data || 'null';
+  return app.settings[name];
 };
 
 export const getCustomUniqueId = () => {

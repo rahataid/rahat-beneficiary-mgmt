@@ -27,6 +27,7 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
+import { AppSettingService } from './settings/setting.service';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -63,6 +64,7 @@ import { SettingsModule } from '@rumsan/settings';
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     ScheduleService,
+    AppSettingService,
   ],
 })
 export class AppModule {}
