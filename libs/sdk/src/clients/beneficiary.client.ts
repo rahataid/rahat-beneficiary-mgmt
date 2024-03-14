@@ -35,7 +35,7 @@ export const getBeneficiaryClient = (
       return formatResponse<Beneficiary>(response);
     },
 
-    uploadBenificiary: async (file: TFile, config?: AxiosRequestConfig) => {
+    uploadBenificiary: async (file: any, config?: AxiosRequestConfig) => {
       const response = await client.post('/beneficiaries/upload', file, config);
       return formatResponse<FileResponse>(response);
     },
