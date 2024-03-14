@@ -18,7 +18,7 @@ Learn more about [Nx generators on the docs](https://nx.dev/plugin-features/use-
 
 ## Running tasks
 
-To execute tasks with Nx use the following syntax:
+To execute tasks with Nx use the following syntax: 
 
 ```
 nx <target> <project> <...options>

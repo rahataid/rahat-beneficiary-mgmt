@@ -16,8 +16,8 @@ export class AppService {
   async getDataFromKoboTool(name: string) {
     const settings = getSetting(name);
     if (!settings) throw new Error('Setting not found');
-    const formId = settings.FORMID;
-    const tokenId = settings.TOKENID;
+    const formId = settings.FORM_ID;
+    const tokenId = settings.TOKEN_ID;
     return axios.get(`${KOBO_URL}/${formId}/data.json`, {
       headers: {
         Authorization: `Token ${tokenId}`,
@@ -32,7 +32,7 @@ export class AppService {
         AND: [
           {
             value: {
-              path: ['data', 'TYPE'],
+              path: ['TYPE'],
               string_contains: 'KOBOTOOL',
             },
           },
@@ -48,7 +48,7 @@ export class AppService {
     const sanitized = res.map((item) => {
       return {
         name: item.name,
-        formId: item.value.data.FORMID,
+        formId: item.value.FORM_ID,
       };
     });
     return sanitized;
