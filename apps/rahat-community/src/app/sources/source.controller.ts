@@ -47,8 +47,8 @@ export class SourceController {
 
   @Get(':importId/mappings')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
+  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  // @UseGuards(JwtGuard, AbilitiesGuard)
   getMappings(@Param('importId') importId: string) {
     return this.sourceService.getMappingsByImportId(importId);
   }
