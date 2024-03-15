@@ -21,6 +21,12 @@ export class CreateSourceDto {
   importId!: string;
 
   @ApiProperty({
+    example: '101',
+  })
+  @IsString()
+  uniqueField?: string;
+
+  @ApiProperty({
     type: 'object',
     example: { data: 'any' },
   })

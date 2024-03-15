@@ -3,11 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
 import { validateRequiredFields } from '../beneficiary-import/helpers';
-import { getCustomUniqueId } from '../settings/setting.config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
-import { ConfigService } from '@nestjs/config';
 import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 
 @Injectable()
@@ -15,7 +13,6 @@ export class SourceService {
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
     private prisma: PrismaService,
-    private config: ConfigService,
   ) {}
 
   async getMappingsByImportId(importId: string) {
@@ -23,17 +20,13 @@ export class SourceService {
       where: { importId },
     });
     if (!res) return null;
-    console.log(res);
-
-    return res?.fieldMapping || null;
+    return res;
   }
 
   async create(dto: CreateSourceDto) {
-    const DEV_ENV = this.config.get('ENV_DEV');
-
-    const customUID = getCustomUniqueId();
+    const customUniqueField = dto.uniqueField || '';
     const missing_fields = validateRequiredFields(
-      customUID,
+      customUniqueField,
       dto.fieldMapping.data,
     );
     if (missing_fields.length) {
@@ -51,8 +44,6 @@ export class SourceService {
       { sourceUUID: row.uuid },
       QUEUE_RETRY_OPTIONS,
     );
-
-    if (DEV_ENV === 'dev') return row;
     return { message: 'Source created and added to queue' };
   }
 

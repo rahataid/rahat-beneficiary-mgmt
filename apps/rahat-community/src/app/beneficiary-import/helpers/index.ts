@@ -1,9 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
 
-export const BENEFICIARY_REQ_FIELDS = ['firstName', 'lastName'];
-
-const GENDER_DB_FIELD = 'gender';
+export const BENEFICIARY_REQ_FIELDS = {
+  FIRST_NAME: 'firstName',
+  LAST_NAME: 'lastName',
+};
 
 export const PRISMA_FIELD_TYPES = {
   STRING: 'String',
@@ -12,12 +13,12 @@ export const PRISMA_FIELD_TYPES = {
   FLOAT: 'Float',
 };
 
-export const injectCustomID = (custonUniqueId: string, payload: any) => {
+export const injectCustomID = (customUniqueField: string, payload: any) => {
   const final = [];
   for (let p of payload) {
     const newItem = { ...p };
-    if (custonUniqueId) {
-      newItem.customId = p[custonUniqueId];
+    if (customUniqueField) {
+      newItem.customId = p[customUniqueField];
     } else newItem.customId = uuid();
     final.push(newItem);
   }
@@ -25,14 +26,18 @@ export const injectCustomID = (custonUniqueId: string, payload: any) => {
 };
 
 export const validateRequiredFields = (
-  custonUniqueId: string,
+  customUniqueField: string,
   payload: any,
 ) => {
-  if (custonUniqueId) BENEFICIARY_REQ_FIELDS.push(custonUniqueId);
   const missing_fields = [];
+  let reqFields = [
+    BENEFICIARY_REQ_FIELDS.FIRST_NAME,
+    BENEFICIARY_REQ_FIELDS.LAST_NAME,
+  ];
+  if (customUniqueField) reqFields.push(customUniqueField);
   for (let item of payload) {
     const keys = Object.keys(item);
-    for (let f of BENEFICIARY_REQ_FIELDS) {
+    for (let f of reqFields) {
       let exist = keys.includes(f);
       if (!exist) missing_fields.push(f);
     }

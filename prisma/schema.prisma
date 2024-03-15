@@ -45,6 +45,7 @@ model Source {
   uuid              String              @unique @default(uuid()) @db.Uuid()
   name              String
   importId          String              @unique
+  uniqueField       String?
   isImported        Boolean             @default(false)
   beneficiarySource BeneficiarySource[]
   details           Json?               @db.JsonB()
@@ -303,6 +304,7 @@ enum Service {
   GITHUB
   LINKEDIN
 }
+
 // ============End User Management Schema===========
 // ++++++++++++++++++ START: @rumsan/user - Signup +++++++++++++++++++++++++
 

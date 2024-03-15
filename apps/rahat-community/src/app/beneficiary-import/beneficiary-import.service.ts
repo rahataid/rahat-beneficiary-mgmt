@@ -10,7 +10,6 @@ import {
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
-import { getCustomUniqueId } from '../settings/setting.config';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -21,17 +20,20 @@ export class BeneficiaryImportService {
   ) {}
 
   async importBySourceUUID(uuid: string) {
-    const customUID = getCustomUniqueId();
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
     if (source.isImported) return 'Already imported!';
+    const customUniqueField = source.uniqueField || '';
     const jsonData = source.fieldMapping as {
       data: object;
     };
     // 1. Fetch DB_Fields and validate required fields
     const mapped_fields = jsonData.data;
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    const missing_fields = validateRequiredFields(customUID, mapped_fields);
+    const missing_fields = validateRequiredFields(
+      customUniqueField,
+      mapped_fields,
+    );
 
     if (missing_fields.length) {
       throw new Error(
@@ -46,7 +48,7 @@ export class BeneficiaryImportService {
     // 3. Parse values against target field
     const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
     // 4. Inject unique key based on settings
-    const final_payload = injectCustomID(customUID, parsed_data);
+    const final_payload = injectCustomID(customUniqueField, parsed_data);
     let count = 0;
 
     // // 5. Save Benef and source
