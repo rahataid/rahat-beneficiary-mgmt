@@ -72,7 +72,6 @@ export class BeneficiariesController {
     file: //@ts-ignore
     Express.Multer.file,
   ) {
-    console.log(file);
     return this.beneficiariesService.uploadFile(file);
   }
 
