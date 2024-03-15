@@ -7,3 +7,4 @@ export * from './fieldDefinition.client.types';
 export * from './target.client.types';
 export * from './file.types';
 export * from './response.types';
+export * from './settings.clients.types';
