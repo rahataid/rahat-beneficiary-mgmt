@@ -59,8 +59,8 @@ export class BeneficiariesController {
   }
 
   @Post('upload')
-  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+   @UseGuards(JwtGuard, AbilitiesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadAsset(

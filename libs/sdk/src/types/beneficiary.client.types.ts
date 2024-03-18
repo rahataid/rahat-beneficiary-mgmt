@@ -30,8 +30,8 @@ export type BeneficiaryClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
-  upload: (
-    file: TFile,
+  uploadBenificiary: (
+    file: any,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FileResponse>>;
 
@@ -45,7 +45,7 @@ export type BeneficiaryClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Beneficiary>>;
 
-  import_beneficiary: (
+  importBeneficiary: (
     source_uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ImportBeneficiary>>;
