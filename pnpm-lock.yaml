@@ -72,8 +72,8 @@ dependencies:
     specifier: ^1.0.3
     version: 1.0.3(@types/react-dom@18.2.14)(@types/react@18.2.33)(react-dom@18.2.0)(react@18.2.0)
   '@rahataid/community-tool-sdk':
-    specifier: ^0.0.1
-    version: 0.0.1
+    specifier: ^0.0.3
+    version: 0.0.3
   '@rumsan/core':
     specifier: 3.0.1
     version: 3.0.1(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
@@ -5618,8 +5618,8 @@ packages:
       '@babel/runtime': 7.23.9
     dev: false
 
-  /@rahataid/community-tool-sdk@0.0.1:
-    resolution: {integrity: sha512-rzTpBkci23sgf9C2g4Br0JqmLtIFtd3hGtm4e7B7R0ksjmXb5D1qx4P0zc1nHxVLA1TMFpBpATlWukuiYtHXzA==, tarball: https://npm.pkg.github.com/download/@rahataid/community-tool-sdk/0.0.1/640e57d2b2dbb4a505508c2f934fe68234ed2b13}
+  /@rahataid/community-tool-sdk@0.0.3:
+    resolution: {integrity: sha512-H6Q0jhrpu3x5M6FDVyRlqDv9hXdIUV6gslvWRMmSYgLuU8Gz/VAdA6ZyvtLsjwCBXg8Q8dgUD1ller68LJgYsQ==, tarball: https://npm.pkg.github.com/download/@rahataid/community-tool-sdk/0.0.3/298a16770f605e6231c86a62b2f2393e9c16d69a}
     dependencies:
       tslib: 2.6.2
     dev: false

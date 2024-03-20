@@ -14,3 +14,8 @@ export type SettingInput = {
   isReadOnly: boolean | null;
   isPrivate: boolean | null;
 };
+
+export type SettingList = {
+  sucess: boolean;
+  data: any;
+};

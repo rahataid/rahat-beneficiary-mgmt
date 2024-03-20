@@ -16,7 +16,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @Controller('app')
 @ApiTags('APP')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private appSettingService: AppSettingService,
+  ) {}
 
   @Get()
   getData() {
@@ -34,7 +37,7 @@ export class AppController {
 
   @Get('settings')
   listSettings() {
-    return listSettings();
+    return this.appSettingService.findaAll();
   }
 
   @Get('settings/kobotool')

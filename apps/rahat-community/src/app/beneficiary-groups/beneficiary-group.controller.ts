@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { BeneficiaryGroupService } from './beneficiary-group.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -45,8 +46,9 @@ export class BeneficiaryGroupController {
   @HttpCode(HttpStatus.OK)
   // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
   // @UseGuards(JwtGuard, AbilitiesGuard)
-  findAll() {
-    return this.beneficiaryGroupService.findAll();
+  findAll(@Query('') filters: any) {
+    console.log(filters);
+    return this.beneficiaryGroupService.findAll(filters);
   }
 
   @Get(':id')
