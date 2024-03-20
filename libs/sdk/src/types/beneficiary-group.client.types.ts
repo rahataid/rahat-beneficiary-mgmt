@@ -1,6 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import { BeneficiaryGroup } from '../beneficiarygroup';
 import { FormattedResponse } from '@rumsan/sdk/utils';
+import { Pagination } from '@rumsan/sdk/types';
 
 export type BeneficiaryGroupClient = {
   create: (
@@ -9,6 +10,7 @@ export type BeneficiaryGroupClient = {
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 
   list: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup[]>>;
 

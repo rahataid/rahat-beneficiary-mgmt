@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { GroupClient } from '../types';
 import { Groups } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
+import { Pagination } from '@rumsan/sdk/types';
 
 export const getGroupClient = (client: AxiosInstance): GroupClient => {
   return {
@@ -10,8 +11,8 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<Groups>(response);
     },
 
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/group', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/group', { params: data, ...config });
       return formatResponse<Groups[]>(response);
     },
 

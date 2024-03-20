@@ -5,6 +5,8 @@ import {
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import { RSError } from '@rumsan/core';
+import { paginate } from '../utils/paginate';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BeneficiaryGroupService {
@@ -40,8 +42,21 @@ export class BeneficiaryGroupService {
     return groupBenefData;
   }
 
-  async findAll() {
-    return await this.prisma.beneficiaryGroup.findMany({});
+  async findAll(filters: any) {
+    const select: Prisma.BeneficiaryGroupSelect = {
+      beneficiaryId: true,
+      groupId: true,
+      id: true,
+    };
+    // return await this.prisma.beneficiaryGroup.findMany({});
+    return paginate(
+      this.prisma.beneficiaryGroup,
+      { select },
+      {
+        page: +filters?.page,
+        perPage: +filters?.perPage,
+      },
+    );
   }
 
   async findOne(id: number) {

@@ -10,6 +10,12 @@ export class AppSettingService {
 
   async refreshSettings() {
     const response = await this.settingService.listPublic();
+
     setSettings(response);
+    return response;
+  }
+  async findaAll() {
+    const response = await this.settingService.listAll();
+    return response;
   }
 }

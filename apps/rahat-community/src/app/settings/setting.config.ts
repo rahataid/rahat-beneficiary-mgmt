@@ -2,7 +2,7 @@ import { APP_SETTINGS } from '../../constants';
 
 const app: {
   name: string;
-  settings: {};
+  settings: object;
   customId: string;
 } = {
   name: 'Rumsan App',
@@ -14,7 +14,9 @@ export const setSettings = (data: any) => {
   app.settings = data;
 };
 
-export const listSettings = () => app.settings;
+export const listSettings = () => {
+  return app.settings;
+};
 
 export const getSetting = (name: string) => {
   if (!name) return null;

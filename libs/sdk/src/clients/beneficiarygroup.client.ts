@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { BeneficiaryGroup } from '../beneficiarygroup';
 import { BeneficiaryGroupClient } from '../types';
 import { formatResponse } from '@rumsan/sdk/utils';
+import { Pagination } from '@rumsan/sdk/types';
 
 export const getBeneficiaryGroupClient = (
   client: AxiosInstance,
@@ -12,8 +13,11 @@ export const getBeneficiaryGroupClient = (
       return formatResponse<BeneficiaryGroup>(response);
     },
 
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/beneficiary-group', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/beneficiary-group', {
+        params: data,
+        ...config,
+      });
       return formatResponse<BeneficiaryGroup[]>(response);
     },
 
