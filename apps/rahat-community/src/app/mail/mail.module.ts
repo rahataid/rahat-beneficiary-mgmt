@@ -16,12 +16,12 @@ const EMAIL_TEMPLATE_DIR = join(__dirname, './assets/email-templates');
           port: config.get('EMAIL_PORT'),
           secure: true,
           auth: {
-            user: config.get('EMAIL_USER'),
-            pass: config.get('EMAIL_PASS'),
+            user: config.get('EMAIL_ADDRESS'),
+            pass: config.get('EMAIL_PASSWORD'),
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('EMAIL_USER')}>`,
+          from: `"No Reply" <${config.get('EMAIL_ADDRESS')}>`,
         },
         template: {
           dir: EMAIL_TEMPLATE_DIR,
