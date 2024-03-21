@@ -13,32 +13,40 @@ export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateBeneficiaryGroupDto) {
     const groupBenefData = await this.prisma.$transaction(async (prisma) => {
-      const data = await prisma.beneficiaryGroup.findFirst({
-        where: {
-          beneficiaryId: dto.beneficiaryId,
-          groupId: dto.groupId,
-        },
-      });
+      const resultArray = [];
 
-      if (data) throw new Error('Already Created');
+      for (const beneficiaryId of dto.beneficiariesId) {
+        const data = await prisma.beneficiaryGroup.findFirst({
+          where: {
+            beneficiaryId: beneficiaryId,
+            groupId: dto.groupId,
+          },
+        });
 
-      const createdBenefGroup = await prisma.beneficiaryGroup.create({
-        data: {
-          beneficiary: {
-            connect: {
-              id: dto.beneficiaryId,
+        if (data) {
+          throw new Error(
+            `Beneficiary ${beneficiaryId} is already associated with the group`,
+          );
+        }
+
+        const createdBenefGroup = await prisma.beneficiaryGroup.create({
+          data: {
+            beneficiary: {
+              connect: {
+                id: beneficiaryId,
+              },
+            },
+            group: {
+              connect: {
+                id: dto.groupId,
+              },
             },
           },
-          group: {
-            connect: {
-              id: dto.groupId,
-            },
-          },
-        },
-      });
-      return createdBenefGroup;
+        });
+        resultArray.push(createdBenefGroup);
+      }
+      return resultArray;
     });
-
     return groupBenefData;
   }
 

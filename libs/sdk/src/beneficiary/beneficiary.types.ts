@@ -13,8 +13,9 @@ export type Beneficiary = {
   latitude?: number;
   longitude?: number;
   notes?: string;
-  phone: string;
+  phone?: string;
   extras?: any;
+  email?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
   phoneStatus?: PhoneStatus;
@@ -40,8 +41,9 @@ export type UpdateBeneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
+  email?: string;
   notes?: string;
-  phone: string;
+  phone?: string;
   extras?: any;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
@@ -56,6 +58,7 @@ export type ListBeneficiary = {
   lastName: string;
   id: number;
   uuid: string;
+  email?: string;
   gender: Gender;
   customId: string;
   walletAddress: string;

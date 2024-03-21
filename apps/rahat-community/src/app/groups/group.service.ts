@@ -69,7 +69,7 @@ export class GroupService {
   }
 
   async update(id: number, dto: UpdateGroupDto) {
-    await this.prisma.group.update({
+    return await this.prisma.group.update({
       where: {
         id,
       },

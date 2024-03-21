@@ -1,27 +1,32 @@
 import { AxiosRequestConfig } from 'axios';
-import { Groups } from '../groups';
+import {
+  GroupInput,
+  GroupResponse,
+  GroupResponseById,
+  ListGroup,
+} from '../groups';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
 
 export type GroupClient = {
   create: (
-    data?: Groups,
+    data?: GroupInput,
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<Groups>>;
+  ) => Promise<FormattedResponse<GroupResponse>>;
   list: (
     data?: Pagination,
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<Groups[]>>;
+  ) => Promise<FormattedResponse<ListGroup[]>>;
   listById: (
     id: string,
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<Groups>>;
+  ) => Promise<FormattedResponse<GroupResponseById>>;
   update: (
-    { id, data }: { id?: string; data?: Groups },
+    { id, data }: { id?: string; data?: GroupInput },
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<Groups>>;
+  ) => Promise<FormattedResponse<GroupResponse>>;
   remove: (
     id: string,
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<Groups>>;
+  ) => Promise<FormattedResponse<GroupResponse>>;
 };
