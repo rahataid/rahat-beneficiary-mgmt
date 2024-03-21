@@ -9,9 +9,12 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { SourceService } from '../sources/source.service';
+import { MailService } from '../mail/mail.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
   ],
@@ -24,6 +27,7 @@ import { SourceService } from '../sources/source.service';
     BeneficiaryImportService,
     BeneficiarySourceService,
     SourceService,
+    MailService,
   ],
 })
 export class ListenersModule {}

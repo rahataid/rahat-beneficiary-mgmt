@@ -2,6 +2,10 @@ export const DB_MODELS = {
   TBL_BENEFICIARY: 'tbl_beneficiaries',
 };
 
+export const EMAIL_TEMPLATES = {
+  LOGIN: 'login',
+};
+
 export const TARGET_QUERY_STATUS = {
   PENDING: 'PENDING',
   COMPLETED: 'COMPLETED',
@@ -24,6 +28,8 @@ export const EVENTS = {
   CREATE_TARGET_RESULT: 'create_target_result',
   CLEANUP_TARGET_QUERY: 'cleanup.target.query',
   BENEF_SOURCE_CREATED: 'benef.source.created',
+  CHALLENGE_CREATED: 'rsu.challenge_created',
+  OTP_CREATED: 'rsu.otp_created',
 };
 
 export const APP = {
