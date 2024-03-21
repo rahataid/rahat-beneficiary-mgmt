@@ -29,6 +29,8 @@ export class SourceService {
       customUniqueField,
       dto.fieldMapping.data,
     );
+    console.log('Missing_Fields=>', missing_fields);
+    return;
     if (missing_fields.length) {
       throw new Error(
         `Required fields missing! [${missing_fields.toString()}]`,

@@ -30,20 +30,58 @@ export const validateRequiredFields = (
   payload: any,
 ) => {
   const missing_fields = [];
+  const myFields = [];
   let reqFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
   if (customUniqueField) reqFields.push(customUniqueField);
   for (let item of payload) {
+    console.log('REQ_FIELDS=>', reqFields);
     const keys = Object.keys(item);
     for (let f of reqFields) {
+      console.log('KEY:==>', keys);
       let exist = keys.includes(f);
-      if (!exist) missing_fields.push(f);
+      if (!exist) {
+        // Validate keys
+        myFields.push({ fieldName: f, isValid: false });
+        missing_fields.push(f);
+      } else {
+        let isValid = true;
+        // If exist validate value
+        const itemValue = item[f];
+        if (f === 'email') isValid = validateEmail(itemValue);
+        if (f === 'phone') isValid = validatePhone(itemValue);
+
+        myFields.push({ fieldName: f, isValid });
+      }
     }
   }
-  const unique_only = [...new Set(missing_fields)];
-  return unique_only;
+  const invalidFields = myFields.filter((f) => f.isValid === false);
+  const uniqueItems = removeDuplicates(invalidFields);
+  return uniqueItems;
+};
+
+const removeDuplicates = (input: string[]) => {
+  const uniqueFieldNames = new Set();
+  const uniqueObjects = input.filter((item: any) => {
+    if (!uniqueFieldNames.has(item.fieldName)) {
+      uniqueFieldNames.add(item.fieldName);
+      return true;
+    }
+    return false;
+  });
+  return uniqueObjects;
+};
+
+const validateEmail = (email: string) => {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
+};
+
+const validatePhone = (phone: string) => {
+  const re = /^\d{10}$/;
+  return re.test(phone);
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {
