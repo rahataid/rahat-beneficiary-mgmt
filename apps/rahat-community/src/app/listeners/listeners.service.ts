@@ -4,14 +4,13 @@ import { EMAIL_TEMPLATES, EVENTS } from '../../constants';
 import { TargetService } from '../targets/target.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
 import { SourceCreatedDto } from './listeners.dto';
-import { MailService } from '../mail/mail.service';
-
+import { EmailService } from './mail.service';
 @Injectable()
 export class ListenerService {
   constructor(
     private targetService: TargetService,
     private benefImport: BeneficiaryImportService,
-    private mailService: MailService,
+    private emailService: EmailService,
   ) {}
   @OnEvent(EVENTS.CREATE_TARGET_RESULT)
   async createTargetResult(data: any) {
@@ -27,7 +26,15 @@ export class ListenerService {
       subject: 'Rahat OTP',
       template: EMAIL_TEMPLATES.LOGIN,
     };
-    return this.mailService.sendOTPMail(payload);
+    console.log('EMAIL Payload==>', payload);
+    return this.emailService.sendEmail(
+      data.address,
+      'OTP for login',
+      'OTP for login',
+      `<h1>OTP for login</h1><p>${data.otp}</p>`,
+    );
+    // const sent = await this.mailService.sendOTPMail(payload);
+    // console.log('Email Sent==>', sent);
   }
 
   @OnEvent(EVENTS.CLEANUP_TARGET_QUERY)
