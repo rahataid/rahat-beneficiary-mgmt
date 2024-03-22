@@ -1,4 +1,4 @@
 export type BeneficiaryGroup = {
-  beneficiaryId: number;
+  beneficiariesId: number[];
   groupId: number;
 };

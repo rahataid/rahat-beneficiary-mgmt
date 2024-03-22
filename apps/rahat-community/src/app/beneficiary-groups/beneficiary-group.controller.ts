@@ -38,7 +38,6 @@ export class BeneficiaryGroupController {
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   // @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiaryGroupDto) {
-    console.log(dto);
     return this.beneficiaryGroupService.create(dto);
   }
 
