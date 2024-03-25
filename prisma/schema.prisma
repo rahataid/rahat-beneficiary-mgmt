@@ -84,6 +84,7 @@ model FieldDefinition {
 
 model Group {
   id                 Int                @id @default(autoincrement()) @db.Integer()
+  uuid              String              @unique @default(uuid()) @db.Uuid()
   name               String             @unique
   beneficiariesGroup BeneficiaryGroup[]
 
