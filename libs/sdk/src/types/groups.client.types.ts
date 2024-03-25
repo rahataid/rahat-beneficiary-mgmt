@@ -18,15 +18,15 @@ export type GroupClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ListGroup[]>>;
   listById: (
-    id: string,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponseById>>;
   update: (
-    { id, data }: { id?: string; data?: GroupInput },
+    { uuid, data }: { uuid?: string; data?: GroupInput },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
   remove: (
-    id: string,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
 };

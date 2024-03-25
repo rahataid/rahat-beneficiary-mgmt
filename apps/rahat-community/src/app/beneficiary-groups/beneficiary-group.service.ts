@@ -14,6 +14,7 @@ export class BeneficiaryGroupService {
   async create(dto: CreateBeneficiaryGroupDto) {
     const groupBenefData = await this.prisma.$transaction(async (prisma) => {
       const resultArray = [];
+      const errors = [];
 
       for (const beneficiaryId of dto.beneficiariesId) {
         const data = await prisma.beneficiaryGroup.findFirst({
@@ -24,9 +25,20 @@ export class BeneficiaryGroupService {
         });
 
         if (data) {
-          throw new Error(
-            `Beneficiary ${beneficiaryId} is already associated with the group`,
+          const beneficiaryName = await prisma.beneficiary.findUnique({
+            where: {
+              id: beneficiaryId,
+            },
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          });
+
+          errors.push(
+            `${beneficiaryName.firstName} ${beneficiaryName.lastName}`,
           );
+          continue;
         }
 
         const createdBenefGroup = await prisma.beneficiaryGroup.create({
@@ -45,7 +57,25 @@ export class BeneficiaryGroupService {
         });
         resultArray.push(createdBenefGroup);
       }
-      return resultArray;
+
+      const errorMessage = errors.length > 0 && errors.join(',');
+
+      const groupName = await prisma.group.findUnique({
+        where: {
+          id: dto.groupId,
+        },
+        select: {
+          name: true,
+        },
+      });
+
+      const finalResult = {
+        finalMessage: `${resultArray.length} beneficiary associated with ${groupName.name}`,
+        info:
+          errors.length > 0 &&
+          `${errorMessage} is already associated with ${groupName.name}`,
+      };
+      return finalResult;
     });
     return groupBenefData;
   }
