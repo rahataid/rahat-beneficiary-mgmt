@@ -25,15 +25,18 @@ export class SourceService {
 
   async create(dto: CreateSourceDto) {
     const customUniqueField = dto.uniqueField || '';
-    const missing_fields = validateRequiredFields(
+    const invalidFields = validateRequiredFields(
       customUniqueField,
       dto.fieldMapping.data,
     );
-    if (missing_fields.length) {
-      throw new Error(
-        `Required fields missing! [${missing_fields.toString()}]`,
-      );
-    }
+    console.log('invalidFields==>', invalidFields);
+    return { success: false, invalidFields };
+
+    // if (missing_fields.length) {
+    //   throw new Error(
+    //     `Required fields missing! [${missing_fields.toString()}]`,
+    //   );
+    // }
     const row = await this.prisma.source.upsert({
       where: { importId: dto.importId },
       update: { ...dto, isImported: false },

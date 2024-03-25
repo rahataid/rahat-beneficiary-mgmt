@@ -25,25 +25,66 @@ export const injectCustomID = (customUniqueField: string, payload: any) => {
   return final;
 };
 
+function validateEmail(email: string) {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
+}
+
+function validatePhone(phoneNumber: string) {
+  const phoneRegex = /^\+\d{1,3} \(\d{3}\) \d{3}-\d{4}$/;
+
+  return (
+    phoneRegex.test(phoneNumber) &&
+    phoneNumber.length > 10 &&
+    phoneNumber.length < 20
+  );
+}
+
+function removeDuplicates(fields: any) {
+  const uniqueFields = {};
+  fields.forEach((item: any) => {
+    uniqueFields[item.fieldName] = item;
+  });
+  return Object.values(uniqueFields);
+}
+
 export const validateRequiredFields = (
   customUniqueField: string,
   payload: any,
 ) => {
   const missing_fields = [];
+  const myFields = [];
   let reqFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
   if (customUniqueField) reqFields.push(customUniqueField);
   for (let item of payload) {
+    console.log('REQ_FIELDS=>', reqFields);
     const keys = Object.keys(item);
+    console.log('KEYS=>', keys);
     for (let f of reqFields) {
       let exist = keys.includes(f);
-      if (!exist) missing_fields.push(f);
+      console.log(exist, f);
+      if (!exist) {
+        // Validate keys
+        myFields.push({ fieldName: f, isValid: false });
+        missing_fields.push(f);
+      } else {
+        let isValid = true;
+        // If exist validate value
+        const itemValue = item[f];
+        if (f === 'email') isValid = validateEmail(itemValue);
+        if (f === 'phone') isValid = validatePhone(itemValue);
+
+        myFields.push({ fieldName: f, isValid });
+      }
     }
   }
-  const unique_only = [...new Set(missing_fields)];
-  return unique_only;
+  const invalidFields = myFields.filter((f) => f.isValid === false);
+  console.log('Invalid==>', invalidFields);
+  const uniqueItems = removeDuplicates(invalidFields);
+  return uniqueItems;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

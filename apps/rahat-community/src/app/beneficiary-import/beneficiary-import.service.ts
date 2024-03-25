@@ -35,11 +35,11 @@ export class BeneficiaryImportService {
       mapped_fields,
     );
 
-    if (missing_fields.length) {
-      throw new Error(
-        `Required fields missing! [${missing_fields.toString()}]`,
-      );
-    }
+    // if (missing_fields.length) {
+    //   throw new Error(
+    //     `Required fields missing! [${missing_fields.toString()}]`,
+    //   );
+    // }
     // 2. Only select fields matching with DB_Fields
     const sanitized_fields = extractFieldsMatchingWithDBFields(
       dbFields,
