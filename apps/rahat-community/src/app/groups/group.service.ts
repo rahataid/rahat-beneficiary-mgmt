@@ -53,10 +53,10 @@ export class GroupService {
     );
   }
 
-  findOne(id: number) {
+  findOne(uuid: string) {
     return this.prisma.group.findUnique({
       where: {
-        id,
+        uuid,
       },
       select: {
         beneficiariesGroup: {
@@ -69,19 +69,19 @@ export class GroupService {
     });
   }
 
-  async update(id: number, dto: UpdateGroupDto) {
+  async update(uuid: string, dto: UpdateGroupDto) {
     return await this.prisma.group.update({
       where: {
-        id,
+        uuid,
       },
       data: dto,
     });
   }
 
-  remove(id: number) {
+  remove(uuid: string) {
     return this.prisma.group.delete({
       where: {
-        id,
+        uuid,
       },
     });
   }
