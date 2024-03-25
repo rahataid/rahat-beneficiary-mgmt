@@ -23,6 +23,7 @@ export class GroupService {
   async findAll(query: any) {
     const select: Prisma.GroupSelect = {
       name: true,
+      uuid: true,
       id: true,
       beneficiariesGroup: {
         select: {
