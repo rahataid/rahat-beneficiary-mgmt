@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
-import { plainToClass } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateBeneficiaryDto } from '@community-tool/extentions';
 
@@ -53,41 +53,30 @@ function removeDuplicates(fields: any) {
 
 export const validateKeysAndValues = async (
   customUniqueField: string,
-  data: CreateBeneficiaryDto[],
+  data: [],
 ) => {
-  const missing_fields = [];
-  const myFields = [];
-  let reqFields = [
+  const invalidFields = [];
+  let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
-  return myFields;
-  if (customUniqueField) reqFields.push(customUniqueField);
+  if (customUniqueField) requiredFields.push(customUniqueField);
   for (let item of data) {
-    const beneficiaryDto = plainToClass(CreateBeneficiaryDto, item);
+    const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
 
-    const keys = Object.keys(item);
-    for (let f of reqFields) {
-      let exist = keys.includes(f);
-      if (!exist) {
-        // Validate keys
-        myFields.push({ fieldName: f, isValid: false });
-        missing_fields.push(f);
-      } else {
-        let isValid = true;
-        // If exist validate value
-        const itemValue = item[f];
-        if (f === 'email') isValid = validateEmail(itemValue);
-        if (f === 'phone') isValid = validatePhone(itemValue);
-
-        myFields.push({ fieldName: f, isValid });
-      }
+    if (errors.length) {
+      const fields = errors.map((e) => e.property);
+      invalidFields.push(...fields);
     }
+
+    const keys = Object.keys(item);
+    for (let f of requiredFields) {
+      let exist = keys.includes(f);
+      if (!exist) invalidFields.push(f);
+    }
+    return invalidFields;
   }
-  const invalidFields = myFields.filter((f) => f.isValid === false);
-  const uniqueItems = removeDuplicates(invalidFields);
-  return uniqueItems;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

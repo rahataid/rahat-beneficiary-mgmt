@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import {
   BankedStatus,
   Gender,
   InternetStatus,
   PhoneStatus,
 } from '@rahataid/community-tool-sdk/enums/';
-// enum GenderEnum {
-//   MALE = 'MALE',
-//   FEMALE = 'FEMALE',
-//   OTHER = 'OTHER',
-//   UNKNOWN = 'UNKNOWN',
-// }
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -72,6 +74,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(Gender)
   gender?: Gender;
 
   @ApiProperty({
@@ -81,6 +84,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(InternetStatus)
   internetStatus?: InternetStatus;
 
   @ApiProperty({
@@ -90,6 +94,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(BankedStatus)
   bankedStatus?: BankedStatus;
 
   @ApiProperty({
@@ -99,6 +104,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(PhoneStatus)
   phoneStatus?: PhoneStatus;
 
   @ApiProperty({
@@ -138,6 +144,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @MinLength(10)
   phone?: string;
 
   @ApiProperty({
@@ -158,6 +165,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/g)
   email?: string;
 
   @ApiProperty({

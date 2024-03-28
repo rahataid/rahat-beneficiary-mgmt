@@ -28,27 +28,26 @@ export class SourceService {
     return res;
   }
 
-  async ValidateBeneficiaryImort(customUniqueField: string, dto: any) {
-    const { data } = dto.fieldMapping;
-    const invalidFields = validateKeysAndValues(customUniqueField, data);
-    console.log('invalidFields==>', invalidFields);
-    return data;
+  async ValidateBeneficiaryImort(customUniqueField: string, data: any) {
+    const invalidFields = await validateKeysAndValues(customUniqueField, data);
+    return { invalidFields, result: data };
   }
 
   async create(dto: CreateSourceDto) {
-    console.log('DTO==>', dto);
     const { action, ...rest } = dto;
+    const { data } = dto.fieldMapping;
+
     const customUniqueField = rest.uniqueField || '';
 
     if (action === IMPORT_ACTION.VALIDATE)
-      return this.ValidateBeneficiaryImort(customUniqueField, rest);
+      return this.ValidateBeneficiaryImort(customUniqueField, data);
 
     if (action === IMPORT_ACTION.IMPORT) {
       const invalidFields = await validateKeysAndValues(
         customUniqueField,
-        rest.fieldMapping.data,
+        data,
       );
-      if (invalidFields.length) throw new Error('Invalid data!');
+      if (invalidFields.length) throw new Error('Invalid data submitted!');
       const row = await this.prisma.source.upsert({
         where: { importId: rest.importId },
         update: { ...rest, isImported: false },
