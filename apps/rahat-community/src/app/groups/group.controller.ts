@@ -39,21 +39,21 @@ export class GroupController {
     return this.groupService.findAll(query);
   }
 
-  @Get(':id')
+  @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
-  findOne(@Param('id') id: string) {
-    return this.groupService.findOne(+id);
+  findOne(@Param('uuid') uuid: string) {
+    return this.groupService.findOne(uuid);
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
-  update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
-    return this.groupService.update(+id, updateGroupDto);
+  update(@Param('uuid') uuid: string, @Body() updateGroupDto: UpdateGroupDto) {
+    return this.groupService.update(uuid, updateGroupDto);
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
-  remove(@Param('id') id: string) {
-    return this.groupService.remove(+id);
+  remove(@Param('uuid') uuid: string) {
+    return this.groupService.remove(uuid);
   }
 }

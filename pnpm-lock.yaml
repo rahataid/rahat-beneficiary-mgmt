@@ -48,8 +48,8 @@ dependencies:
     specifier: ^7.1.16
     version: 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
   '@prisma/client':
-    specifier: ^5.10.2
-    version: 5.10.2(prisma@5.10.2)
+    specifier: ^5.11.0
+    version: 5.11.0(prisma@5.11.0)
   '@radix-ui/react-avatar':
     specifier: ^1.0.4
     version: 1.0.4(@types/react-dom@18.2.14)(@types/react@18.2.33)(react-dom@18.2.0)(react@18.2.0)
@@ -76,19 +76,19 @@ dependencies:
     version: 0.0.3
   '@rumsan/core':
     specifier: 3.0.1
-    version: 3.0.1(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
+    version: 3.0.1(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
   '@rumsan/prisma':
     specifier: ^1.0.125
-    version: 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+    version: 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1)
   '@rumsan/sdk':
     specifier: ^0.0.41
     version: 0.0.41
   '@rumsan/settings':
     specifier: ^0.0.108
-    version: 0.0.108(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
+    version: 0.0.108(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
   '@rumsan/user':
     specifier: ^3.0.152
-    version: 3.0.153(@nestjs/platform-express@10.3.3)(passport@0.7.0)(prisma@5.10.2)(reflect-metadata@0.1.14)(typescript@5.2.2)(zod@3.22.4)
+    version: 3.0.153(@nestjs/platform-express@10.3.3)(passport@0.7.0)(prisma@5.11.0)(reflect-metadata@0.1.14)(typescript@5.2.2)(zod@3.22.4)
   axios:
     specifier: ^1.6.7
     version: 1.6.7
@@ -149,9 +149,6 @@ dependencies:
   passport-jwt:
     specifier: ^4.0.1
     version: 4.0.1
-  prisma:
-    specifier: ^5.9.1
-    version: 5.10.2
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -328,6 +325,9 @@ devDependencies:
   prettier:
     specifier: ^2.8.8
     version: 2.8.8
+  prisma:
+    specifier: ^5.11.0
+    version: 5.11.0
   react-refresh:
     specifier: ^0.10.0
     version: 0.10.0
@@ -4915,8 +4915,8 @@ packages:
       webpack: 5.90.3(@swc/core@1.3.107)
     dev: true
 
-  /@prisma/client@5.10.2(prisma@5.10.2):
-    resolution: {integrity: sha512-ef49hzB2yJZCvM5gFHMxSFL9KYrIP9udpT5rYo0CsHD4P9IKj473MbhU1gjKKftiwWBTIyrt9jukprzZXazyag==}
+  /@prisma/client@5.11.0(prisma@5.11.0):
+    resolution: {integrity: sha512-SWshvS5FDXvgJKM/a0y9nDC1rqd7KG0Q6ZVzd+U7ZXK5soe73DJxJJgbNBt2GNXOa+ysWB4suTpdK5zfFPhwiw==}
     engines: {node: '>=16.13'}
     requiresBuild: true
     peerDependencies:
@@ -4925,40 +4925,35 @@ packages:
       prisma:
         optional: true
     dependencies:
-      prisma: 5.10.2
+      prisma: 5.11.0
     dev: false
 
-  /@prisma/debug@5.10.2:
-    resolution: {integrity: sha512-bkBOmH9dpEBbMKFJj8V+Zp8IZHIBjy3fSyhLhxj4FmKGb/UBSt9doyfA6k1UeUREsMJft7xgPYBbHSOYBr8XCA==}
-    dev: false
+  /@prisma/debug@5.11.0:
+    resolution: {integrity: sha512-N6yYr3AbQqaiUg+OgjkdPp3KPW1vMTAgtKX6+BiB/qB2i1TjLYCrweKcUjzOoRM5BriA4idrkTej9A9QqTfl3A==}
 
-  /@prisma/engines-version@5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9:
-    resolution: {integrity: sha512-uCy/++3Jx/O3ufM+qv2H1L4tOemTNqcP/gyEVOlZqTpBvYJUe0tWtW0y3o2Ueq04mll4aM5X3f6ugQftOSLdFQ==}
-    dev: false
+  /@prisma/engines-version@5.11.0-15.efd2449663b3d73d637ea1fd226bafbcf45b3102:
+    resolution: {integrity: sha512-WXCuyoymvrS4zLz4wQagSsc3/nE6CHy8znyiMv8RKazKymOMd5o9FP5RGwGHAtgoxd+aB/BWqxuP/Ckfu7/3MA==}
 
-  /@prisma/engines@5.10.2:
-    resolution: {integrity: sha512-HkSJvix6PW8YqEEt3zHfCYYJY69CXsNdhU+wna+4Y7EZ+AwzeupMnUThmvaDA7uqswiHkgm5/SZ6/4CStjaGmw==}
+  /@prisma/engines@5.11.0:
+    resolution: {integrity: sha512-gbrpQoBTYWXDRqD+iTYMirDlF9MMlQdxskQXbhARhG6A/uFQjB7DZMYocMQLoiZXO/IskfDOZpPoZE8TBQKtEw==}
     requiresBuild: true
     dependencies:
-      '@prisma/debug': 5.10.2
-      '@prisma/engines-version': 5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9
-      '@prisma/fetch-engine': 5.10.2
-      '@prisma/get-platform': 5.10.2
-    dev: false
+      '@prisma/debug': 5.11.0
+      '@prisma/engines-version': 5.11.0-15.efd2449663b3d73d637ea1fd226bafbcf45b3102
+      '@prisma/fetch-engine': 5.11.0
+      '@prisma/get-platform': 5.11.0
 
-  /@prisma/fetch-engine@5.10.2:
-    resolution: {integrity: sha512-dSmXcqSt6DpTmMaLQ9K8ZKzVAMH3qwGCmYEZr/uVnzVhxRJ1EbT/w2MMwIdBNq1zT69Rvh0h75WMIi0mrIw7Hg==}
+  /@prisma/fetch-engine@5.11.0:
+    resolution: {integrity: sha512-994viazmHTJ1ymzvWugXod7dZ42T2ROeFuH6zHPcUfp/69+6cl5r9u3NFb6bW8lLdNjwLYEVPeu3hWzxpZeC0w==}
     dependencies:
-      '@prisma/debug': 5.10.2
-      '@prisma/engines-version': 5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9
-      '@prisma/get-platform': 5.10.2
-    dev: false
+      '@prisma/debug': 5.11.0
+      '@prisma/engines-version': 5.11.0-15.efd2449663b3d73d637ea1fd226bafbcf45b3102
+      '@prisma/get-platform': 5.11.0
 
-  /@prisma/get-platform@5.10.2:
-    resolution: {integrity: sha512-nqXP6vHiY2PIsebBAuDeWiUYg8h8mfjBckHh6Jezuwej0QJNnjDiOq30uesmg+JXxGk99nqyG3B7wpcOODzXvg==}
+  /@prisma/get-platform@5.11.0:
+    resolution: {integrity: sha512-rxtHpMLxNTHxqWuGOLzR2QOyQi79rK1u1XYAVLZxDGTLz/A+uoDnjz9veBFlicrpWjwuieM4N6jcnjj/DDoidw==}
     dependencies:
-      '@prisma/debug': 5.10.2
-    dev: false
+      '@prisma/debug': 5.11.0
 
   /@protobufjs/aspromise@1.1.2:
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -5624,13 +5619,13 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@rumsan/core@3.0.1(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14):
+  /@rumsan/core@3.0.1(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-rRmNUOwmtFni7OpCKYQrWcVH6sGoNrAETaTN0+QzCVRmLLEphRQak5+YFAH73ll0L6rLXmTRnFavxRTxj7p8iw==, tarball: https://npm.pkg.github.com/download/@rumsan/core/3.0.1/1edc2b0945c65487c4695b785889bacfaacb67d2}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/config': 3.2.0(@nestjs/common@10.3.3)(rxjs@7.8.1)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       class-transformer: 0.5.1
       class-validator: 0.14.1
       rxjs: 7.8.1
@@ -5643,12 +5638,12 @@ packages:
       - reflect-metadata
     dev: false
 
-  /@rumsan/core@3.0.116(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14):
+  /@rumsan/core@3.0.116(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-BMpikkcSDSqTr3TSpFjfPyg0g9r2cYchqySi5XNOuf4wwAExSdx5b9UNCrMpN8iBaUNs13B8T29Z7CsDDo/yMA==, tarball: https://npm.pkg.github.com/download/@rumsan/core/3.0.116/ffe97a6a5986d871820d517b2ddb82d7936c0b01}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       class-transformer: 0.5.1
       class-validator: 0.14.1
       rxjs: 7.8.1
@@ -5667,14 +5662,14 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@rumsan/extensions@0.0.15(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14):
+  /@rumsan/extensions@0.0.15(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-98QPbg/+nrZweK5tpc7rKYnZxXMdt1DdCj+tSL3G6UEu2FOpGRC8IM63j/G5GhJPcYtQvIkxVOYoza5yLep+Vw==, tarball: https://npm.pkg.github.com/download/@rumsan/extensions/0.0.15/625a0cadd6594a41a28835abf2d0852160a70af5}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       '@rumsan/core': 3.0.134
-      '@rumsan/prisma': 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+      '@rumsan/prisma': 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@rumsan/sdk': 0.0.40
       axios: 1.6.7
       class-transformer: 0.5.1
@@ -5689,11 +5684,11 @@ packages:
       - reflect-metadata
     dev: false
 
-  /@rumsan/prisma@1.0.112(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1):
+  /@rumsan/prisma@1.0.112(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1):
     resolution: {integrity: sha512-j0POzEFg62uL0sadQI72KSaY9nD5iIX/itCTU1rZSWhCyGxRw3h2AJhAx9hPplTKsj2KpRAOqHObfiHtOvEIGw==, tarball: https://npm.pkg.github.com/download/@rumsan/prisma/1.0.112/71fbb6c324ef1c72bd9e85a8eeb483fdf787c28a}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       tslib: 2.5.0
     transitivePeerDependencies:
       - class-transformer
@@ -5703,11 +5698,11 @@ packages:
       - rxjs
     dev: false
 
-  /@rumsan/prisma@1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1):
+  /@rumsan/prisma@1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1):
     resolution: {integrity: sha512-weDUq+mMZdSo6GSpQYVxtpyckh4/Tmp4zxlB3bqR9KeD+Zg5zgfiE5lQCKS5gzY4sqzOLVaF7s4B7tMiirBSSg==, tarball: https://npm.pkg.github.com/download/@rumsan/prisma/1.0.126/5a51e55184f21474ae50ae9dd010b6a9207b583a}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       '@rumsan/sdk': 0.0.40
       axios: 1.6.7
       tslib: 2.6.2
@@ -5720,13 +5715,13 @@ packages:
       - rxjs
     dev: false
 
-  /@rumsan/sdk@0.0.22(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14):
+  /@rumsan/sdk@0.0.22(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-sKa9mHR3Peck39wH5jaMiSt9o1YsFGhi9C5fTuLRL2Di6OjHG0BxZMl8dUQHdA3dD7QzgXuM7IdQLqoVy1Zw8w==, tarball: https://npm.pkg.github.com/download/@rumsan/sdk/0.0.22/a1c807d431e7c9832dc12eb0194502edb98b55ca}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
-      '@rumsan/core': 3.0.116(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
+      '@rumsan/core': 3.0.116(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
       axios: 1.6.7
       class-transformer: 0.5.1
       class-validator: 0.14.1
@@ -5760,15 +5755,15 @@ packages:
       - debug
     dev: false
 
-  /@rumsan/settings@0.0.108(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14):
+  /@rumsan/settings@0.0.108(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-fph5QtpQF+x+EF/Ie8gI5572TRJQQtfjVTQQlisXJc0+6QE6IDtjR7eOn83ffCnyglWvUHTqrtwSLINRftkFiA==, tarball: https://npm.pkg.github.com/download/@rumsan/settings/0.0.108/ff6002fd14f442ab9875712765abb973cd7e90e7}
     dependencies:
       '@nestjs/common': 10.3.3(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
-      '@rumsan/core': 3.0.116(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
-      '@rumsan/prisma': 1.0.112(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
-      '@rumsan/sdk': 0.0.22(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
+      '@rumsan/core': 3.0.116(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
+      '@rumsan/prisma': 1.0.112(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+      '@rumsan/sdk': 0.0.22(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
       axios: 1.6.7
       class-transformer: 0.5.1
       class-validator: 0.14.1
@@ -5784,7 +5779,7 @@ packages:
       - reflect-metadata
     dev: false
 
-  /@rumsan/user@3.0.153(@nestjs/platform-express@10.3.3)(passport@0.7.0)(prisma@5.10.2)(reflect-metadata@0.1.14)(typescript@5.2.2)(zod@3.22.4):
+  /@rumsan/user@3.0.153(@nestjs/platform-express@10.3.3)(passport@0.7.0)(prisma@5.11.0)(reflect-metadata@0.1.14)(typescript@5.2.2)(zod@3.22.4):
     resolution: {integrity: sha512-Hz1Ry5wHpvyJxQ8Jzfg5TvLj/DYD8/LtJHwfIwJi5iThetQ0t0O0oYqLQ05ANaSeswLwXA6Xre5zXcsl1FRcAg==, tarball: https://npm.pkg.github.com/download/@rumsan/user/3.0.153/08b3d2acdd8b4724c508e20e08184a2ca4bb40f3}
     dependencies:
       '@casl/ability': 6.7.0
@@ -5795,10 +5790,10 @@ packages:
       '@nestjs/jwt': 10.2.0(@nestjs/common@10.3.3)
       '@nestjs/passport': 10.0.3(@nestjs/common@10.3.3)(passport@0.7.0)
       '@nestjs/swagger': 7.3.0(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.11.0(prisma@5.11.0)
       '@rumsan/core': 3.0.134
-      '@rumsan/extensions': 0.0.15(@nestjs/core@10.3.3)(prisma@5.10.2)(reflect-metadata@0.1.14)
-      '@rumsan/prisma': 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.10.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+      '@rumsan/extensions': 0.0.15(@nestjs/core@10.3.3)(prisma@5.11.0)(reflect-metadata@0.1.14)
+      '@rumsan/prisma': 1.0.126(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.11.0)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@rumsan/sdk': 0.0.41
       axios: 1.6.7
       class-transformer: 0.5.1
@@ -12586,6 +12581,8 @@ packages:
     peerDependenciesMeta:
       webpack:
         optional: true
+      webpack-sources:
+        optional: true
     dependencies:
       webpack: 5.90.3(@swc/core@1.3.107)
       webpack-sources: 3.2.3
@@ -14903,14 +14900,13 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /prisma@5.10.2:
-    resolution: {integrity: sha512-hqb/JMz9/kymRE25pMWCxkdyhbnIWrq+h7S6WysJpdnCvhstbJSNP/S6mScEcqiB8Qv2F+0R3yG+osRaWqZacQ==}
+  /prisma@5.11.0:
+    resolution: {integrity: sha512-KCLiug2cs0Je7kGkQBN9jDWoZ90ogE/kvZTUTgz2h94FEo8pczCkPH7fPNXkD1sGU7Yh65risGGD1HQ5DF3r3g==}
     engines: {node: '>=16.13'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@prisma/engines': 5.10.2
-    dev: false
+      '@prisma/engines': 5.11.0
 
   /proc-log@3.0.0:
     resolution: {integrity: sha512-++Vn7NS4Xf9NacaU9Xq3URUuqZETPsf8L4j5/ckhaRYsfPeRyzGw+iDjFhV/Jr3uNmTvvddEJFWh5R1gRgUH8A==}

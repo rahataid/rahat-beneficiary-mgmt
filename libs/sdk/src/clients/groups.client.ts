@@ -21,21 +21,21 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<ListGroup[]>(response);
     },
 
-    listById: async (id: string, config?: AxiosRequestConfig) => {
-      const response = await client.get(`/group/${id}`, config);
+    listById: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.get(`/group/${uuid}`, config);
       return formatResponse<GroupResponseById>(response);
     },
 
     update: async (
-      { id, data }: { id?: string; data?: GroupInput },
+      { uuid, data }: { uuid?: string; data?: GroupInput },
       config?: AxiosRequestConfig,
     ) => {
-      const response = await client.put(`/group/${id}`, data, config);
+      const response = await client.put(`/group/${uuid}`, data, config);
       return formatResponse<GroupResponse>(response);
     },
 
-    remove: async (id: string, config?: AxiosRequestConfig) => {
-      const response = await client.delete(`/group/${id}`, config);
+    remove: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.delete(`/group/${uuid}`, config);
       return formatResponse<GroupResponse>(response);
     },
   };

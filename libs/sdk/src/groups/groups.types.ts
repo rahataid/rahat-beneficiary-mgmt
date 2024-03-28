@@ -6,6 +6,7 @@ export type GroupInput = {
 
 export type ListGroup = {
   name: string;
+  uuid: string;
   id: number;
   beneficiariesGroup: [
     {
@@ -14,6 +15,7 @@ export type ListGroup = {
   ];
 };
 export type GroupResponse = {
+  uuid: string;
   id: number;
   name: string;
   createdAt: Date;
@@ -22,6 +24,7 @@ export type GroupResponse = {
 
 type BeneficiariesGroup = {
   id: number;
+  uuid: string;
   beneficiaryId: number;
   groupId: number;
   createdAt: Date;
