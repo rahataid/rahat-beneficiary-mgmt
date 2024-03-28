@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { DB_MODELS } from '../../constants';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { SourceService } from '../sources/source.service';
 import {
   extractFieldsMatchingWithDBFields,
   fetchSchemaFields,
   injectCustomID,
   parseValuesByTargetTypes,
-  validateRequiredFields,
 } from './helpers';
-import { DB_MODELS } from '../../constants';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -30,16 +29,7 @@ export class BeneficiaryImportService {
     // 1. Fetch DB_Fields and validate required fields
     const mapped_fields = jsonData.data;
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    const missing_fields = validateRequiredFields(
-      customUniqueField,
-      mapped_fields,
-    );
 
-    // if (missing_fields.length) {
-    //   throw new Error(
-    //     `Required fields missing! [${missing_fields.toString()}]`,
-    //   );
-    // }
     // 2. Only select fields matching with DB_Fields
     const sanitized_fields = extractFieldsMatchingWithDBFields(
       dbFields,

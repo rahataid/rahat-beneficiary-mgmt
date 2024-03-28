@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import {
   BankedStatus,
   Gender,
@@ -23,28 +23,38 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
+  constructor() {
+    this.firstName = '';
+    this.lastName = '';
+  }
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Ram',
     description: 'firstName',
   })
   @IsString()
-  firstName!: string;
+  firstName: string;
 
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Sharma',
     description: 'lastName',
   })
   @IsString()
-  lastName!: string;
+  lastName: string;
 
+  @IsOptional()
   @ApiProperty({
     type: 'string',
     example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
   })
   @IsString()
   walletAddress?: string;
+
+  @IsOptional()
+  customId?: string;
 
   @ApiProperty({
     type: 'string',

@@ -14,6 +14,12 @@ export class CreateSourceDto {
   name!: string;
 
   @ApiProperty({
+    example: 'Validate',
+  })
+  @IsString()
+  action!: string;
+
+  @ApiProperty({
     example: 'Kobotool',
   })
   @IsString()
@@ -31,7 +37,7 @@ export class CreateSourceDto {
     example: { data: 'any' },
   })
   @IsOptional()
-  details: any;
+  details?: any;
 
   @ApiProperty({
     type: 'object',

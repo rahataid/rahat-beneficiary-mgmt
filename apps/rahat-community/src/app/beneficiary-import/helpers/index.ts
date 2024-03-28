@@ -1,5 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
+import { CreateBeneficiaryDto } from '@community-tool/extentions';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -48,9 +51,9 @@ function removeDuplicates(fields: any) {
   return Object.values(uniqueFields);
 }
 
-export const validateRequiredFields = (
+export const validateKeysAndValues = async (
   customUniqueField: string,
-  payload: any,
+  data: CreateBeneficiaryDto[],
 ) => {
   const missing_fields = [];
   const myFields = [];
@@ -58,14 +61,15 @@ export const validateRequiredFields = (
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
+  return myFields;
   if (customUniqueField) reqFields.push(customUniqueField);
-  for (let item of payload) {
-    console.log('REQ_FIELDS=>', reqFields);
+  for (let item of data) {
+    const beneficiaryDto = plainToClass(CreateBeneficiaryDto, item);
+    const errors = await validate(beneficiaryDto);
+
     const keys = Object.keys(item);
-    console.log('KEYS=>', keys);
     for (let f of reqFields) {
       let exist = keys.includes(f);
-      console.log(exist, f);
       if (!exist) {
         // Validate keys
         myFields.push({ fieldName: f, isValid: false });
@@ -82,7 +86,6 @@ export const validateRequiredFields = (
     }
   }
   const invalidFields = myFields.filter((f) => f.isValid === false);
-  console.log('Invalid==>', invalidFields);
   const uniqueItems = removeDuplicates(invalidFields);
   return uniqueItems;
 };
