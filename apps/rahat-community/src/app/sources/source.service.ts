@@ -30,6 +30,7 @@ export class SourceService {
 
   async ValidateBeneficiaryImort(customUniqueField: string, data: any) {
     const invalidFields = await validateKeysAndValues(customUniqueField, data);
+    console.log('INvalid FIelds=>', invalidFields);
     return { invalidFields, result: data };
   }
 

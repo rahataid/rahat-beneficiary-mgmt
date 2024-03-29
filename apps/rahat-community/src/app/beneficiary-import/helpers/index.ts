@@ -75,7 +75,8 @@ export const validateKeysAndValues = async (
       let exist = keys.includes(f);
       if (!exist) invalidFields.push(f);
     }
-    return invalidFields;
+    const uniqueOnly = [...new Set(invalidFields)];
+    return uniqueOnly;
   }
 };
 
