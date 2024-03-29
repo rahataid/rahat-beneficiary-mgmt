@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
 import {
   BankedStatus,
   Gender,
   InternetStatus,
   PhoneStatus,
 } from '@rahataid/community-tool-sdk/enums/';
-// enum GenderEnum {
-//   MALE = 'MALE',
-//   FEMALE = 'FEMALE',
-//   OTHER = 'OTHER',
-//   UNKNOWN = 'UNKNOWN',
-// }
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -23,28 +25,38 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
+  constructor() {
+    this.firstName = '';
+    this.lastName = '';
+  }
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Ram',
     description: 'firstName',
   })
   @IsString()
-  firstName!: string;
+  firstName: string;
 
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Sharma',
     description: 'lastName',
   })
   @IsString()
-  lastName!: string;
+  lastName: string;
 
+  @IsOptional()
   @ApiProperty({
     type: 'string',
     example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
   })
   @IsString()
   walletAddress?: string;
+
+  @IsOptional()
+  customId?: string;
 
   @ApiProperty({
     type: 'string',
@@ -62,6 +74,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(Gender)
   gender?: Gender;
 
   @ApiProperty({
@@ -71,6 +84,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(InternetStatus)
   internetStatus?: InternetStatus;
 
   @ApiProperty({
@@ -80,6 +94,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(BankedStatus)
   bankedStatus?: BankedStatus;
 
   @ApiProperty({
@@ -89,6 +104,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEnum(PhoneStatus)
   phoneStatus?: PhoneStatus;
 
   @ApiProperty({
@@ -128,6 +144,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @MinLength(10)
   phone?: string;
 
   @ApiProperty({
@@ -148,6 +165,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/g)
   email?: string;
 
   @ApiProperty({

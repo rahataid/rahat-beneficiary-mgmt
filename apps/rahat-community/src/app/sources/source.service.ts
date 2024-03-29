@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
-import { validateRequiredFields } from '../beneficiary-import/helpers';
+import { validateKeysAndValues } from '../beneficiary-import/helpers';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
+import {
+  IMPORT_ACTION,
+  JOBS,
+  QUEUE,
+  QUEUE_RETRY_OPTIONS,
+} from '../../constants';
 import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 
 @Injectable()
@@ -23,28 +28,39 @@ export class SourceService {
     return res;
   }
 
+  async ValidateBeneficiaryImort(customUniqueField: string, data: any) {
+    const invalidFields = await validateKeysAndValues(customUniqueField, data);
+    console.log('INvalid FIelds=>', invalidFields);
+    return { invalidFields, result: data };
+  }
+
   async create(dto: CreateSourceDto) {
-    const customUniqueField = dto.uniqueField || '';
-    const missing_fields = validateRequiredFields(
-      customUniqueField,
-      dto.fieldMapping.data,
-    );
-    if (missing_fields.length) {
-      throw new Error(
-        `Required fields missing! [${missing_fields.toString()}]`,
+    const { action, ...rest } = dto;
+    const { data } = dto.fieldMapping;
+
+    const customUniqueField = rest.uniqueField || '';
+
+    if (action === IMPORT_ACTION.VALIDATE)
+      return this.ValidateBeneficiaryImort(customUniqueField, data);
+
+    if (action === IMPORT_ACTION.IMPORT) {
+      const invalidFields = await validateKeysAndValues(
+        customUniqueField,
+        data,
       );
+      if (invalidFields.length) throw new Error('Invalid data submitted!');
+      const row = await this.prisma.source.upsert({
+        where: { importId: rest.importId },
+        update: { ...rest, isImported: false },
+        create: rest,
+      });
+      this.queueClient.add(
+        JOBS.BENEFICIARY.IMPORT,
+        { sourceUUID: row.uuid },
+        QUEUE_RETRY_OPTIONS,
+      );
+      return { message: 'Source created and added to queue' };
     }
-    const row = await this.prisma.source.upsert({
-      where: { importId: dto.importId },
-      update: { ...dto, isImported: false },
-      create: dto,
-    });
-    this.queueClient.add(
-      JOBS.BENEFICIARY.IMPORT,
-      { sourceUUID: row.uuid },
-      QUEUE_RETRY_OPTIONS,
-    );
-    return { message: 'Source created and added to queue' };
   }
 
   findAll(query: any) {

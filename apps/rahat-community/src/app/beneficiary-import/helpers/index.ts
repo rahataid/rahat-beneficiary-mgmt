@@ -1,5 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { CreateBeneficiaryDto } from '@community-tool/extentions';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -25,25 +28,56 @@ export const injectCustomID = (customUniqueField: string, payload: any) => {
   return final;
 };
 
-export const validateRequiredFields = (
+function validateEmail(email: string) {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
+}
+
+function validatePhone(phoneNumber: string) {
+  const phoneRegex = /^\+\d{1,3} \(\d{3}\) \d{3}-\d{4}$/;
+
+  return (
+    phoneRegex.test(phoneNumber) &&
+    phoneNumber.length > 10 &&
+    phoneNumber.length < 20
+  );
+}
+
+function removeDuplicates(fields: any) {
+  const uniqueFields = {};
+  fields.forEach((item: any) => {
+    uniqueFields[item.fieldName] = item;
+  });
+  return Object.values(uniqueFields);
+}
+
+export const validateKeysAndValues = async (
   customUniqueField: string,
-  payload: any,
+  data: [],
 ) => {
-  const missing_fields = [];
-  let reqFields = [
+  const invalidFields = [];
+  let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
-  if (customUniqueField) reqFields.push(customUniqueField);
-  for (let item of payload) {
-    const keys = Object.keys(item);
-    for (let f of reqFields) {
-      let exist = keys.includes(f);
-      if (!exist) missing_fields.push(f);
+  if (customUniqueField) requiredFields.push(customUniqueField);
+  for (let item of data) {
+    const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
+    const errors = await validate(beneficiaryDto);
+
+    if (errors.length) {
+      const fields = errors.map((e) => e.property);
+      invalidFields.push(...fields);
     }
+
+    const keys = Object.keys(item);
+    for (let f of requiredFields) {
+      let exist = keys.includes(f);
+      if (!exist) invalidFields.push(f);
+    }
+    const uniqueOnly = [...new Set(invalidFields)];
+    return uniqueOnly;
   }
-  const unique_only = [...new Set(missing_fields)];
-  return unique_only;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

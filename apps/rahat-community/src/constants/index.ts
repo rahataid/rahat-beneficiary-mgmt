@@ -2,6 +2,11 @@ export const DB_MODELS = {
   TBL_BENEFICIARY: 'tbl_beneficiaries',
 };
 
+export const IMPORT_ACTION = {
+  VALIDATE: 'VALIDATE',
+  IMPORT: 'IMPORT',
+};
+
 export const EMAIL_TEMPLATES = {
   LOGIN: 'login',
 };
