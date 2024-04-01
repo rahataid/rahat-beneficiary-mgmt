@@ -11,27 +11,36 @@ datasource db {
 }
 
 model Beneficiary {
-  id       Int    @id @default(autoincrement()) @db.Integer()
-  uuid     String @unique @default(uuid()) @db.Uuid()
-  customId String @unique
+  id        Int    @id @default(autoincrement()) @db.Integer()
+  uuid      String @unique @default(uuid()) @db.Uuid()
+  customId  String @unique
+  firstName String
+  lastName  String
 
-  firstName      String
-  lastName       String
-  gender         Gender         @default(UNKNOWN)
-  walletAddress  String?
-  birthDate      DateTime?
-  location       String?
-  latitude       Float?
-  longitude      Float?
-  phone          String?
-  email          String?
-  extras         Json?          @db.JsonB()
+  gender        Gender    @default(UNKNOWN)
+  birthDate     DateTime?
+  age           Int?
+  walletAddress String?
+  phone         String?
+  email         String?
+
+  location           String?
+  latitude           Float?
+  longitude          Float?
+  beneficiaryCast    String?
+  qualification      String?
+  isVulnerableMember Boolean @default(false)
+  govtIDType         String?
+  govtIDNumber       String?
+  govtIDPhoto        String?
+
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)
   internetStatus InternetStatus @default(UNKNOWN)
   phoneStatus    PhoneStatus    @default(UNKNOWN)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime?      @updatedAt()
+  extras         Json?          @db.JsonB()
 
   beneficiariesGroup BeneficiaryGroup[]
   beneficiarySource  BeneficiarySource[]
@@ -84,7 +93,7 @@ model FieldDefinition {
 
 model Group {
   id                 Int                @id @default(autoincrement()) @db.Integer()
-  uuid              String              @unique @default(uuid()) @db.Uuid()
+  uuid               String             @unique @default(uuid()) @db.Uuid()
   name               String             @unique
   beneficiariesGroup BeneficiaryGroup[]
 
