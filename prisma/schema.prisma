@@ -19,20 +19,17 @@ model Beneficiary {
 
   gender        Gender    @default(UNKNOWN)
   birthDate     DateTime?
-  age           Int?
   walletAddress String?
   phone         String?
   email         String?
 
-  location           String?
-  latitude           Float?
-  longitude          Float?
-  beneficiaryCast    String?
-  qualification      String?
-  isVulnerableMember Boolean @default(false)
-  govtIDType         String?
-  govtIDNumber       String?
-  govtIDPhoto        String?
+  location     String?
+  latitude     Float?
+  longitude    Float?
+  isVulnerable Boolean @default(false)
+  govtIDType   String?
+  govtIDNumber String?
+  govtIDPhoto  String?
 
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)

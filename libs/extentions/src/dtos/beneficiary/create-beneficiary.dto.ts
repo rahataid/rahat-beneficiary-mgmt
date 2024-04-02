@@ -70,14 +70,6 @@ export class CreateBeneficiaryDto {
   @IsOptional()
   birthDate?: string;
 
-  @ApiProperty({
-    type: 'number',
-    example: 20,
-  })
-  @IsNumber()
-  @IsOptional()
-  age?: number;
-
   @IsOptional()
   @ApiProperty({
     type: 'string',
@@ -129,28 +121,12 @@ export class CreateBeneficiaryDto {
   longitude?: number;
 
   @ApiProperty({
-    type: 'string',
-    example: 'Chhetri',
-  })
-  @IsString()
-  @IsOptional()
-  beneficiaryCast?: string;
-
-  @ApiProperty({
-    type: 'string',
-    example: 'Primary School',
-  })
-  @IsString()
-  @IsOptional()
-  qualification?: string;
-
-  @ApiProperty({
     type: 'boolean',
     example: false,
   })
   @IsBoolean()
   @IsOptional()
-  isVulnerableMember?: boolean;
+  isVulnerable?: boolean;
 
   @ApiProperty({
     type: 'string',
@@ -217,8 +193,6 @@ export class CreateBeneficiaryDto {
     description: 'Additional JSON data',
     required: false,
     example: {
-      district: 'Dang',
-      landmark: 'Near the super market',
       totalFamilyMembers: 5,
     },
   })
