@@ -13,6 +13,8 @@ import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
+import { DB_MODELS } from '../../constants';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
 
 @Injectable()
 export class BeneficiariesService {
@@ -20,6 +22,14 @@ export class BeneficiariesService {
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
   ) {}
+
+  async fetchDBFields() {
+    const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+    if (!dbFields.length) return [];
+    const scalarFields = dbFields.filter((f) => f.kind === 'scalar');
+    const extraFields = dbFields.filter((f) => f.type.toLowerCase() === 'json');
+    return { scalarFields, extraFields };
+  }
 
   async upsertByCustomID(payload: any) {
     return this.prisma.beneficiary.upsert({
