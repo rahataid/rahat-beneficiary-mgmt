@@ -3,12 +3,7 @@ import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { SourceService } from '../sources/source.service';
-import {
-  extractFieldsMatchingWithDBFields,
-  fetchSchemaFields,
-  injectCustomID,
-  parseValuesByTargetTypes,
-} from './helpers';
+import { fetchSchemaFields, injectCustomID } from './helpers';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -17,6 +12,27 @@ export class BeneficiaryImportService {
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
   ) {}
+
+  async splitPrimaryAndExtraFields(data: any) {
+    const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+    const primaryFields = fields.map((f) => f.name);
+
+    const modifiedData = data.map((item: any) => {
+      const extras = {};
+      Object.keys(item).forEach((key) => {
+        if (!primaryFields.includes(key) && key !== 'rawData') {
+          extras[key] = item[key]; // Move it to extras object
+          delete item[key]; // Delete from original object
+        }
+      });
+      // If extras has any key then add it to item
+      if (Object.keys(extras).length > 0) {
+        item.extras = extras;
+      }
+      return item;
+    });
+    return modifiedData;
+  }
 
   async importBySourceUUID(uuid: string) {
     const source = await this.sourceService.findOne(uuid);
@@ -31,14 +47,20 @@ export class BeneficiaryImportService {
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
 
     // 2. Only select fields matching with DB_Fields
-    const sanitized_fields = extractFieldsMatchingWithDBFields(
-      dbFields,
-      mapped_fields,
-    );
+    // const sanitized_fields = extractFieldsMatchingWithDBFields(
+    //   dbFields,
+    //   mapped_fields,
+    // );
     // 3. Parse values against target field
-    const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
+    // const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
     // 4. Inject unique key based on settings
-    const final_payload = injectCustomID(customUniqueField, parsed_data);
+    const splittedData = await this.splitPrimaryAndExtraFields(mapped_fields);
+    const omitRawData = splittedData.map((item: any) => {
+      delete item.rawData;
+      return item;
+    });
+    console.log('omitRawData=>', omitRawData);
+    const final_payload = injectCustomID(customUniqueField, omitRawData);
     let count = 0;
 
     // // 5. Save Benef and source

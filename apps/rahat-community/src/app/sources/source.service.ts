@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '@rumsan/prisma';
-import { paginate } from '../utils/paginate';
-import { validateKeysAndValues } from '../beneficiary-import/helpers';
+import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 import { InjectQueue } from '@nestjs/bull';
+import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
 import {
   IMPORT_ACTION,
@@ -11,7 +10,8 @@ import {
   QUEUE,
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
-import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
+import { validateKeysAndValues } from '../beneficiary-import/helpers';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class SourceService {
@@ -48,6 +48,7 @@ export class SourceService {
         customUniqueField,
         data,
       );
+
       if (invalidFields.length) throw new Error('Invalid data submitted!');
       const row = await this.prisma.source.upsert({
         where: { importId: rest.importId },

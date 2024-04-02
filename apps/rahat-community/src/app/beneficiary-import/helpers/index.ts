@@ -53,7 +53,7 @@ function removeDuplicates(fields: any) {
 
 export const validateKeysAndValues = async (
   customUniqueField: string,
-  data: [],
+  data: any,
 ) => {
   const invalidFields = [];
   let requiredFields = [
@@ -166,8 +166,8 @@ function parseToTargetFieldType({
 }) {
   if (kind === 'enum') {
     const currentFieldEnums = ENUM_MAPPING[targetField];
-    const validEnum = currentFieldEnums.includes(targetValue);
-    if (validEnum) return targetValue;
+    const validEnum = currentFieldEnums.includes(targetValue.toUpperCase());
+    if (validEnum) return targetValue.toUpperCase();
     const defaultValue = 'UNKNOWN';
     return defaultValue;
   }

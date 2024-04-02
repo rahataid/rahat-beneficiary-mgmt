@@ -14,7 +14,7 @@ export class FieldDefinitionsService {
   create(dto: CreateFieldDefinitionDto) {
     const payload = {
       ...dto,
-      name: dto.name.toLocaleLowerCase(),
+      name: dto.name,
     };
 
     return this.prisma.fieldDefinition.create({
@@ -57,7 +57,7 @@ export class FieldDefinitionsService {
   update(id: number, dto: UpdateFieldDefinitionDto) {
     const payload = {
       ...dto,
-      name: dto.name.toLocaleLowerCase(),
+      name: dto.name,
     };
     return this.prisma.fieldDefinition.update({
       where: { id },
