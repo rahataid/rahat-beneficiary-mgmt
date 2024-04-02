@@ -64,7 +64,7 @@ export const validateKeysAndValues = async (
   for (let item of data) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
-
+    console.log('ERRORS=>', errors);
     if (errors.length) {
       const fields = errors.map((e) => e.property);
       invalidFields.push(...fields);
@@ -75,9 +75,10 @@ export const validateKeysAndValues = async (
       let exist = keys.includes(f);
       if (!exist) invalidFields.push(f);
     }
-    const uniqueOnly = [...new Set(invalidFields)];
-    return uniqueOnly;
   }
+
+  const uniqueOnly = [...new Set(invalidFields)];
+  return uniqueOnly;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

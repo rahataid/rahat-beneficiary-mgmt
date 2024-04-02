@@ -7,14 +7,17 @@ import {
 } from '@rahataid/community-tool-sdk/enums/';
 import {
   IsBoolean,
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Matches,
   MinLength,
 } from 'class-validator';
+import { IsAlphaString, IsValidDate } from '../../validators';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -37,18 +40,16 @@ export class CreateBeneficiaryDto {
   @ApiProperty({
     type: 'string',
     example: 'Ram',
-    description: 'firstName',
   })
-  @IsString()
+  @IsAlphaString()
   firstName: string;
 
   @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Sharma',
-    description: 'lastName',
   })
-  @IsString()
+  @IsAlphaString()
   lastName: string;
 
   @ApiProperty({
@@ -68,6 +69,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsValidDate()
   birthDate?: string;
 
   @IsOptional()
@@ -75,7 +77,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
   })
-  @IsString()
+  @IsAlphaString()
   walletAddress?: string;
 
   @ApiProperty({
@@ -100,7 +102,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'lalitpur',
   })
-  @IsString()
+  @IsAlphaString()
   @IsOptional()
   location?: string;
 
@@ -197,5 +199,6 @@ export class CreateBeneficiaryDto {
     },
   })
   @IsOptional()
+  @IsObject()
   extras?: any;
 }
