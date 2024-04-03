@@ -3,6 +3,7 @@ import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateBeneficiaryDto } from '@community-tool/extentions';
+import { DB_MODELS } from 'apps/rahat-community/src/constants';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -16,6 +17,11 @@ export const PRISMA_FIELD_TYPES = {
   FLOAT: 'Float',
 };
 
+interface IExtraField {
+  name: string;
+  type: string;
+}
+
 export const injectCustomID = (customUniqueField: string, payload: any) => {
   const final = [];
   for (let p of payload) {
@@ -28,22 +34,7 @@ export const injectCustomID = (customUniqueField: string, payload: any) => {
   return final;
 };
 
-function validateEmail(email: string) {
-  const re = /\S+@\S+\.\S+/;
-  return re.test(email);
-}
-
-function validatePhone(phoneNumber: string) {
-  const phoneRegex = /^\+\d{1,3} \(\d{3}\) \d{3}-\d{4}$/;
-
-  return (
-    phoneRegex.test(phoneNumber) &&
-    phoneNumber.length > 10 &&
-    phoneNumber.length < 20
-  );
-}
-
-function removeDuplicates(fields: any) {
+function removeDuplicatesByObjectKey(fields: any) {
   const uniqueFields = {};
   fields.forEach((item: any) => {
     uniqueFields[item.fieldName] = item;
@@ -51,34 +42,96 @@ function removeDuplicates(fields: any) {
   return Object.values(uniqueFields);
 }
 
-export const validateKeysAndValues = async (
+export const validateSchemaFields = async (
   customUniqueField: string,
-  data: any,
+  payload: any,
+  extraFields: IExtraField[],
 ) => {
-  const invalidFields = [];
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
   if (customUniqueField) requiredFields.push(customUniqueField);
-  for (let item of data) {
+  const primaryErrors = await validatePrimaryFields(payload, requiredFields);
+  const secondaryErrors = await validateSecondaryFields(payload, extraFields);
+
+  const allValidationErrors = [...primaryErrors, ...secondaryErrors];
+  return removeDuplicatesByObjectKey(allValidationErrors);
+};
+
+// Validate extras fields
+const validateSecondaryFields = async (
+  payload: any,
+  extraFields: IExtraField[],
+) => {
+  const secondaryErrors = [];
+  const dbFields = await fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+  const primaryFields = dbFields.map((f) => f.name);
+  payload.map((item: any) => {
+    Object.keys(item).forEach((key) => {
+      if (!primaryFields.includes(key) && key !== 'rawData') {
+        // This is extra field
+        const val = item[key];
+        const found = extraFields.find((f) => f.name === key);
+        const isValid = validateValueByType(val, found.type);
+        if (!isValid) {
+          secondaryErrors.push({
+            fieldName: key,
+            value: val,
+            message: "Invalid value for field '" + key + "'",
+          });
+        }
+      }
+    });
+  });
+  return secondaryErrors;
+};
+
+function validateValueByType(value: any, type: string) {
+  switch (type.toUpperCase()) {
+    case 'RADIO':
+      return value.toLowerCase() === 'yes' || value.toLowerCase() === 'no';
+    case 'NUMBER':
+      return !isNaN(parseInt(value)) && isFinite(parseInt(value));
+    case 'TEXT':
+      return typeof value === 'string' && value.trim() !== '';
+    default:
+      return false;
+  }
+}
+
+const validatePrimaryFields = async (
+  payload: any,
+  requiredFields: string[],
+) => {
+  const primaryErrors = [];
+  for (let item of payload) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
-    console.log('ERRORS=>', errors);
     if (errors.length) {
-      const fields = errors.map((e) => e.property);
-      invalidFields.push(...fields);
+      for (let e of errors) {
+        primaryErrors.push({
+          fieldName: e.property,
+          value: item[e.property],
+          message: "Invalid value for field '" + e.property + "'",
+        });
+      }
     }
 
+    // Required fields validation
     const keys = Object.keys(item);
     for (let f of requiredFields) {
       let exist = keys.includes(f);
-      if (!exist) invalidFields.push(f);
+      if (!exist) {
+        primaryErrors.push({
+          fieldName: f,
+          value: null,
+          message: 'Required field is missing',
+        });
+      }
     }
   }
-
-  const uniqueOnly = [...new Set(invalidFields)];
-  return uniqueOnly;
+  return primaryErrors;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

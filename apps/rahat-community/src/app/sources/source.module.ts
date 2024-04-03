@@ -4,10 +4,15 @@ import { SourceController } from './source.controller';
 import { PrismaService } from '@rumsan/prisma';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
+import { FieldDefinitionsModule } from '../field-definitions/field-definitions.module';
+import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 
 @Module({
-  imports: [BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT })],
+  imports: [
+    FieldDefinitionsModule,
+    BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
+  ],
   controllers: [SourceController],
-  providers: [SourceService, PrismaService],
+  providers: [SourceService, PrismaService, FieldDefinitionsService],
 })
 export class SourceModule {}
