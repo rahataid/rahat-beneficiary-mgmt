@@ -67,7 +67,6 @@ export class CreateBeneficiaryDto {
     example: '2004-03-08',
     description: 'YYYY-MM-DD format',
   })
-  @IsString()
   @IsOptional()
   @IsValidDate()
   birthDate?: string;

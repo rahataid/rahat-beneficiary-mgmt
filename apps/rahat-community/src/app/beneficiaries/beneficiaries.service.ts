@@ -15,6 +15,7 @@ import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { convertDateToISO } from '../utils';
 
 @Injectable()
 export class BeneficiariesService {
@@ -32,6 +33,9 @@ export class BeneficiariesService {
   }
 
   async upsertByCustomID(payload: any) {
+    if (payload.birthDate) {
+      payload.birthDate = convertDateToISO(payload.birthDate);
+    }
     return this.prisma.beneficiary.upsert({
       where: { customId: payload.customId },
       update: payload,
@@ -41,10 +45,8 @@ export class BeneficiariesService {
 
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras } = dto;
-    if (birthDate) {
-      const formattedDate = new Date(dto.birthDate).toISOString();
-      dto.birthDate = formattedDate;
-    }
+    if (birthDate) dto.birthDate = convertDateToISO(birthDate);
+
     if (extras) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');

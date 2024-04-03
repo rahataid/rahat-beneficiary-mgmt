@@ -42,24 +42,12 @@ export class BeneficiaryImportService {
     const jsonData = source.fieldMapping as {
       data: object;
     };
-    // 1. Fetch DB_Fields and validate required fields
     const mapped_fields = jsonData.data;
-    const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-
-    // 2. Only select fields matching with DB_Fields
-    // const sanitized_fields = extractFieldsMatchingWithDBFields(
-    //   dbFields,
-    //   mapped_fields,
-    // );
-    // 3. Parse values against target field
-    // const parsed_data = parseValuesByTargetTypes(sanitized_fields, dbFields);
-    // 4. Inject unique key based on settings
     const splittedData = await this.splitPrimaryAndExtraFields(mapped_fields);
     const omitRawData = splittedData.map((item: any) => {
       delete item.rawData;
       return item;
     });
-    console.log('omitRawData=>', omitRawData);
     const final_payload = injectCustomID(customUniqueField, omitRawData);
     let count = 0;
 
