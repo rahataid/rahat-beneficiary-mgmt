@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '@rumsan/prisma';
-import { paginate } from '../utils/paginate';
-import { validateKeysAndValues } from '../beneficiary-import/helpers';
+import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
 import { InjectQueue } from '@nestjs/bull';
+import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
 import {
   IMPORT_ACTION,
@@ -11,13 +10,16 @@ import {
   QUEUE,
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
-import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
+import { validateSchemaFields } from '../beneficiary-import/helpers';
+import { paginate } from '../utils/paginate';
+import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 
 @Injectable()
 export class SourceService {
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
     private prisma: PrismaService,
+    private readonly fdService: FieldDefinitionsService,
   ) {}
 
   async getMappingsByImportId(importId: string) {
@@ -28,26 +30,54 @@ export class SourceService {
     return res;
   }
 
-  async ValidateBeneficiaryImort(customUniqueField: string, data: any) {
-    const invalidFields = await validateKeysAndValues(customUniqueField, data);
-    console.log('INvalid FIelds=>', invalidFields);
+  async listExtraFields() {
+    const fd = await this.fdService.listActive();
+    if (!fd.length) return [];
+
+    return fd.map((item: any) => {
+      return {
+        name: item.name,
+        type: item.fieldType,
+      };
+    });
+  }
+
+  async ValidateBeneficiaryImort(
+    customUniqueField: string,
+    data: any,
+    extraFields: any,
+  ) {
+    const invalidFields = await validateSchemaFields(
+      customUniqueField,
+      data,
+      extraFields,
+    );
+
+    console.log('Invalid Fields: ', invalidFields);
     return { invalidFields, result: data };
   }
 
   async create(dto: CreateSourceDto) {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
+    const extraFields = await this.listExtraFields();
 
     const customUniqueField = rest.uniqueField || '';
 
     if (action === IMPORT_ACTION.VALIDATE)
-      return this.ValidateBeneficiaryImort(customUniqueField, data);
-
-    if (action === IMPORT_ACTION.IMPORT) {
-      const invalidFields = await validateKeysAndValues(
+      return this.ValidateBeneficiaryImort(
         customUniqueField,
         data,
+        extraFields,
       );
+
+    if (action === IMPORT_ACTION.IMPORT) {
+      const invalidFields = await validateSchemaFields(
+        customUniqueField,
+        data,
+        extraFields,
+      );
+
       if (invalidFields.length) throw new Error('Invalid data submitted!');
       const row = await this.prisma.source.upsert({
         where: { importId: rest.importId },
