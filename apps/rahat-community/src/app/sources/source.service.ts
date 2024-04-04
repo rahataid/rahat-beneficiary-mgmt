@@ -42,11 +42,30 @@ export class SourceService {
     });
   }
 
+  async getDuplicateCountByUnqueId(customUniqueField: string, payload: []) {
+    let count = 0;
+    for (let p of payload) {
+      const res = await this.prisma.beneficiary.findUnique({
+        where: { customId: p[customUniqueField] },
+      });
+      if (res) count++;
+    }
+    return count;
+  }
+
   async ValidateBeneficiaryImort(
     customUniqueField: string,
     data: any,
     extraFields: any,
   ) {
+    let duplicateCount = 0;
+    if (customUniqueField) {
+      duplicateCount = await this.getDuplicateCountByUnqueId(
+        customUniqueField,
+        data,
+      );
+    }
+
     const invalidFields = await validateSchemaFields(
       customUniqueField,
       data,
@@ -54,7 +73,7 @@ export class SourceService {
     );
 
     console.log('Invalid Fields: ', invalidFields);
-    return { invalidFields, result: data };
+    return { invalidFields, result: data, duplicateCount };
   }
 
   async create(dto: CreateSourceDto) {
