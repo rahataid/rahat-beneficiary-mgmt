@@ -52,11 +52,15 @@ export const validateSchemaFields = async (
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
   if (customUniqueField) requiredFields.push(customUniqueField);
-  const primaryErrors = await validatePrimaryFields(payload, requiredFields);
+  const { primaryErrors, processedData } = await validatePrimaryFields(
+    payload,
+    requiredFields,
+  );
   const secondaryErrors = await validateSecondaryFields(payload, extraFields);
 
   const allValidationErrors = [...primaryErrors, ...secondaryErrors];
-  return removeDuplicatesByObjectKey(allValidationErrors);
+  return { allValidationErrors, processedData };
+  // return removeDuplicatesByObjectKey(allValidationErrors);
 };
 
 // Validate extras fields
@@ -76,6 +80,7 @@ const validateSecondaryFields = async (
         const isValid = validateValueByType(val, found.type);
         if (!isValid) {
           secondaryErrors.push({
+            uuid: item.uuid,
             fieldName: key,
             value: val,
             message: "Invalid value for field '" + key + "'",
@@ -104,6 +109,7 @@ const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
 ) => {
+  let processedData = [];
   const primaryErrors = [];
   for (let item of payload) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
@@ -111,6 +117,7 @@ const validatePrimaryFields = async (
     if (errors.length) {
       for (let e of errors) {
         primaryErrors.push({
+          uuid: item.uuid,
           fieldName: e.property,
           value: item[e.property],
           message: "Invalid value for field '" + e.property + "'",
@@ -123,7 +130,10 @@ const validatePrimaryFields = async (
     for (let f of requiredFields) {
       let exist = keys.includes(f);
       if (!exist) {
+        // Required field is missing
+
         primaryErrors.push({
+          uuid: item.uuid,
           fieldName: f,
           value: null,
           message: 'Required field is missing',
@@ -131,7 +141,8 @@ const validatePrimaryFields = async (
       }
     }
   }
-  return primaryErrors;
+  console.log('processedData==>', processedData);
+  return { primaryErrors, processedData: payload };
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {

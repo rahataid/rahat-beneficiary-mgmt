@@ -13,6 +13,7 @@ import {
 import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { paginate } from '../utils/paginate';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
+import { uuid } from 'uuidv4';
 
 @Injectable()
 export class SourceService {
@@ -45,10 +46,13 @@ export class SourceService {
   async getDuplicateCountByUnqueId(customUniqueField: string, payload: []) {
     let count = 0;
     for (let p of payload) {
-      const res = await this.prisma.beneficiary.findUnique({
-        where: { customId: p[customUniqueField] },
-      });
-      if (res) count++;
+      const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+      if (keyExist) {
+        const res = await this.prisma.beneficiary.findUnique({
+          where: { customId: p[customUniqueField] },
+        });
+        if (res) count++;
+      }
     }
     return count;
   }
@@ -66,14 +70,21 @@ export class SourceService {
       );
     }
 
-    const invalidFields = await validateSchemaFields(
+    const payloadWithUUID = data.map((d) => {
+      return { ...d, uuid: uuid() };
+    });
+
+    const { allValidationErrors, processedData } = await validateSchemaFields(
       customUniqueField,
-      data,
+      payloadWithUUID,
       extraFields,
     );
 
-    console.log('Invalid Fields: ', invalidFields);
-    return { invalidFields, result: data, duplicateCount };
+    return {
+      invalidFields: allValidationErrors,
+      result: processedData,
+      duplicateCount,
+    };
   }
 
   async create(dto: CreateSourceDto) {
@@ -91,13 +102,14 @@ export class SourceService {
       );
 
     if (action === IMPORT_ACTION.IMPORT) {
-      const invalidFields = await validateSchemaFields(
+      const { allValidationErrors } = await validateSchemaFields(
         customUniqueField,
         data,
         extraFields,
       );
 
-      if (invalidFields.length) throw new Error('Invalid data submitted!');
+      if (allValidationErrors.length)
+        throw new Error('Invalid data submitted!');
       const row = await this.prisma.source.upsert({
         where: { importId: rest.importId },
         update: { ...rest, isImported: false },
