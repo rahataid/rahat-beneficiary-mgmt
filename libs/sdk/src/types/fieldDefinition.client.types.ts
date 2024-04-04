@@ -1,6 +1,7 @@
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
 import { FieldDefinition } from '../fieldDefinitions';
+import { Pagination } from '@rumsan/sdk/types';
 
 export type FieldDefinitionClient = {
   create: (
@@ -8,6 +9,7 @@ export type FieldDefinitionClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FieldDefinition>>;
   list: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FieldDefinition[]>>;
   listById: (
@@ -15,6 +17,7 @@ export type FieldDefinitionClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FieldDefinition>>;
   listActive: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FieldDefinition[]>>;
   update: (

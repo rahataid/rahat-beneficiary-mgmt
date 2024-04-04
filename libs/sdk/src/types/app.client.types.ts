@@ -12,4 +12,14 @@ export type AppClient = {
     data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
+
+  listBySettingName: (
+    name?: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
+
+  listByConstantName: (
+    { name, data }: { name?: string; data?: Pagination },
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
 };
