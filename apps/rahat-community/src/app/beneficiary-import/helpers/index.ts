@@ -60,7 +60,6 @@ export const validateSchemaFields = async (
 
   const allValidationErrors = [...primaryErrors, ...secondaryErrors];
   return { allValidationErrors, processedData };
-  // return removeDuplicatesByObjectKey(allValidationErrors);
 };
 
 // Validate extras fields
@@ -109,8 +108,9 @@ const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
 ) => {
-  let processedData = [];
+  let emptyFields = [];
   const primaryErrors = [];
+
   for (let item of payload) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
@@ -131,18 +131,30 @@ const validatePrimaryFields = async (
       let exist = keys.includes(f);
       if (!exist) {
         // Required field is missing
-
+        emptyFields.push(f);
         primaryErrors.push({
           uuid: item.uuid,
           fieldName: f,
           value: null,
+          isNull: true,
           message: 'Required field is missing',
         });
       }
     }
   }
-  console.log('processedData==>', processedData);
-  return { primaryErrors, processedData: payload };
+  const processedData = addEmptyFieldsToPayload(payload, emptyFields);
+  return { primaryErrors, processedData };
+};
+
+const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
+  const result = payload.map((obj) => {
+    const newObj = { ...obj };
+    emptyFields.forEach((field) => {
+      newObj[field] = null; //
+    });
+    return newObj;
+  });
+  return result;
 };
 
 export const fetchSchemaFields = (dbModelName: string) => {
