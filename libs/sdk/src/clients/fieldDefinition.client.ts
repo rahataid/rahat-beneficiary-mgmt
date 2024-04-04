@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { FieldDefinitionClient } from '../types';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { FieldDefinition } from '../fieldDefinitions';
+import { Pagination } from '@rumsan/sdk/types';
 
 export const getFieldDefinitionClient = (
   client: AxiosInstance,
@@ -12,8 +13,11 @@ export const getFieldDefinitionClient = (
       return formatResponse<FieldDefinition>(response);
     },
 
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/field-definitions', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/field-definitions', {
+        params: data,
+        ...config,
+      });
       return formatResponse<FieldDefinition[]>(response);
     },
 
@@ -22,8 +26,11 @@ export const getFieldDefinitionClient = (
       return formatResponse<FieldDefinition>(response);
     },
 
-    listActive: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/field-definitions/active', config);
+    listActive: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/field-definitions/active', {
+        params: data,
+        ...config,
+      });
       return formatResponse<FieldDefinition[]>(response);
     },
 
@@ -31,7 +38,7 @@ export const getFieldDefinitionClient = (
       { id, data }: { id?: string; data?: FieldDefinition },
       config?: AxiosRequestConfig,
     ) => {
-      const response = await client.put(
+      const response = await client.patch(
         `/field-definitions/${id}`,
         data,
         config,
