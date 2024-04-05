@@ -69,14 +69,9 @@ export class SourceService {
         data,
       );
     }
-
-    const payloadWithUUID = data.map((d) => {
-      return { ...d, uuid: uuid() };
-    });
-
     const { allValidationErrors, processedData } = await validateSchemaFields(
       customUniqueField,
-      payloadWithUUID,
+      data,
       extraFields,
     );
 
@@ -91,20 +86,23 @@ export class SourceService {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     const extraFields = await this.listExtraFields();
+    const payloadWithUUID = data.map((d) => {
+      return { ...d, uuid: uuid() };
+    });
 
     const customUniqueField = rest.uniqueField || '';
 
     if (action === IMPORT_ACTION.VALIDATE)
       return this.ValidateBeneficiaryImort(
         customUniqueField,
-        data,
+        payloadWithUUID,
         extraFields,
       );
 
     if (action === IMPORT_ACTION.IMPORT) {
       const { allValidationErrors } = await validateSchemaFields(
         customUniqueField,
-        data,
+        payloadWithUUID,
         extraFields,
       );
 
