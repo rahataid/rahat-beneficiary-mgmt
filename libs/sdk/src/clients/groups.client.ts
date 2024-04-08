@@ -38,5 +38,26 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       const response = await client.delete(`/group/${uuid}`, config);
       return formatResponse<GroupResponse>(response);
     },
+
+    download: async ({
+      groupedBeneficiaries,
+      // responseType,
+      config,
+    }: {
+      groupedBeneficiaries: any[];
+      // responseType: string;
+      config?: AxiosRequestConfig;
+    }) => {
+      const response = await client.post(
+        `/group/download`,
+        groupedBeneficiaries,
+        {
+          ...config,
+          responseType:
+            config?.responseType === 'arraybuffer' ? 'arraybuffer' : 'blob',
+        },
+      );
+      return response;
+    },
   };
 };
