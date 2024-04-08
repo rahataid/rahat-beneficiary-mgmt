@@ -8,3 +8,14 @@ export const calculateNumberOfDays = (startDate: Date, currentDate: Date) => {
 export const convertDateToISO = (date: string) => {
   return new Date(date).toISOString();
 };
+
+export const convertToValidString = (inputString: string) => {
+  // Replace spaces with underscores
+  let stringWithUnderscores = inputString.replace(/ /g, '_');
+  // Remove special characters using regex
+  let stringWithoutSpecialChars = stringWithUnderscores.replace(
+    /[^\w\s]/gi,
+    '',
+  );
+  return stringWithoutSpecialChars;
+};

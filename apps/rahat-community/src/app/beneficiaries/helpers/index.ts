@@ -14,7 +14,8 @@ export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
       // Check if the key exists in extras and the value matches
       if (key === FILTER_KEY.MAX_AGE) return item.extras['age'] < value;
       if (key === FILTER_KEY.MIN_AGE) return item.extras['age'] > value;
-      if (item.extras[key] != value) return false;
+      if (!new RegExp('^' + value + '$', 'i').test(item.extras[key]))
+        return false;
     }
     // If all conditions pass, keep the item
     return true;

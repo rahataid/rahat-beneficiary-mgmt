@@ -22,7 +22,7 @@ export class CreateFieldDefinitionDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'Text',
+    example: 'TEXT',
     description:
       'Valid data types:  CHECKBOX/DROPDOWN/NUMBER/PASSWORD/RADIO/TEXT/TEXTAREA',
   })
@@ -32,7 +32,12 @@ export class CreateFieldDefinitionDto {
 
   @ApiProperty({
     type: 'object',
-    example: { data: 'any' },
+    example: {
+      data: [
+        { key: 'yes', value: 'Yes' },
+        { key: 'no', value: 'No' },
+      ],
+    },
   })
   @IsOptional()
   fieldPopulate: any;
