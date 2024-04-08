@@ -75,14 +75,20 @@ export class SourceService {
       extraFields,
     );
 
+    const result = await this.checkDuplicateBeneficiary(
+      processedData,
+      customUniqueField,
+    );
+
     return {
       invalidFields: allValidationErrors,
-      result: processedData,
+      result,
       duplicateCount,
     };
   }
 
   async create(dto: CreateSourceDto) {
+    console.log('Data==>', dto.fieldMapping);
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     const extraFields = await this.listExtraFields();
@@ -120,6 +126,22 @@ export class SourceService {
       );
       return { message: 'Source created and added to queue' };
     }
+  }
+
+  async checkDuplicateBeneficiary(data: any, customUniqueField: string) {
+    const result = [];
+    for (let p of data) {
+      p.isDuplicate = false;
+      const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+      if (keyExist) {
+        const res = await this.prisma.beneficiary.findUnique({
+          where: { customId: p[customUniqueField] },
+        });
+        if (res) p.isDuplicate = true;
+      }
+      result.push(p);
+    }
+    return result;
   }
 
   findAll(query: any) {
