@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
 
 export enum FieldTypeEnum {
   Checkbox = 'CHECKBOX',
@@ -29,6 +29,20 @@ export class CreateFieldDefinitionDto {
   @IsString()
   @IsNotEmpty()
   fieldType!: FieldTypeEnum;
+
+  @ApiProperty({
+    type: 'boolean',
+    example: true,
+  })
+  @IsBoolean()
+  isActive!: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
+    example: false,
+  })
+  @IsBoolean()
+  isTargeting!: boolean;
 
   @ApiProperty({
     type: 'object',

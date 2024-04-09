@@ -81,7 +81,7 @@ model FieldDefinition {
   fieldType     FieldType
   fieldPopulate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
   isActive      Boolean   @default(true)
-
+  isTargeting   Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 
