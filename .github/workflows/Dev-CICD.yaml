@@ -1,15 +1,12 @@
-name: Dev Root CI/CD
+name: Dev CI/CD
 on:
   push:
     branches:
       - 'dev'
-    paths-ignore:
-      - 'apps/**'
   pull_request:
     branches:
       - 'dev'
-    paths-ignore:
-      - 'apps/**'
+  workflow_dispatch:
 
 env:
   CI: false
@@ -19,6 +16,8 @@ jobs:
   deploy:
     name: build && push image to Docker hub
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'action') || contains(github.event.pull_request.title, 'action') || github.event_name == 'workflow_dispatch'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -47,14 +46,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Frontend Image
-      - name: build && push frontend
-        id: build-push-frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile.frontend
-          push: ${{ github.event_name == 'push' && 'true' || 'false' }}
-          tags: esatya/rahat-beneficiary-mgmt-frontend:dev
+      # - name: build && push frontend
+      #   id: build-push-frontend
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: Dockerfile.frontend
+      #     push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+      #     tags: esatya/rahat-beneficiary-mgmt-frontend:dev
 
       # Rahat Image
       - name: build && push rahat
@@ -63,5 +62,5 @@ jobs:
         with:
           context: .
           file: Dockerfile.rahat-community
-          push: ${{ github.event_name == 'push' && 'true' || 'false' }}
+          push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           tags: esatya/rahat-beneficiary-mgmt-rahat-community:dev
