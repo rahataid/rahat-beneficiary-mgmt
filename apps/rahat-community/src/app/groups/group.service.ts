@@ -3,6 +3,8 @@ import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
 import { CreateGroupDto, UpdateGroupDto } from '@community-tool/extentions';
+import { generateExcelData } from '../utils/export-to-excel';
+import { Response } from 'express';
 
 @Injectable()
 export class GroupService {
@@ -84,5 +86,18 @@ export class GroupService {
         uuid,
       },
     });
+  }
+
+  downloadData(data: any[], res: Response) {
+    const excelBuffer = generateExcelData(data);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=beneficiaries.xlsx',
+    );
+    return res.send(excelBuffer);
   }
 }
