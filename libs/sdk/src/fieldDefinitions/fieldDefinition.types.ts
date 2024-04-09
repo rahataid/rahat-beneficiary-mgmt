@@ -4,6 +4,7 @@ export type FieldDefinition = {
   fieldType: string;
   fieldPopulate?: any;
   isActive: boolean;
+  isTargeting: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 };
