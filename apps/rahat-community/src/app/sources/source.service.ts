@@ -62,13 +62,7 @@ export class SourceService {
     data: any,
     extraFields: any,
   ) {
-    let duplicateCount = 0;
-    if (customUniqueField) {
-      duplicateCount = await this.getDuplicateCountByUnqueId(
-        customUniqueField,
-        data,
-      );
-    }
+    let duplicateCount = 0; // If customUniqueField update duplicateCount
     const { allValidationErrors, processedData } = await validateSchemaFields(
       customUniqueField,
       data,
@@ -79,16 +73,16 @@ export class SourceService {
       processedData,
       customUniqueField,
     );
-
+    const duplicates = result.filter((f) => f.isDuplicate);
     return {
       invalidFields: allValidationErrors,
       result,
       duplicateCount,
+      containsDuplicate: duplicates.length ? true : false,
     };
   }
 
   async create(dto: CreateSourceDto) {
-    console.log('Data==>', dto.fieldMapping);
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     const extraFields = await this.listExtraFields();

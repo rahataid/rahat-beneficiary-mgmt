@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import axios from 'axios';
-import { getSetting } from './settings/setting.config';
 import { KOBO_URL } from '../constants';
+import { SettingsService } from '@rumsan/settings';
 
 @Injectable()
 export class AppService {
@@ -14,10 +14,10 @@ export class AppService {
   }
 
   async getDataFromKoboTool(name: string) {
-    const settings = getSetting(name);
+    const settings = SettingsService.get(name);
     if (!settings) throw new Error('Setting not found');
-    const formId = settings.FORM_ID;
-    const tokenId = settings.TOKEN_ID;
+    const formId = settings.FORM_ID || '';
+    const tokenId = settings.TOKEN_ID || '';
     return axios.get(`${KOBO_URL}/${formId}/data.json`, {
       headers: {
         Authorization: `Token ${tokenId}`,

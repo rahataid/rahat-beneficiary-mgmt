@@ -29,6 +29,7 @@ import {
 import { SettingsModule } from '@rumsan/settings';
 import { AppSettingService } from './settings/setting.service';
 import { StatsModule } from '@community-tool/stats';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -66,7 +67,6 @@ import { StatsModule } from '@community-tool/stats';
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     ScheduleService,
-    AppSettingService,
   ],
 })
 export class AppModule {}
