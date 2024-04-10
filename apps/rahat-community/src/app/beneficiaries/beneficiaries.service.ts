@@ -16,12 +16,17 @@ import { createSearchQuery } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BQUEUE, BeneficiaryEvents } from '@community-tool/sdk';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
+    @InjectQueue(BQUEUE.COMMUNITY_BENEFICIARY)
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async fetchDBFields() {
@@ -57,12 +62,15 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.create({
+    const createdData = await this.prisma.beneficiary.create({
       data: {
         customId: uuid(),
         ...dto,
       },
     });
+    //  createdData;
+    console.log('  first', createdData);
+    return this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED, {});
   }
 
   async searchTargets(filters: any) {
@@ -164,12 +172,16 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.update({
+    const beneficiaryData = await this.prisma.beneficiary.update({
       where: {
         uuid,
       },
       data: dto,
     });
+
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
+
+    return beneficiaryData;
   }
 
   async remove(uuid: string) {
@@ -180,11 +192,14 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    return await this.prisma.beneficiary.delete({
+    const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+
+    return rData;
   }
 
   addBulk(dto: BulkInsertDto) {

@@ -33,13 +33,18 @@ import {
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@community-tool/extentions';
+import { BeneficiaryStatService } from './beneficiaryStats.service';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtGuard, AbilitiesGuard)
 export class BeneficiariesController {
-  constructor(private readonly beneficiariesService: BeneficiariesService) {}
+  constructor(
+    private readonly beneficiariesService: BeneficiariesService,
+
+    private readonly statsService: BeneficiaryStatService,
+  ) {}
 
   @Get('db-fields')
   @HttpCode(HttpStatus.OK)
@@ -88,6 +93,11 @@ export class BeneficiariesController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
+  }
+
+  @Get('stats')
+  async getStats() {
+    return this.statsService.getAllStats();
   }
 
   @Put(':uuid')

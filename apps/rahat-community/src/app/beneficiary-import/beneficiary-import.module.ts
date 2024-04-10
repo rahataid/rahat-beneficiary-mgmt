@@ -8,9 +8,13 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
+import { BQUEUE } from '@community-tool/sdk';
 
 @Module({
-  imports: [BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT })],
+  imports: [
+    BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
+    BullModule.registerQueue({ name: BQUEUE.COMMUNITY_BENEFICIARY }),
+  ],
   controllers: [BeneficiaryImportController],
   providers: [
     FieldDefinitionsService,
