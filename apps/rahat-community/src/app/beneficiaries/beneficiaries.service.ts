@@ -203,7 +203,9 @@ export class BeneficiariesService {
     const withCustomID = dto.data.map((d: any) => {
       return { ...d, customId: uuid() };
     });
-    return this.prisma.beneficiary.createMany({ data: withCustomID });
+    const rdata = this.prisma.beneficiary.createMany({ data: withCustomID });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return rdata;
   }
 
   async uploadFile(file: any) {

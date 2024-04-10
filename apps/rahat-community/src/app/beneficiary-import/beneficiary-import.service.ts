@@ -4,6 +4,8 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { SourceService } from '../sources/source.service';
 import { fetchSchemaFields, injectCustomID } from './helpers';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BeneficiaryEvents } from '@community-tool/sdk';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -11,6 +13,7 @@ export class BeneficiaryImportService {
     private benefSourceService: BeneficiarySourceService,
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async splitPrimaryAndExtraFields(data: any) {
@@ -63,6 +66,8 @@ export class BeneficiaryImportService {
       }
     }
     await this.sourceService.updateImportFlag(source.uuid, true);
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CHANGED);
+
     return {
       success: true,
       status: 200,
