@@ -1,25 +1,20 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
-
-import { AppService } from './app.service';
-import { getSetting, listSettings } from './settings/setting.config';
-import { AppSettingService } from './settings/setting.service';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ACTIONS,
+  AbilitiesGuard,
+  CheckAbilities,
+  JwtGuard,
+  SUBJECTS,
+} from '@rumsan/user';
+import { AppService } from './app.service';
 
 @Controller('app')
 @ApiTags('APP')
+@UseGuards(JwtGuard, AbilitiesGuard)
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private appSettingService: AppSettingService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getData() {
@@ -28,30 +23,14 @@ export class AppController {
 
   @ApiBearerAuth('JWT')
   @Get('kobo-import/:name')
-  // @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   getDataFromKoboTool(@Param('name') name: string) {
     return this.appService.getDataFromKoboTool(name);
   }
 
-  @Get('settings')
-  listSettings() {
-    return this.appSettingService.findaAll();
-  }
-
   @Get('settings/kobotool')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   filterSettingByType() {
     return this.appService.findKobotoolSettings();
   }
-
-  @Get('settings/:name')
-  getSettings(@Param('name') name: string) {
-    return getSetting(name);
-  }
-
-  // @Get('settings/:customkey')
-  // getSettingsData(@Param('customKey') customKey: string) {
-  //   return this.appSetttingService.getDynamicSettingForCustomId(customKey);
-  // }
 }
