@@ -27,6 +27,9 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
+import { AppSettingService } from './settings/setting.service';
+import { StatsModule } from '@community-tool/stats';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -41,6 +44,7 @@ import { SettingsModule } from '@rumsan/settings';
     }),
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RSUserModule.forRoot([AuthsModule, UsersModule, RolesModule]),
+    StatsModule,
     BeneficiariesModule,
     SourceModule,
     FieldDefinitionsModule,

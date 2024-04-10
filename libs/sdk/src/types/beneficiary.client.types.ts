@@ -4,6 +4,7 @@ import { AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
   ImportBeneficiary,
+  Stats,
   UpdateBeneficiary,
 } from '../beneficiary/beneficiary.types';
 import { FileResponse } from './response.types';
@@ -49,4 +50,8 @@ export type BeneficiaryClient = {
     source_uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ImportBeneficiary>>;
+
+  getBeneficiaryStats: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Stats[]>>;
 };

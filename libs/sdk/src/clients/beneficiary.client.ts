@@ -4,6 +4,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
   ImportBeneficiary,
+  Stats,
   UpdateBeneficiary,
 } from '../beneficiary';
 import { BeneficiaryClient, FileResponse, TFile } from '../types';
@@ -66,6 +67,11 @@ export const getBeneficiaryClient = (
         config,
       );
       return formatResponse<ImportBeneficiary>(response);
+    },
+
+    getBeneficiaryStats: async (config?: AxiosRequestConfig) => {
+      const response = await client.get('/beneficiaries/stats', config);
+      return formatResponse<Stats[]>(response);
     },
   };
 };

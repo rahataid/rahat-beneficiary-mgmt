@@ -1,8 +1,10 @@
+import { BeneficiaryEvents } from '@community-tool/sdk';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EMAIL_TEMPLATES, EVENTS } from '../../constants';
-import { TargetService } from '../targets/target.service';
+import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+import { TargetService } from '../targets/target.service';
 import { SourceCreatedDto } from './listeners.dto';
 import { EmailService } from './mail.service';
 @Injectable()
@@ -11,6 +13,7 @@ export class ListenerService {
     private targetService: TargetService,
     private benefImport: BeneficiaryImportService,
     private emailService: EmailService,
+    private readonly benStats: BeneficiaryStatService,
   ) {}
   @OnEvent(EVENTS.CREATE_TARGET_RESULT)
   async createTargetResult(data: any) {
@@ -45,5 +48,13 @@ export class ListenerService {
   @OnEvent(EVENTS.BENEF_SOURCE_CREATED)
   async importBeneficiaries(data: SourceCreatedDto) {
     return this.benefImport.importBySourceUUID(data.sourceUUID);
+  }
+
+  @OnEvent(BeneficiaryEvents.BENEFICIARY_CREATED)
+  @OnEvent(BeneficiaryEvents.BENEFICIARY_UPDATED)
+  @OnEvent(BeneficiaryEvents.BENEFICIARY_REMOVED)
+  async onBeneficiaryChanged() {
+    console.log('listener called');
+    await this.benStats.saveAllStats();
   }
 }

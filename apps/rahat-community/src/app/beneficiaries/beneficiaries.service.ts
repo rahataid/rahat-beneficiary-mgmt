@@ -16,12 +16,15 @@ import { createSearchQuery } from './helpers';
 import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BeneficiaryEvents } from '@community-tool/sdk';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async fetchDBFields() {
@@ -57,12 +60,14 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.create({
+    const createdData = await this.prisma.beneficiary.create({
       data: {
         customId: uuid(),
         ...dto,
       },
     });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return createdData;
   }
 
   async searchTargets(filters: any) {
@@ -164,12 +169,16 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.update({
+    const beneficiaryData = await this.prisma.beneficiary.update({
       where: {
         uuid,
       },
       data: dto,
     });
+
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
+
+    return beneficiaryData;
   }
 
   async remove(uuid: string) {
@@ -180,18 +189,23 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    return await this.prisma.beneficiary.delete({
+    const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+
+    return rData;
   }
 
   addBulk(dto: BulkInsertDto) {
     const withCustomID = dto.data.map((d: any) => {
       return { ...d, customId: uuid() };
     });
-    return this.prisma.beneficiary.createMany({ data: withCustomID });
+    const rdata = this.prisma.beneficiary.createMany({ data: withCustomID });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return rdata;
   }
 
   async uploadFile(file: any) {
