@@ -89,3 +89,9 @@ export type ListBeneficiary = {
   updatedAt?: Date;
   deletedAt?: Date;
 };
+
+export type Stats = {
+  name: string;
+  data: any;
+  group: string;
+};

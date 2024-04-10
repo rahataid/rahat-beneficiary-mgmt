@@ -43,9 +43,15 @@ export class BeneficiariesController {
   constructor(
     private readonly beneficiariesService: BeneficiariesService,
 
-    private readonly statsService: BeneficiaryStatService,
+    private readonly benStatsService: BeneficiaryStatService,
   ) {}
 
+  @Get('stats')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  async getStats() {
+    return this.benStatsService.getAllStats();
+  }
   @Get('db-fields')
   @HttpCode(HttpStatus.OK)
   beneDBFields() {
@@ -89,15 +95,15 @@ export class BeneficiariesController {
     return this.beneficiariesService.findAll(filters);
   }
 
+  @Get(':name')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  findStatsByName(@Param('name') name: string) {
+    return this.benStatsService.getStatsByName(name);
+  }
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
-  }
-
-  @Get('stats')
-  async getStats() {
-    return this.statsService.getAllStats();
   }
 
   @Put(':uuid')

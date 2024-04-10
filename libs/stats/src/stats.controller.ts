@@ -12,6 +12,10 @@ export class StatsController {
     return this.statsService.findAll();
   }
 
+  @Get(':group')
+  getByGroup(@Param('group') group: string) {
+    return this.statsService.getByGroup(group);
+  }
   @Get(':name')
   findOne(@Param('name') name: string) {
     return this.statsService.findOne(name);

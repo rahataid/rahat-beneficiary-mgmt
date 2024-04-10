@@ -89,10 +89,12 @@ export class BeneficiaryStatService {
   }
 
   async getAllStats(group = 'beneficiary') {
-    return this.statsService.getByGroup(group, {
-      name: true,
-      data: true,
-    });
+    return await this.statsService.getByGroup(group);
+  }
+
+  async getStatsByName(name: string) {
+    console.log(name);
+    return await this.statsService.findOne(name);
   }
 
   async saveAllStats() {
