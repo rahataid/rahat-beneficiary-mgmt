@@ -1,19 +1,15 @@
+import { BeneficiaryEvents } from '@community-tool/sdk';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EMAIL_TEMPLATES, EVENTS } from '../../constants';
-import { TargetService } from '../targets/target.service';
+import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+import { TargetService } from '../targets/target.service';
 import { SourceCreatedDto } from './listeners.dto';
 import { EmailService } from './mail.service';
-import { BQUEUE, BeneficiaryEvents } from '@community-tool/sdk';
-import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 @Injectable()
 export class ListenerService {
   constructor(
-    @InjectQueue(BQUEUE.COMMUNITY_BENEFICIARY) private readonly queue: Queue,
-
     private targetService: TargetService,
     private benefImport: BeneficiaryImportService,
     private emailService: EmailService,

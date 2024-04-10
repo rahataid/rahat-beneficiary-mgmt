@@ -21,9 +21,6 @@ import { BQUEUE } from '@community-tool/sdk';
     // MailModule,
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
-    BullModule.registerQueue({
-      name: BQUEUE.COMMUNITY_BENEFICIARY,
-    }),
   ],
   providers: [
     ListenerService,

@@ -17,15 +17,13 @@ import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BQUEUE, BeneficiaryEvents } from '@community-tool/sdk';
-import { InjectQueue } from '@nestjs/bull';
+import { BeneficiaryEvents } from '@community-tool/sdk';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
-    @InjectQueue(BQUEUE.COMMUNITY_BENEFICIARY)
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -68,9 +66,8 @@ export class BeneficiariesService {
         ...dto,
       },
     });
-    //  createdData;
-    console.log('  first', createdData);
-    return this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED, {});
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return createdData;
   }
 
   async searchTargets(filters: any) {
