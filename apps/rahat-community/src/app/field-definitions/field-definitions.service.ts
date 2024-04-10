@@ -16,6 +16,15 @@ export class FieldDefinitionsService {
     const payload = {
       ...dto,
       name: convertToValidString(dto.name),
+      fieldPopulate:
+        dto?.fieldPopulate?.data?.length > 0
+          ? {
+              data: dto.fieldPopulate.data.map((item) => ({
+                key: convertToValidString(item.key),
+                value: convertToValidString(item.value),
+              })),
+            }
+          : [],
     };
 
     return this.prisma.fieldDefinition.create({
@@ -59,6 +68,15 @@ export class FieldDefinitionsService {
     const payload = {
       ...dto,
       name: convertToValidString(dto.name),
+      fieldPopulate:
+        dto?.fieldPopulate?.data?.length > 0
+          ? {
+              data: dto.fieldPopulate.data.map((item) => ({
+                key: convertToValidString(item.key),
+                value: convertToValidString(item.value),
+              })),
+            }
+          : [],
     };
     return this.prisma.fieldDefinition.update({
       where: { id },

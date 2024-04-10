@@ -10,12 +10,27 @@ export const convertDateToISO = (date: string) => {
 };
 
 export const convertToValidString = (inputString: string) => {
-  // Replace spaces with underscores
-  let stringWithUnderscores = inputString.replace(/ /g, '_');
+  // Trim leading and trailing whitespace
+  const trimmedString = inputString.trim();
+
+  // Replace spaces with underscores and collapse consecutive underscores
+  const stringWithUnderscores = trimmedString
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_');
+
   // Remove special characters using regex
-  let stringWithoutSpecialChars = stringWithUnderscores.replace(
+  const stringWithoutSpecialChars = stringWithUnderscores.replace(
     /[^\w\s]/gi,
     '',
   );
-  return stringWithoutSpecialChars;
+
+  // Remove underscores at the beginning and end of the string
+  const stringWithoutLeadingTrailingUnderscores =
+    stringWithoutSpecialChars.replace(/^_+|_+$/g, '');
+
+  // Replace consecutive underscores with a single underscore
+  const stringWithoutConsecutiveUnderscores =
+    stringWithoutLeadingTrailingUnderscores.replace(/_+/g, '_');
+
+  return stringWithoutConsecutiveUnderscores;
 };
