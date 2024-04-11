@@ -127,9 +127,10 @@ export class SourceService {
     for (let p of data) {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+
       if (keyExist) {
         const res = await this.prisma.beneficiary.findUnique({
-          where: { customId: p[customUniqueField] },
+          where: { customId: p[customUniqueField].toString() },
         });
         if (res) p.isDuplicate = true;
       }

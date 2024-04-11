@@ -40,7 +40,7 @@ export class BeneficiariesService {
       payload.birthDate = convertDateToISO(payload.birthDate);
     }
     return this.prisma.beneficiary.upsert({
-      where: { customId: payload.customId },
+      where: { customId: payload.customId.toString() },
       update: payload,
       create: payload,
     });

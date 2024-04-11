@@ -66,7 +66,7 @@ export class BeneficiaryImportService {
       }
     }
     await this.sourceService.updateImportFlag(source.uuid, true);
-    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CHANGED);
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 
     return {
       success: true,
