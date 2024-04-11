@@ -6,7 +6,7 @@ import { PrismaService } from '@rumsan/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
-import { BQUEUE } from '@community-tool/sdk';
+import { BQUEUE } from '@rahataid/community-tool-sdk';
 
 @Module({
   imports: [

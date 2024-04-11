@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
+import {
+  CreateSourceDto,
+  UpdateSourceDto,
+} from '@rahataid/community-tool-extensions';
 import { InjectQueue } from '@nestjs/bull';
 import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';

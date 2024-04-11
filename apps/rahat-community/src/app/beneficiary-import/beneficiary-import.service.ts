@@ -5,7 +5,7 @@ import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-sou
 import { SourceService } from '../sources/source.service';
 import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@community-tool/sdk';
+import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class BeneficiaryImportService {

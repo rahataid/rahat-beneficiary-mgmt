@@ -27,7 +27,7 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
-import { StatsModule } from '@community-tool/stats';
+import { StatsModule } from '@rahataid/community-tool-stats';
 
 @Module({
   imports: [

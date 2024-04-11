@@ -18,7 +18,7 @@ import {
   CreateFieldDefinitionDto,
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')

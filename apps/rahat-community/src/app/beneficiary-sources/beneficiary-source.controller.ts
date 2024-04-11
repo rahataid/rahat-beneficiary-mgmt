@@ -22,7 +22,7 @@ import {
 import {
   CreateBeneficiarySourceDto,
   UpdateBeneficiarySourceDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Controller('beneficiarySource')
 @ApiBearerAuth('JWT')

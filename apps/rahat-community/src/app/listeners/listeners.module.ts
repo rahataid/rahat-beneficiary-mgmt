@@ -12,9 +12,9 @@ import { SourceService } from '../sources/source.service';
 // import { MailService } from '../mail/mail.service';
 // import { MailModule } from '../mail/mail.module';
 import { EmailService } from './mail.service';
-import { StatsService } from '@community-tool/stats';
+import { StatsService } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
-import { BQUEUE } from '@community-tool/sdk';
+import { BQUEUE } from '@rahataid/community-tool-sdk';
 
 @Module({
   imports: [
