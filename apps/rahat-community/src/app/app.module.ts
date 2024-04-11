@@ -63,7 +63,6 @@ import { StatsModule } from '@rahataid/community-tool-stats';
     AppService,
     TargetProcessor,
     BeneficiaryProcessor,
-    { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     ScheduleService,
   ],
