@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpCode,
@@ -34,33 +33,47 @@ import {
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@community-tool/extentions';
+import { BeneficiaryStatService } from './beneficiaryStats.service';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
 @ApiBearerAuth('JWT')
+@UseGuards(JwtGuard, AbilitiesGuard)
 export class BeneficiariesController {
-  constructor(private readonly beneficiariesService: BeneficiariesService) {}
+  constructor(
+    private readonly beneficiariesService: BeneficiariesService,
+
+    private readonly benStatsService: BeneficiaryStatService,
+  ) {}
+
+  @Get('stats')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  async getStats() {
+    return this.benStatsService.getAllStats();
+  }
+  @Get('db-fields')
+  @HttpCode(HttpStatus.OK)
+  beneDBFields() {
+    return this.beneficiariesService.fetchDBFields();
+  }
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ROLE })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.PUBLIC })
   async create(@Body() dto: CreateBeneficiaryDto) {
-    console.log(dto);
     return this.beneficiariesService.create(dto);
   }
 
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
   async bulkInsert(@Body() dto: BulkInsertDto) {
     return this.beneficiariesService.addBulk(dto);
   }
 
   @Post('upload')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadAsset(
@@ -78,15 +91,17 @@ export class BeneficiariesController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
-  // @ApiFilterQuery('filters', BeneficiaryFilterDto)
   findAll(@Query('') filters: any) {
     return this.beneficiariesService.findAll(filters);
   }
 
+  @Get(':name')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  findStatsByName(@Param('name') name: string) {
+    return this.benStatsService.getStatsByName(name);
+  }
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
   }
@@ -94,7 +109,6 @@ export class BeneficiariesController {
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
   update(
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
@@ -105,7 +119,6 @@ export class BeneficiariesController {
 
   @Delete(':uuid')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
-  @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string) {
     return this.beneficiariesService.remove(uuid);

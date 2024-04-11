@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -19,6 +20,7 @@ import {
   SUBJECTS,
 } from '@rumsan/user';
 import { CreateGroupDto, UpdateGroupDto } from '@community-tool/extentions';
+import { Response } from 'express';
 
 @Controller('group')
 @ApiTags('Group')
@@ -31,6 +33,11 @@ export class GroupController {
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
   create(@Body() dto: CreateGroupDto) {
     return this.groupService.create(dto);
+  }
+
+  @Post('download')
+  async downloadData(@Body() data: any[], @Res() res: Response) {
+    return this.groupService.downloadData(data, res);
   }
 
   @Get()

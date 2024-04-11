@@ -11,6 +11,7 @@
     "build:frontend": "npx nx build frontend",
     "build:rahat-com": "npx nx build rahat-community",
     "serve:rahat-com": "npx nx serve rahat-community",
+    "dev": "npx nx serve rahat-community",
     "serve:frontend": "npx nx serve frontend",
     "test": "npx nx test rahat-community-e2e:e2e",
     "prisma:generate": "npx prisma generate"
@@ -39,7 +40,7 @@
     "@nestjs/schedule": "^4.0.0",
     "@nestjs/serve-static": "^4.0.0",
     "@nestjs/swagger": "^7.1.16",
-    "@prisma/client": "^5.11.0",
+    "@prisma/client": "^5.10.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",

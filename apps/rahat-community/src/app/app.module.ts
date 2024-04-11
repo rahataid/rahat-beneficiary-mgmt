@@ -27,7 +27,8 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
-import { AppSettingService } from './settings/setting.service';
+import { StatsModule } from '@community-tool/stats';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -42,6 +43,7 @@ import { AppSettingService } from './settings/setting.service';
     }),
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RSUserModule.forRoot([AuthsModule, UsersModule, RolesModule]),
+    StatsModule,
     BeneficiariesModule,
     SourceModule,
     FieldDefinitionsModule,
@@ -64,7 +66,6 @@ import { AppSettingService } from './settings/setting.service';
     { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     ScheduleService,
-    AppSettingService,
   ],
 })
 export class AppModule {}

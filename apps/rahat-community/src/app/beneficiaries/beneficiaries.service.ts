@@ -1,35 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
 
-import { PrismaService } from '@rumsan/prisma';
-import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
-import { paginate } from '../utils/paginate';
-import XLSX from 'xlsx';
-import { deleteFileFromDisk } from '../utils/multer';
-import { createSearchQuery } from './helpers';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@community-tool/extentions';
-import {
-  BankedStatus,
-  Gender,
-  InternetStatus,
-  PhoneStatus,
-} from '@rahataid/community-tool-sdk/enums';
+import { PrismaService } from '@rumsan/prisma';
+import XLSX from 'xlsx';
+import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
+import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
+import { deleteFileFromDisk } from '../utils/multer';
+import { paginate } from '../utils/paginate';
+import { createSearchQuery } from './helpers';
+import { DB_MODELS } from '../../constants';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { convertDateToISO } from '../utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BeneficiaryEvents } from '@community-tool/sdk';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
+  async fetchDBFields() {
+    const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+    if (!dbFields.length) return [];
+    const scalarFields = dbFields.filter((f) => f.kind === 'scalar');
+    const extraFields = dbFields.filter((f) => f.type.toLowerCase() === 'json');
+    return { scalarFields, extraFields };
+  }
+
   async upsertByCustomID(payload: any) {
+    if (payload.birthDate) {
+      payload.birthDate = convertDateToISO(payload.birthDate);
+    }
     return this.prisma.beneficiary.upsert({
-      where: { customId: payload.customId },
+      where: { customId: payload.customId.toString() },
       update: payload,
       create: payload,
     });
@@ -37,10 +48,8 @@ export class BeneficiariesService {
 
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras } = dto;
-    if (birthDate) {
-      const formattedDate = new Date(dto.birthDate).toISOString();
-      dto.birthDate = formattedDate;
-    }
+    if (birthDate) dto.birthDate = convertDateToISO(birthDate);
+
     if (extras) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
@@ -51,26 +60,14 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.create({
+    const createdData = await this.prisma.beneficiary.create({
       data: {
         customId: uuid(),
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        gender: dto.gender.toUpperCase() as Gender,
-        birthDate: dto.birthDate,
-        email: dto.email,
-        extras: dto.extras,
-        location: dto.location,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        phone: dto.phone,
-        notes: dto.notes,
-        walletAddress: dto.walletAddress,
-        bankedStatus: dto.bankedStatus.toUpperCase() as BankedStatus,
-        internetStatus: dto.internetStatus.toUpperCase() as InternetStatus,
-        phoneStatus: dto.phoneStatus.toUpperCase() as PhoneStatus,
+        ...dto,
       },
     });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return createdData;
   }
 
   async searchTargets(filters: any) {
@@ -172,12 +169,16 @@ export class BeneficiariesService {
         );
     }
 
-    return await this.prisma.beneficiary.update({
+    const beneficiaryData = await this.prisma.beneficiary.update({
       where: {
         uuid,
       },
       data: dto,
     });
+
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
+
+    return beneficiaryData;
   }
 
   async remove(uuid: string) {
@@ -188,18 +189,23 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    return await this.prisma.beneficiary.delete({
+    const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+
+    return rData;
   }
 
   addBulk(dto: BulkInsertDto) {
     const withCustomID = dto.data.map((d: any) => {
       return { ...d, customId: uuid() };
     });
-    return this.prisma.beneficiary.createMany({ data: withCustomID });
+    const rdata = this.prisma.beneficiary.createMany({ data: withCustomID });
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    return rdata;
   }
 
   async uploadFile(file: any) {

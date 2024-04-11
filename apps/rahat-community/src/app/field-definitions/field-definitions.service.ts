@@ -7,6 +7,7 @@ import {
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
 } from '@community-tool/extentions';
+import { convertToValidString } from '../utils';
 
 @Injectable()
 export class FieldDefinitionsService {
@@ -14,9 +15,17 @@ export class FieldDefinitionsService {
   create(dto: CreateFieldDefinitionDto) {
     const payload = {
       ...dto,
-      name: dto.name.toLocaleLowerCase(),
+      name: convertToValidString(dto.name),
+      fieldPopulate:
+        dto?.fieldPopulate?.data?.length > 0
+          ? {
+              data: dto.fieldPopulate.data.map((item) => ({
+                key: convertToValidString(item.key),
+                value: convertToValidString(item.value),
+              })),
+            }
+          : [],
     };
-    console.log('FieldDefinition=>', payload);
 
     return this.prisma.fieldDefinition.create({
       data: payload,
@@ -58,7 +67,16 @@ export class FieldDefinitionsService {
   update(id: number, dto: UpdateFieldDefinitionDto) {
     const payload = {
       ...dto,
-      name: dto.name.toLocaleLowerCase(),
+      name: convertToValidString(dto.name),
+      fieldPopulate:
+        dto?.fieldPopulate?.data?.length > 0
+          ? {
+              data: dto.fieldPopulate.data.map((item) => ({
+                key: convertToValidString(item.key),
+                value: convertToValidString(item.value),
+              })),
+            }
+          : [],
     };
     return this.prisma.fieldDefinition.update({
       where: { id },

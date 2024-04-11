@@ -2,6 +2,7 @@ import { UUID } from 'crypto';
 
 export type Source = {
   id: number;
+  action?: string;
   uuid?: UUID;
   name: string;
   isImported?: boolean;

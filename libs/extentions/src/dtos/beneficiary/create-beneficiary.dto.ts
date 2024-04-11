@@ -1,17 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
 import {
   BankedStatus,
   Gender,
   InternetStatus,
   PhoneStatus,
 } from '@rahataid/community-tool-sdk/enums/';
-// enum GenderEnum {
-//   MALE = 'MALE',
-//   FEMALE = 'FEMALE',
-//   OTHER = 'OTHER',
-//   UNKNOWN = 'UNKNOWN',
-// }
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
+import { IsAlphaString, IsValidDate } from '../../validators';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -23,88 +29,85 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
+  constructor() {
+    this.firstName = '';
+    this.lastName = '';
+  }
+  @IsOptional()
+  customId?: string;
+
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Ram',
-    description: 'firstName',
   })
-  @IsString()
-  firstName!: string;
+  @IsAlphaString()
+  firstName: string;
 
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     example: 'Sharma',
-    description: 'lastName',
   })
-  @IsString()
-  lastName!: string;
+  @IsAlphaString()
+  lastName: string;
 
   @ApiProperty({
     type: 'string',
-    example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
-  })
-  @IsString()
-  walletAddress?: string;
-
-  @ApiProperty({
-    type: 'string',
-    example: '1997-03-08',
-    description: 'Date of birth in the YYYY-MM-DD format.',
-  })
-  @IsString()
-  @IsOptional()
-  birthDate?: string;
-
-  @ApiProperty({
-    type: 'string',
-    example: 'Male',
+    example: Gender.MALE,
     description: 'Gender ',
   })
   @IsString()
   @IsOptional()
+  @IsEnum(Gender)
   gender?: Gender;
 
   @ApiProperty({
     type: 'string',
-    example: 'home_internet',
-    description: 'Type of internet use ',
+    example: '2004-03-08',
+    description: 'YYYY-MM-DD format',
   })
-  @IsString()
   @IsOptional()
-  internetStatus?: InternetStatus;
+  @IsValidDate()
+  birthDate?: string;
+
+  @IsOptional()
+  @ApiProperty({
+    type: 'string',
+    example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
+  })
+  @IsAlphaString()
+  walletAddress?: string;
 
   @ApiProperty({
     type: 'string',
-    example: 'under_banked',
-    description: 'bankedStatus ',
+    example: '9785623749',
   })
   @IsString()
   @IsOptional()
-  bankedStatus?: BankedStatus;
+  @MinLength(10)
+  phone?: string;
 
   @ApiProperty({
     type: 'string',
-    example: 'featuresPhone',
-    description: 'phoneStatus ',
+    example: 'ram@mailinator.com',
   })
   @IsString()
   @IsOptional()
-  phoneStatus?: PhoneStatus;
+  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/g)
+  email?: string;
 
   @ApiProperty({
     type: 'string',
     example: 'lalitpur',
-    description: 'location of the beneficiary',
   })
-  @IsString()
+  @IsAlphaString()
   @IsOptional()
   location?: string;
 
   @ApiProperty({
     type: 'number',
     example: '26.24',
-    description: 'Latitude of community',
-    required: false,
   })
   @IsNumber()
   @IsOptional()
@@ -113,28 +116,46 @@ export class CreateBeneficiaryDto {
   @ApiProperty({
     type: 'number',
     example: '86.24',
-    description: 'longitude of community',
-    required: false,
   })
   @IsNumber()
   @IsOptional()
   longitude?: number;
 
   @ApiProperty({
-    type: 'string',
-    example: '9785623749',
-    description: 'Phone number',
-    required: false,
+    type: 'boolean',
+    example: false,
   })
-  @IsString()
+  @IsBoolean()
   @IsOptional()
-  phone?: string;
+  isVulnerable?: boolean;
 
   @ApiProperty({
     type: 'string',
-    example: '9785623749',
-    description: 'Notes to remember',
-    required: false,
+    example: 'Citizenship',
+  })
+  @IsString()
+  @IsOptional()
+  govtIDType?: string;
+
+  @ApiProperty({
+    type: 'string',
+    example: '1234-4545',
+  })
+  @IsString()
+  @IsOptional()
+  govtIDNumber?: string;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'https://www.google.com/ram.jpg',
+  })
+  @IsString()
+  @IsOptional()
+  govtIDPhoto?: string;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'This is a note to remember',
   })
   @IsString()
   @IsOptional()
@@ -142,23 +163,41 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'ram@mailinator.com',
-    description: 'email',
-    required: false,
+    example: InternetStatus.HOME_INTERNET,
+    description: 'Type of internet use ',
   })
   @IsString()
   @IsOptional()
-  email?: string;
+  @IsEnum(InternetStatus)
+  internetStatus?: InternetStatus;
+
+  @ApiProperty({
+    type: 'string',
+    example: BankedStatus.UNBANKED,
+  })
+  @IsString()
+  @IsOptional()
+  @IsEnum(BankedStatus)
+  bankedStatus?: BankedStatus;
+
+  @ApiProperty({
+    type: 'string',
+    example: PhoneStatus.SMART_PHONE,
+  })
+  @IsString()
+  @IsOptional()
+  @IsEnum(PhoneStatus)
+  phoneStatus?: PhoneStatus;
 
   @ApiProperty({
     format: 'json',
     description: 'Additional JSON data',
     required: false,
     example: {
-      home: '98670023857',
-      work: '36526012',
+      totalFamilyMembers: 5,
     },
   })
   @IsOptional()
+  @IsObject()
   extras?: any;
 }

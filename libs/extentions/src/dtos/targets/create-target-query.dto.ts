@@ -9,7 +9,10 @@ export enum TargetQueryStatusEnum {
 export class CreateTargetQueryDto {
   @ApiProperty({
     type: 'array',
-    example: [{ gender: 'MALE' }, { maxAge: 30 }],
+    example: [
+      { gender: 'MALE', isVulnerable: false, has_ssa: 'yes' },
+      { gender: 'FEMALE', isVulnerable: true, has_ssa: 'no' },
+    ],
   })
   @IsOptional()
   filterOptions: any;

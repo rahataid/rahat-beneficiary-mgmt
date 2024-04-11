@@ -1,9 +1,10 @@
 export type FieldDefinition = {
-  id: number;
+  id?: number;
   name: string;
   fieldType: string;
   fieldPopulate?: any;
   isActive: boolean;
+  isTargeting: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 };
