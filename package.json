@@ -51,7 +51,7 @@
     "@rumsan/extensions": "^0.0.22",
     "@rumsan/core": "3.0.1",
     "@rumsan/prisma": "^1.0.125",
-    "@rumsan/sdk": "^0.0.44",
+    "@rumsan/sdk": "^0.0.45",
     "@rumsan/settings": "^0.0.108",
     "@rumsan/user": "^3.0.153",
     "axios": "^1.6.7",
