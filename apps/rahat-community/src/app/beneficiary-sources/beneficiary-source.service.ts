@@ -5,7 +5,7 @@ import { paginate } from '../utils/paginate';
 import {
   CreateBeneficiarySourceDto,
   UpdateBeneficiarySourceDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Injectable()
 export class BeneficiarySourceService {

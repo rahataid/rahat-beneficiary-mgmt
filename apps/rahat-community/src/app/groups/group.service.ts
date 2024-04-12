@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
-import { CreateGroupDto, UpdateGroupDto } from '@community-tool/extentions';
+import {
+  CreateGroupDto,
+  UpdateGroupDto,
+} from '@rahataid/community-tool-extensions';
 import { generateExcelData } from '../utils/export-to-excel';
 import { Response } from 'express';
 

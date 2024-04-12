@@ -1,4 +1,4 @@
-import { BeneficiaryEvents } from '@community-tool/sdk';
+import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EMAIL_TEMPLATES, EVENTS } from '../../constants';

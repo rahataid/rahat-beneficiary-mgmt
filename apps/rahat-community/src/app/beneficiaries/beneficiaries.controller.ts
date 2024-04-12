@@ -32,7 +32,7 @@ import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 
 @Controller('beneficiaries')

@@ -21,7 +21,10 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rumsan/user';
-import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
+import {
+  CreateSourceDto,
+  UpdateSourceDto,
+} from '@rahataid/community-tool-extensions';
 
 @Controller('sources')
 @ApiTags('Sources')

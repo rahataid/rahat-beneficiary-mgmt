@@ -26,7 +26,7 @@ import {
   CreateTargetResultDto,
   TargetQueryStatusEnum,
   updateTargetQueryLabelDTO,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Injectable()
 export class TargetService {
