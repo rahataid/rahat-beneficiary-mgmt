@@ -17,6 +17,8 @@ import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { paginate } from '../utils/paginate';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { uuid } from 'uuidv4';
+import { parse } from 'path';
+import { parseIsoDateToString } from '../utils';
 
 @Injectable()
 export class SourceService {
@@ -65,7 +67,6 @@ export class SourceService {
     data: any,
     extraFields: any,
   ) {
-    let duplicateCount = 0; // If customUniqueField update duplicateCount
     const { allValidationErrors, processedData } = await validateSchemaFields(
       customUniqueField,
       data,
@@ -77,11 +78,18 @@ export class SourceService {
       customUniqueField,
     );
     const duplicates = result.filter((f) => f.isDuplicate);
+    const dateParsedDuplicates = duplicates.map((d) => {
+      let item = { ...d };
+      if (item.birthDate) {
+        item.birthDate = parseIsoDateToString(item.birthDate);
+      }
+      return item;
+    });
+    const submittedData = result.filter((f) => !f.exportOnly);
     return {
       invalidFields: allValidationErrors,
-      result,
-      duplicateCount,
-      containsDuplicate: duplicates.length ? true : false,
+      result: submittedData,
+      duplicates: dateParsedDuplicates,
     };
   }
 
@@ -135,7 +143,10 @@ export class SourceService {
         const res = await this.prisma.beneficiary.findUnique({
           where: { customId: p[customUniqueField].toString() },
         });
-        if (res) p.isDuplicate = true;
+        if (res) {
+          p.isDuplicate = true;
+          result.push({ ...res, isDuplicate: true, exportOnly: true });
+        }
       }
       result.push(p);
     }
