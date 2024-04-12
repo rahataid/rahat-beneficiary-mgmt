@@ -85,10 +85,10 @@ export class SourceService {
       }
       return item;
     });
-    const submittedData = result.filter((f) => !f.exportOnly);
+    const finalResult = result.filter((f) => !f.exportOnly);
     return {
       invalidFields: allValidationErrors,
-      result: submittedData,
+      result: finalResult,
       duplicates: dateParsedDuplicates,
     };
   }
@@ -117,6 +117,7 @@ export class SourceService {
         extraFields,
       );
 
+      console.log('allImportErrors', allValidationErrors);
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
       const row = await this.prisma.source.upsert({
@@ -139,7 +140,7 @@ export class SourceService {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
 
-      if (keyExist) {
+      if (keyExist && p[customUniqueField]) {
         const res = await this.prisma.beneficiary.findUnique({
           where: { customId: p[customUniqueField].toString() },
         });
