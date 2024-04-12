@@ -27,7 +27,6 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
-import { AppSettingService } from './settings/setting.service';
 import { StatsModule } from '@community-tool/stats';
 
 @Module({
