@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateBeneficiaryDto } from '@community-tool/extentions';
+import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
 import { DB_MODELS } from 'apps/rahat-community/src/constants';
 
 export const BENEFICIARY_REQ_FIELDS = {

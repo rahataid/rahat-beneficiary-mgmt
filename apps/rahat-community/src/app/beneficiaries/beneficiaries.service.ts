@@ -5,7 +5,7 @@ import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   UpdateBeneficiaryDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
 import XLSX from 'xlsx';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
@@ -17,7 +17,7 @@ import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@community-tool/sdk';
+import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class BeneficiariesService {
@@ -40,7 +40,7 @@ export class BeneficiariesService {
       payload.birthDate = convertDateToISO(payload.birthDate);
     }
     return this.prisma.beneficiary.upsert({
-      where: { customId: payload.customId },
+      where: { customId: payload.customId.toString() },
       update: payload,
       create: payload,
     });

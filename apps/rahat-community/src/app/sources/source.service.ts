@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { CreateSourceDto, UpdateSourceDto } from '@community-tool/extentions';
+import {
+  CreateSourceDto,
+  UpdateSourceDto,
+} from '@rahataid/community-tool-extensions';
 import { InjectQueue } from '@nestjs/bull';
 import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
@@ -127,9 +130,10 @@ export class SourceService {
     for (let p of data) {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+
       if (keyExist) {
         const res = await this.prisma.beneficiary.findUnique({
-          where: { customId: p[customUniqueField] },
+          where: { customId: p[customUniqueField].toString() },
         });
         if (res) p.isDuplicate = true;
       }
