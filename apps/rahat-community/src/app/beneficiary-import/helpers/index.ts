@@ -76,14 +76,16 @@ const validateSecondaryFields = async (
         // This is extra field
         const val = item[key];
         const found = extraFields.find((f) => f.name === key);
-        const isValid = validateValueByType(val, found.type);
-        if (!isValid) {
-          secondaryErrors.push({
-            uuid: item.uuid,
-            fieldName: key,
-            value: val,
-            message: "Invalid value for field '" + key + "'",
-          });
+        if (found) {
+          const isValid = validateValueByType(val, found.type);
+          if (!isValid) {
+            secondaryErrors.push({
+              uuid: item.uuid,
+              fieldName: key,
+              value: val,
+              message: "Invalid value for field '" + key + "'",
+            });
+          }
         }
       }
     });
