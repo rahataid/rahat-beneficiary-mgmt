@@ -37,7 +37,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'Ram',
   })
-  @IsAlphaString()
+  @IsString()
   firstName: string;
 
   @IsNotEmpty()
@@ -45,7 +45,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'Sharma',
   })
-  @IsAlphaString()
+  @IsString()
   lastName: string;
 
   @ApiProperty({
@@ -97,7 +97,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'lalitpur',
   })
-  @IsAlphaString()
+  @IsString()
   @IsOptional()
   location?: string;
 
@@ -116,14 +116,6 @@ export class CreateBeneficiaryDto {
   @IsNumber()
   @IsOptional()
   longitude?: number;
-
-  @ApiProperty({
-    type: 'boolean',
-    example: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isVulnerable?: boolean;
 
   @ApiProperty({
     type: 'string',
