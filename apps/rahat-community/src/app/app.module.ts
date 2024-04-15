@@ -27,7 +27,7 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { SettingsModule } from '@rumsan/settings';
-import { StatsModule } from '@community-tool/stats';
+import { StatsModule } from '@rahataid/community-tool-stats';
 
 @Module({
   imports: [
@@ -63,7 +63,6 @@ import { StatsModule } from '@community-tool/stats';
     AppService,
     TargetProcessor,
     BeneficiaryProcessor,
-    { provide: APP_PIPE, useClass: ValidationPipe },
     PrismaService,
     ScheduleService,
   ],

@@ -1,7 +1,7 @@
 import {
   CreateBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import { RSError } from '@rumsan/core';

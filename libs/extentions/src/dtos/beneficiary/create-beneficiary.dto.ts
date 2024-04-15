@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  BankedStatus,
-  Gender,
-  InternetStatus,
-  PhoneStatus,
-} from '@rahataid/community-tool-sdk/enums/';
+
 import {
   IsBoolean,
   IsDate,
@@ -18,6 +13,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsAlphaString, IsValidDate } from '../../validators';
+import { Enums } from '@rahataid/community-tool-sdk';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -41,7 +37,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'Ram',
   })
-  @IsAlphaString()
+  @IsString()
   firstName: string;
 
   @IsNotEmpty()
@@ -49,18 +45,18 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'Sharma',
   })
-  @IsAlphaString()
+  @IsString()
   lastName: string;
 
   @ApiProperty({
     type: 'string',
-    example: Gender.MALE,
+    example: Enums.Gender.MALE,
     description: 'Gender ',
   })
   @IsString()
   @IsOptional()
-  @IsEnum(Gender)
-  gender?: Gender;
+  @IsEnum(Enums.Gender)
+  gender?: Enums.Gender;
 
   @ApiProperty({
     type: 'string',
@@ -101,7 +97,7 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: 'lalitpur',
   })
-  @IsAlphaString()
+  @IsString()
   @IsOptional()
   location?: string;
 
@@ -120,14 +116,6 @@ export class CreateBeneficiaryDto {
   @IsNumber()
   @IsOptional()
   longitude?: number;
-
-  @ApiProperty({
-    type: 'boolean',
-    example: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isVulnerable?: boolean;
 
   @ApiProperty({
     type: 'string',
@@ -163,31 +151,31 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: InternetStatus.HOME_INTERNET,
+    example: Enums.InternetStatus.HOME_INTERNET,
     description: 'Type of internet use ',
   })
   @IsString()
   @IsOptional()
-  @IsEnum(InternetStatus)
-  internetStatus?: InternetStatus;
+  @IsEnum(Enums.InternetStatus)
+  internetStatus?: Enums.InternetStatus;
 
   @ApiProperty({
     type: 'string',
-    example: BankedStatus.UNBANKED,
+    example: Enums.BankedStatus.UNBANKED,
   })
   @IsString()
   @IsOptional()
-  @IsEnum(BankedStatus)
-  bankedStatus?: BankedStatus;
+  @IsEnum(Enums.BankedStatus)
+  bankedStatus?: Enums.BankedStatus;
 
   @ApiProperty({
     type: 'string',
-    example: PhoneStatus.SMART_PHONE,
+    example: Enums.PhoneStatus.SMART_PHONE,
   })
   @IsString()
   @IsOptional()
-  @IsEnum(PhoneStatus)
-  phoneStatus?: PhoneStatus;
+  @IsEnum(Enums.PhoneStatus)
+  phoneStatus?: Enums.PhoneStatus;
 
   @ApiProperty({
     format: 'json',

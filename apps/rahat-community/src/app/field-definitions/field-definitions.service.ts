@@ -6,7 +6,7 @@ import {
   CreateFieldDefinitionDto,
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 import { convertToValidString } from '../utils';
 
 @Injectable()
@@ -38,17 +38,25 @@ export class FieldDefinitionsService {
     });
   }
 
-  findAll(query: any) {
+  findAll(query) {
     const select = {
       id: true,
       name: true,
       fieldType: true,
       isActive: true,
+      isTargeting: true,
     };
+
+    const isTargeting =
+      query.isTargeting === 'true'
+        ? true
+        : query.isTargeting === 'false'
+        ? false
+        : undefined;
 
     return paginate(
       this.prisma.fieldDefinition,
-      { select },
+      { select, where: { isTargeting: isTargeting } },
       {
         page: query?.page,
         perPage: query?.perPage,

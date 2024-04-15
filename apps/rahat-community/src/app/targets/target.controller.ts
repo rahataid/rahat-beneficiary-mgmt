@@ -23,7 +23,7 @@ import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
   updateTargetQueryLabelDTO,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Controller('targets')
 @ApiTags('Targets')

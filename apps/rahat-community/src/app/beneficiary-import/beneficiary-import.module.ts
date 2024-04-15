@@ -8,7 +8,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
-import { BQUEUE } from '@community-tool/sdk';
+import { BQUEUE } from '@rahataid/community-tool-sdk';
 
 @Module({
   imports: [

@@ -14,7 +14,6 @@ export type Beneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  isVulnerable?: boolean;
   govtIDType?: string;
   govtIDNumber?: string;
   govtIDPhoto?: string;
@@ -48,7 +47,6 @@ export type UpdateBeneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  isVulnerable?: boolean;
   govtIDType?: string;
   govtIDNumber?: string;
   govtIDPhoto?: string;
@@ -76,7 +74,6 @@ export type ListBeneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  isVulnerable?: boolean;
   govtIDType?: string;
   govtIDNumber?: string;
   govtIDPhoto?: string;

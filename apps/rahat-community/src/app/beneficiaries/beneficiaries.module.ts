@@ -4,8 +4,8 @@ import { BeneficiariesController } from './beneficiaries.controller';
 import { PrismaService } from '@rumsan/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BullModule } from '@nestjs/bull';
-import { BQUEUE } from '@community-tool/sdk';
-import { StatsModule } from '@community-tool/stats';
+import { BQUEUE } from '@rahataid/community-tool-sdk';
+import { StatsModule } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 
 @Module({

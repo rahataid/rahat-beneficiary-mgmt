@@ -19,7 +19,10 @@ import {
   JwtGuard,
   SUBJECTS,
 } from '@rumsan/user';
-import { CreateGroupDto, UpdateGroupDto } from '@community-tool/extentions';
+import {
+  CreateGroupDto,
+  UpdateGroupDto,
+} from '@rahataid/community-tool-extensions';
 import { Response } from 'express';
 
 @Controller('group')
