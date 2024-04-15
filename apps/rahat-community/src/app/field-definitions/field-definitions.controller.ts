@@ -8,10 +8,14 @@ import {
   Delete,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FieldDefinitionsService } from './field-definitions.service';
 
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rumsan/user';
 import { ACTIONS, SUBJECTS } from '@rumsan/user';
 import {
@@ -19,11 +23,13 @@ import {
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
 } from '@rahataid/community-tool-extensions';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from '../utils/multer';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtGuard, AbilitiesGuard)
+// @UseGuards(JwtGuard, AbilitiesGuard)
 export class FieldDefinitionsController {
   constructor(private readonly fieldDefService: FieldDefinitionsService) {}
 
@@ -31,6 +37,14 @@ export class FieldDefinitionsController {
   @Post()
   create(@Body() dto: CreateFieldDefinitionDto) {
     return this.fieldDefService.create(dto);
+  }
+
+  @Post('upload')
+  // @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  async upload(@UploadedFile() file: Express.Multer.File) {
+    return this.fieldDefService.bulkUpload(file);
   }
 
   @ApiQuery({
