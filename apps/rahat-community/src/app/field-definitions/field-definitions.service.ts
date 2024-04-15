@@ -8,10 +8,37 @@ import {
   updateFieldStatusDto,
 } from '@rahataid/community-tool-extensions';
 import { convertToValidString } from '../utils';
+import { ExcelParser } from '../utils/excel.parser';
 
 @Injectable()
 export class FieldDefinitionsService {
   constructor(private prisma: PrismaService) {}
+
+  bulkUpload(file: Express.Multer.File) {
+    const data = ExcelParser(file.buffer) as CreateFieldDefinitionDto[];
+    if (!data.length) throw new Error('No data found in the file!');
+    return this.createBulk(data);
+  }
+  async createBulk(data: CreateFieldDefinitionDto[]) {
+    let uploadedCount = 0;
+    for (let d of data) {
+      await this.upsertByName(d);
+      uploadedCount++;
+    }
+    return { message: `${uploadedCount} fields uploaded successfully!` };
+  }
+
+  upsertByName(data: CreateFieldDefinitionDto) {
+    const { name, fieldType, ...rest } = data;
+    const parsedName = convertToValidString(name);
+    const payload = { name: parsedName, fieldType };
+    return this.prisma.fieldDefinition.upsert({
+      where: { name: parsedName },
+      update: payload,
+      create: payload,
+    });
+  }
+
   create(dto: CreateFieldDefinitionDto) {
     const payload = {
       ...dto,
