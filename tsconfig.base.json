@@ -15,9 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@community-tool/extentions": ["libs/extentions/src/index.ts"],
-      "@community-tool/sdk": ["libs/sdk/src/index.ts"],
-      "@community-tool/stats": ["libs/stats/src/index.ts"]
+      "@rahataid/community-tool-extensions": ["libs/extentions/src/index.ts"],
+      "@rahataid/community-tool-sdk": ["libs/sdk/src/index.ts"],
+      "@rahataid/community-tool-stats": ["libs/stats/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

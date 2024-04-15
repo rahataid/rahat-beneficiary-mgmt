@@ -23,7 +23,7 @@ import {
 import {
   CreateBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Controller('beneficiary-group')
 @ApiTags('BeneficiaryGroup')

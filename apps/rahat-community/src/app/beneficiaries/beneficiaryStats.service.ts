@@ -1,4 +1,4 @@
-import { StatsService } from '@community-tool/stats';
+import { StatsService } from '@rahataid/community-tool-stats';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 

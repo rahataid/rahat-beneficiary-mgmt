@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateBeneficiaryDto } from '@community-tool/extentions';
+import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
 import { DB_MODELS } from 'apps/rahat-community/src/constants';
 
 export const BENEFICIARY_REQ_FIELDS = {
@@ -76,14 +76,16 @@ const validateSecondaryFields = async (
         // This is extra field
         const val = item[key];
         const found = extraFields.find((f) => f.name === key);
-        const isValid = validateValueByType(val, found.type);
-        if (!isValid) {
-          secondaryErrors.push({
-            uuid: item.uuid,
-            fieldName: key,
-            value: val,
-            message: "Invalid value for field '" + key + "'",
-          });
+        if (found) {
+          const isValid = validateValueByType(val, found.type);
+          if (!isValid) {
+            secondaryErrors.push({
+              uuid: item.uuid,
+              fieldName: key,
+              value: val,
+              message: "Invalid value for field '" + key + "'",
+            });
+          }
         }
       }
     });

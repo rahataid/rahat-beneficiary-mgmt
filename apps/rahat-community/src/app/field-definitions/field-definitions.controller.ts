@@ -11,14 +11,14 @@ import {
 } from '@nestjs/common';
 import { FieldDefinitionsService } from './field-definitions.service';
 
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rumsan/user';
 import { ACTIONS, SUBJECTS } from '@rumsan/user';
 import {
   CreateFieldDefinitionDto,
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
-} from '@community-tool/extentions';
+} from '@rahataid/community-tool-extensions';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')
@@ -33,6 +33,12 @@ export class FieldDefinitionsController {
     return this.fieldDefService.create(dto);
   }
 
+  @ApiQuery({
+    name: 'isTargeting',
+    description: 'User for Targeting',
+    type: Boolean,
+    required: false,
+  })
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
   @Get()
   findAll(@Query() query: any) {
