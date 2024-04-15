@@ -10,8 +10,8 @@ export class CreateTargetQueryDto {
   @ApiProperty({
     type: 'array',
     example: [
-      { gender: 'MALE', isVulnerable: false, has_ssa: 'yes' },
-      { gender: 'FEMALE', isVulnerable: true, has_ssa: 'no' },
+      { gender: 'MALE', has_ssa: 'yes' },
+      { gender: 'FEMALE', has_ssa: 'no' },
     ],
   })
   @IsOptional()

@@ -26,7 +26,6 @@ model Beneficiary {
   location     String?
   latitude     Float?
   longitude    Float?
-  isVulnerable Boolean @default(false)
   govtIDType   String?
   govtIDNumber String?
   govtIDPhoto  String?
@@ -82,8 +81,8 @@ model FieldDefinition {
   fieldPopulate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
   isActive      Boolean   @default(true)
   isTargeting   Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt()
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt()
 
   @@map("tbl_field_definitions")
 }
@@ -373,4 +372,5 @@ model Stats {
 
   @@map("tbl_stats")
 }
+
 //End Stats Schema //
