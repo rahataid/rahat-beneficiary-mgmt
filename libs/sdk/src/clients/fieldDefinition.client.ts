@@ -57,5 +57,13 @@ export const getFieldDefinitionClient = (
       );
       return formatResponse<FieldDefinition>(response);
     },
+    addBulk: async ({ file }: { file: any }, config?: AxiosRequestConfig) => {
+      const response = await client.post(
+        '/field-definitions/upload',
+        file,
+        config,
+      );
+      return formatResponse<any>(response);
+    },
   };
 };
