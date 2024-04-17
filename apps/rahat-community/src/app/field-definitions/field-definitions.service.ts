@@ -47,7 +47,7 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
+                label: convertToValidString(item.label),
                 value: convertToValidString(item.value),
               })),
             }
@@ -72,6 +72,7 @@ export class FieldDefinitionsService {
       fieldType: true,
       isActive: true,
       isTargeting: true,
+      fieldPopulate: true,
     };
 
     const isTargeting =
@@ -107,7 +108,7 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
+                label: convertToValidString(item.label),
                 value: convertToValidString(item.value),
               })),
             }
