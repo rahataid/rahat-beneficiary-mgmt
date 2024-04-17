@@ -115,9 +115,9 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
-    if (filters.nickName) {
+    if (filters.firstName) {
       OR_CONDITIONS.push({
-        lastName: { contains: filters.nickName, mode: 'insensitive' },
+        firstName: { contains: filters.firstName, mode: 'insensitive' },
       });
       conditions = { OR: OR_CONDITIONS };
     }
