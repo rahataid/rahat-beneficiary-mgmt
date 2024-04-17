@@ -31,6 +31,7 @@ import { multerOptions } from '../utils/multer';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
+  ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
@@ -91,7 +92,8 @@ export class BeneficiariesController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
-  findAll(@Query('') filters: any) {
+  findAll(@Query('') filters: ListBeneficiaryDto) {
+    // console.log(filters);
     return this.beneficiariesService.findAll(filters);
   }
 

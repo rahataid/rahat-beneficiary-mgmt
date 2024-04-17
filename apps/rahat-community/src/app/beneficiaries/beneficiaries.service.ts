@@ -4,6 +4,7 @@ import { uuid } from 'uuidv4';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
+  ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
@@ -82,7 +83,7 @@ export class BeneficiariesService {
     );
   }
 
-  async findAll(filters: any) {
+  async findAll(filters: ListBeneficiaryDto) {
     const OR_CONDITIONS = [];
     let conditions = {};
 
@@ -107,16 +108,16 @@ export class BeneficiariesService {
 
     if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
 
-    if (filters.firstName) {
+    if (filters.location) {
       OR_CONDITIONS.push({
-        firstName: { contains: filters.firstName, mode: 'insensitive' },
+        location: { contains: filters.location, mode: 'insensitive' },
       });
       conditions = { OR: OR_CONDITIONS };
     }
 
-    if (filters.lastName) {
+    if (filters.nickName) {
       OR_CONDITIONS.push({
-        lastName: { contains: filters.lastName, mode: 'insensitive' },
+        lastName: { contains: filters.nickName, mode: 'insensitive' },
       });
       conditions = { OR: OR_CONDITIONS };
     }
