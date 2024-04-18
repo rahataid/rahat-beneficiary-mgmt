@@ -113,6 +113,21 @@ model BeneficiaryGroup {
   @@map("tbl_beneficiary_groups")
 }
 
+model Log {
+  id       Int    @id @unique
+  uuid     String @unique @default(uuid()) @db.Uuid()
+  user     User   @relation(fields: [userUUID], references: [uuid])
+  userUUID String
+
+  action String
+  data   Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  @@map("tbl_logs")
+}
+
 model TargetQuery {
   id            Int               @id @default(autoincrement()) @db.Integer()
   uuid          String            @unique @default(uuid()) @db.Uuid()
@@ -207,6 +222,7 @@ model User {
   deletedAt DateTime?
   createdBy Int?
   updatedBy Int?
+  Log       Log[]
 
   @@map("tbl_users")
 }
