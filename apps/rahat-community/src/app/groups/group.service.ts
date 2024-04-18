@@ -104,9 +104,9 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
           // first delete from the combine table (tbl_beneficiary_groups)
-          await prisma.beneficiaryGroup.delete({
+          await prisma.beneficiaryGroup.deleteMany({
             where: {
-              id: item.id,
+              beneficiaryId: item.beneficiaryId,
             },
           });
 
