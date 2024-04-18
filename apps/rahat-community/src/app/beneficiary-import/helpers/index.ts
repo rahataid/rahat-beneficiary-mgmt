@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
 import { DB_MODELS } from 'apps/rahat-community/src/constants';
+import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -77,7 +78,12 @@ const validateSecondaryFields = async (
         const val = item[key];
         const found = extraFields.find((f) => f.name === key);
         if (found) {
-          const isValid = validateValueByType(val, found.type);
+          const isValid = validateValueByType({
+            value: val,
+            type: found.type,
+            fieldName: key,
+            extraFields,
+          });
           if (!isValid) {
             secondaryErrors.push({
               uuid: item.uuid,
@@ -93,17 +99,37 @@ const validateSecondaryFields = async (
   return secondaryErrors;
 };
 
-function validateValueByType(value: any, type: string) {
+function validateValueByType({ value, type, fieldName, extraFields }) {
   switch (type.toUpperCase()) {
-    case 'RADIO':
-      return value.toLowerCase() === 'yes' || value.toLowerCase() === 'no';
-    case 'NUMBER':
+    case FIELD_DEF_TYPES.NUMBER:
       return !isNaN(parseInt(value)) && isFinite(parseInt(value));
-    case 'TEXT':
+    case FIELD_DEF_TYPES.TEXT:
       return typeof value === 'string' && value.trim() !== '';
+    case FIELD_DEF_TYPES.DROPDOWN:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.RADIO:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.CHECKBOX:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
     default:
-      return false;
+      return true;
   }
+}
+
+function checkIfPopulateValuesMatch(
+  fieldName: string,
+  value: string,
+  extraFields: any,
+) {
+  const values = getPopulateFieldValues(fieldName, extraFields);
+  return values.includes(value);
+}
+
+function getPopulateFieldValues(fieldName: string, extraFields: any) {
+  const found = extraFields.find((f: any) => f.name === fieldName);
+  if (!found) return [];
+  const values = found.fieldPopulate?.data?.map((d: any) => d.value) || [];
+  return values;
 }
 
 const validatePrimaryFields = async (

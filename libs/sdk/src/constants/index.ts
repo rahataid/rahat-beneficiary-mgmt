@@ -34,3 +34,13 @@ export const SUBJECTS = {
 export const APP = {
   JWT_BEARER: 'JWT',
 };
+
+export const FIELD_DEF_TYPES = {
+  TEXT: 'TEXT',
+  NUMBER: 'NUMBER',
+  TEXTAREA: 'TEXTAREA',
+  RADIO: 'RADIO',
+  PASSWORD: 'PASSWORD',
+  CHECKBOX: 'CHECKBOX',
+  DROPDOWN: 'DROPDOWN',
+};

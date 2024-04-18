@@ -44,6 +44,7 @@ export class SourceService {
       return {
         name: item.name,
         type: item.fieldType,
+        fieldPopulate: item.fieldPopulate,
       };
     });
   }
