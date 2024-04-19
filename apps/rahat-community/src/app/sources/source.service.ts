@@ -7,7 +7,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
-import { uuid } from 'uuidv4';
+import { uuid, isUuid } from 'uuidv4';
 import {
   EXTERNAL_UUID_FIELD,
   IMPORT_ACTION,
@@ -188,8 +188,11 @@ export class SourceService {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, external_uuid);
       if (keyExist && p[external_uuid]) {
+        const rahat_uuid = p[external_uuid];
+        const isValid = isUuid(rahat_uuid);
+        if (!isValid) throw new Error('Data contains invalid rahat UUID!');
         const res = await this.prisma.beneficiary.findUnique({
-          where: { uuid: p[external_uuid] },
+          where: { uuid: rahat_uuid },
         });
         if (res) {
           p.isDuplicate = true;
