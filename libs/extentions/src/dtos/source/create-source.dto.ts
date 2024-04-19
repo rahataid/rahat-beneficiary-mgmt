@@ -4,9 +4,18 @@ import {
   IsNotEmptyObject,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
+import { UUID } from 'crypto';
 
 export class CreateSourceDto {
+  @ApiProperty({
+    example: 'd32d85a2-8760-4263-8f7e-83a2f1d3c98c',
+  })
+  @IsUUID()
+  @IsOptional()
+  uuid!: UUID;
+
   @ApiProperty({
     example: 'Kobotool',
   })

@@ -3,7 +3,10 @@ import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
-import { DB_MODELS } from 'apps/rahat-community/src/constants';
+import {
+  DB_MODELS,
+  EXTERNAL_UUID_FIELD,
+} from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
 export const BENEFICIARY_REQ_FIELDS = {
@@ -47,12 +50,14 @@ export const validateSchemaFields = async (
   customUniqueField: string,
   payload: any,
   extraFields: IExtraField[],
+  hasRahatUUID: boolean,
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
   ];
   if (customUniqueField) requiredFields.push(customUniqueField);
+  if (hasRahatUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
@@ -158,7 +163,6 @@ const validatePrimaryFields = async (
     for (let f of requiredFields) {
       let exist = keys.includes(f);
       if (!exist) {
-        // Required field is missing
         emptyFields.push(f);
         primaryErrors.push({
           uuid: item.uuid,
