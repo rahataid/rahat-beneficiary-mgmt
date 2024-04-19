@@ -77,12 +77,10 @@ export class SourceService {
       hasRahatUUID,
     );
 
-    if (customUniqueField) {
-      result = await this.checkDuplicateByCustomID(
-        processedData,
-        customUniqueField,
-      );
-    }
+    result = await this.checkDuplicateByCustomID(
+      processedData,
+      customUniqueField,
+    );
 
     if (hasRahatUUID) {
       result = await this.checkDuplicateByExternalUUID(

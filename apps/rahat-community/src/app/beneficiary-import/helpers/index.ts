@@ -109,7 +109,7 @@ function validateValueByType({ value, type, fieldName, extraFields }) {
     case FIELD_DEF_TYPES.NUMBER:
       return !isNaN(parseInt(value)) && isFinite(parseInt(value));
     case FIELD_DEF_TYPES.TEXT:
-      return typeof value === 'string' && value.trim() !== '';
+      return typeof value === 'string' || typeof value === 'number';
     case FIELD_DEF_TYPES.DROPDOWN:
       return checkIfPopulateValuesMatch(fieldName, value, extraFields);
     case FIELD_DEF_TYPES.RADIO:
