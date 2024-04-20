@@ -83,7 +83,7 @@ export class GroupService {
     });
   }
 
-  async remove(uuid: string) {
+  async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
     // get relevant informationn from the group table
     const getInfo = await this.prisma.group.findUnique({
       where: {
@@ -104,30 +104,26 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
           // first delete from the combine table (tbl_beneficiary_groups)
+
           await prisma.beneficiaryGroup.deleteMany({
             where: {
               beneficiaryId: item.beneficiaryId,
             },
           });
 
-          // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-          await prisma.beneficiary.delete({
-            where: {
-              id: item?.beneficiaryId,
-            },
-          });
+          if (deleteBeneficiaryFlag) {
+            // delete beneficiary from the beneficiary table (tbl_beneficiaries)
+            await prisma.beneficiary.delete({
+              where: {
+                id: item?.beneficiaryId,
+              },
+            });
+          }
         }
       });
     }
 
-    // finally delete from group table (tbl_groups)
-    const deletedGroup = await this.prisma.group.delete({
-      where: {
-        uuid,
-      },
-    });
-
-    return deletedGroup;
+    return 'Beneficiaries and their associations were successfully removed from the group.';
   }
 
   downloadData(data: any[], res: Response) {

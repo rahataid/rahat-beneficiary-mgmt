@@ -61,9 +61,12 @@ export class GroupController {
     return this.groupService.update(uuid, updateGroupDto);
   }
 
-  @Delete(':uuid')
+  @Delete(':uuid/:deleteBeneficiaryFlag')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
-  remove(@Param('uuid') uuid: string) {
-    return this.groupService.remove(uuid);
+  remove(
+    @Param('uuid') uuid: string,
+    @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,
+  ) {
+    return this.groupService.remove(uuid, deleteBeneficiaryFlag);
   }
 }

@@ -40,13 +40,11 @@ CREATE TABLE "tbl_beneficiaries" (
     "walletAddress" TEXT,
     "phone" TEXT,
     "email" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
     "location" TEXT,
     "latitude" DOUBLE PRECISION,
     "longitude" DOUBLE PRECISION,
-    "isVulnerable" BOOLEAN NOT NULL DEFAULT false,
-    "govtIDType" TEXT,
     "govtIDNumber" TEXT,
-    "govtIDPhoto" TEXT,
     "notes" TEXT,
     "bankedStatus" "BankedStatus" NOT NULL DEFAULT 'UNKNOWN',
     "internetStatus" "InternetStatus" NOT NULL DEFAULT 'UNKNOWN',
@@ -119,6 +117,19 @@ CREATE TABLE "tbl_beneficiary_groups" (
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "tbl_beneficiary_groups_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tbl_logs" (
+    "id" INTEGER NOT NULL,
+    "uuid" UUID NOT NULL,
+    "userUUID" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "data" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "tbl_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -261,6 +272,17 @@ CREATE TABLE "tbl_settings" (
     CONSTRAINT "tbl_settings_pkey" PRIMARY KEY ("name")
 );
 
+-- CreateTable
+CREATE TABLE "tbl_stats" (
+    "name" TEXT NOT NULL,
+    "data" JSONB NOT NULL,
+    "group" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "tbl_stats_pkey" PRIMARY KEY ("name")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_beneficiaries_uuid_key" ON "tbl_beneficiaries"("uuid");
 
@@ -284,6 +306,12 @@ CREATE UNIQUE INDEX "tbl_groups_name_key" ON "tbl_groups"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_beneficiary_groups_beneficiaryId_groupId_key" ON "tbl_beneficiary_groups"("beneficiaryId", "groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_logs_id_key" ON "tbl_logs"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_logs_uuid_key" ON "tbl_logs"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_target_queries_uuid_key" ON "tbl_target_queries"("uuid");
@@ -315,6 +343,9 @@ CREATE UNIQUE INDEX "tbl_users_signups_uuid_key" ON "tbl_users_signups"("uuid");
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_settings_name_key" ON "tbl_settings"("name");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_stats_name_key" ON "tbl_stats"("name");
+
 -- AddForeignKey
 ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "tbl_sources"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -326,6 +357,9 @@ ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_bene
 
 -- AddForeignKey
 ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "tbl_groups"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_logs" ADD CONSTRAINT "tbl_logs_userUUID_fkey" FOREIGN KEY ("userUUID") REFERENCES "tbl_users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_target_results" ADD CONSTRAINT "tbl_target_results_benefUuid_fkey" FOREIGN KEY ("benefUuid") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
