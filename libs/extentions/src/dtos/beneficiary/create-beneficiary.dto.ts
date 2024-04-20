@@ -90,7 +90,6 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
-  @Matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/g)
   email?: string;
 
   @ApiProperty({
