@@ -26,9 +26,7 @@ model Beneficiary {
   location     String?
   latitude     Float?
   longitude    Float?
-  govtIDType   String?
   govtIDNumber String?
-  govtIDPhoto  String?
 
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)
