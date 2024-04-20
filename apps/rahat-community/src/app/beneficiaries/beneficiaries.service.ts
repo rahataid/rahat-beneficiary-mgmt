@@ -135,7 +135,7 @@ export class BeneficiariesService {
 
     return paginate(
       this.prisma.beneficiary,
-      { where: conditions },
+      { where: { ...conditions, archived: false } },
       {
         page: +filters?.page,
         perPage: +filters?.perPage,
@@ -201,17 +201,14 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    // const rData = await this.prisma.beneficiary.delete({
-    //   where: {
-    //     uuid,
-    //   },
-    // });
-    const payload = { archived: true };
+
     const rData = await this.prisma.beneficiary.update({
       where: {
         uuid,
       },
-      data: payload,
+      data: {
+        archived: true,
+      },
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
 
