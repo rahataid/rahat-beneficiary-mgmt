@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
 
+import { InjectQueue } from '@nestjs/bull';
 import {
   CreateSourceDto,
   UpdateSourceDto,
 } from '@rahataid/community-tool-extensions';
-import { InjectQueue } from '@nestjs/bull';
 import { PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
+import { uuid, isUuid } from 'uuidv4';
 import {
+  EXTERNAL_UUID_FIELD,
   IMPORT_ACTION,
   JOBS,
   QUEUE,
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
 import { validateSchemaFields } from '../beneficiary-import/helpers';
-import { paginate } from '../utils/paginate';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { uuid } from 'uuidv4';
-import { parse } from 'path';
 import { parseIsoDateToString } from '../utils';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class SourceService {
@@ -63,21 +63,32 @@ export class SourceService {
     return count;
   }
 
-  async ValidateBeneficiaryImort(
-    customUniqueField: string,
-    data: any,
-    extraFields: any,
-  ) {
+  async ValidateBeneficiaryImort({
+    customUniqueField,
+    data,
+    extraFields,
+    hasRahatUUID,
+  }) {
+    let result = [] as any;
     const { allValidationErrors, processedData } = await validateSchemaFields(
       customUniqueField,
       data,
       extraFields,
+      hasRahatUUID,
     );
 
-    const result = await this.checkDuplicateBeneficiary(
+    result = await this.checkDuplicateByCustomID(
       processedData,
       customUniqueField,
     );
+
+    if (hasRahatUUID) {
+      result = await this.checkDuplicateByExternalUUID(
+        processedData,
+        EXTERNAL_UUID_FIELD,
+      );
+    }
+
     const duplicates = result.filter((f) => f.isDuplicate);
     const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };
@@ -95,47 +106,61 @@ export class SourceService {
   }
 
   async create(dto: CreateSourceDto) {
+    let customUniqueField = '';
     const { action, ...rest } = dto;
+    if (rest.uniqueField) customUniqueField = rest.uniqueField;
     const { data } = dto.fieldMapping;
-    const extraFields = await this.listExtraFields();
-    const payloadWithUUID = data.map((d) => {
+    if (!data.length) throw new Error('No data found!');
+
+    let payloadWithUUID = data.map((d: any) => {
       return { ...d, uuid: uuid() };
     });
-
-    const customUniqueField = rest.uniqueField || '';
+    const extraFields = await this.listExtraFields();
+    const hasRahatUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+    if (hasRahatUUID) {
+      customUniqueField = '';
+      payloadWithUUID = data.map((d: any) => {
+        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] }; // attach rahat_uuid
+      });
+    }
 
     if (action === IMPORT_ACTION.VALIDATE)
-      return this.ValidateBeneficiaryImort(
+      return this.ValidateBeneficiaryImort({
         customUniqueField,
-        payloadWithUUID,
+        data: payloadWithUUID,
         extraFields,
-      );
+        hasRahatUUID,
+      });
 
     if (action === IMPORT_ACTION.IMPORT) {
       const { allValidationErrors } = await validateSchemaFields(
         customUniqueField,
         payloadWithUUID,
         extraFields,
+        hasRahatUUID,
       );
 
-      console.log('allImportErrors', allValidationErrors);
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
-      const row = await this.prisma.source.upsert({
-        where: { importId: rest.importId },
-        update: { ...rest, isImported: false },
-        create: rest,
-      });
-      this.queueClient.add(
-        JOBS.BENEFICIARY.IMPORT,
-        { sourceUUID: row.uuid },
-        QUEUE_RETRY_OPTIONS,
-      );
-      return { message: 'Source created and added to queue' };
+      return this.createSourceAndAddToQueue(rest);
     }
   }
 
-  async checkDuplicateBeneficiary(data: any, customUniqueField: string) {
+  async createSourceAndAddToQueue(data: any) {
+    const row = await this.prisma.source.upsert({
+      where: { importId: data.importId },
+      update: { ...data, isImported: false },
+      create: data,
+    });
+    this.queueClient.add(
+      JOBS.BENEFICIARY.IMPORT,
+      { sourceUUID: row.uuid },
+      QUEUE_RETRY_OPTIONS,
+    );
+    return { message: 'Source created and added to queue' };
+  }
+
+  async checkDuplicateByCustomID(data: any, customUniqueField: string) {
     const result = [];
     for (let p of data) {
       p.isDuplicate = false;
@@ -144,6 +169,28 @@ export class SourceService {
       if (keyExist && p[customUniqueField]) {
         const res = await this.prisma.beneficiary.findUnique({
           where: { customId: p[customUniqueField].toString() },
+        });
+        if (res) {
+          p.isDuplicate = true;
+          result.push({ ...res, isDuplicate: true, exportOnly: true });
+        }
+      }
+      result.push(p);
+    }
+    return result;
+  }
+
+  async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
+    const result = [];
+    for (let p of data) {
+      p.isDuplicate = false;
+      const keyExist = Object.hasOwnProperty.call(p, external_uuid);
+      if (keyExist && p[external_uuid]) {
+        const rahat_uuid = p[external_uuid];
+        const isValid = isUuid(rahat_uuid);
+        if (!isValid) throw new Error('Data contains invalid rahat UUID!');
+        const res = await this.prisma.beneficiary.findUnique({
+          where: { uuid: rahat_uuid },
         });
         if (res) {
           p.isDuplicate = true;
