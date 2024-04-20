@@ -47,8 +47,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                label: convertToValidString(item.label),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],
@@ -108,8 +108,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                label: convertToValidString(item.label),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],
