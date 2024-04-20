@@ -23,7 +23,7 @@ import {
   CheckAbilities,
   JwtGuard,
   ACTIONS,
-  SUBJECTS,
+  // SUBJECTS,
 } from '@rumsan/user';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -35,6 +35,7 @@ import {
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
@@ -49,7 +50,7 @@ export class BeneficiariesController {
 
   @Get('stats')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   async getStats() {
     return this.benStatsService.getAllStats();
   }
@@ -61,20 +62,20 @@ export class BeneficiariesController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.PUBLIC })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   async create(@Body() dto: CreateBeneficiaryDto) {
     return this.beneficiariesService.create(dto);
   }
 
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   async bulkInsert(@Body() dto: BulkInsertDto) {
     return this.beneficiariesService.addBulk(dto);
   }
 
   @Post('upload')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadAsset(
@@ -91,7 +92,7 @@ export class BeneficiariesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   findAll(@Query('') filters: ListBeneficiaryDto) {
     // console.log(filters);
     return this.beneficiariesService.findAll(filters);
@@ -110,7 +111,7 @@ export class BeneficiariesController {
 
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
   update(
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
@@ -120,7 +121,7 @@ export class BeneficiariesController {
   }
 
   @Delete(':uuid')
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string) {
     return this.beneficiariesService.remove(uuid);

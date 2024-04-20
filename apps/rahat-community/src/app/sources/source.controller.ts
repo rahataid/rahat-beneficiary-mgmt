@@ -34,8 +34,8 @@ export class SourceController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateSourceDto) {
     return this.sourceService.create(dto);
   }
@@ -43,15 +43,15 @@ export class SourceController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query() query: any) {
     return this.sourceService.findAll(query);
   }
 
   @Get(':importId/mappings')
   @HttpCode(HttpStatus.OK)
-  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  // @UseGuards(JwtGuard, AbilitiesGuard)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @UseGuards(JwtGuard, AbilitiesGuard)
   getMappings(@Param('importId') importId: string) {
     return this.sourceService.getMappingsByImportId(importId);
   }
@@ -66,7 +66,7 @@ export class SourceController {
 
   @Patch(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(@Param('uuid') uuid: string, @Body() dto: UpdateSourceDto) {
     return this.sourceService.update(uuid, dto);
