@@ -34,8 +34,17 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<GroupResponse>(response);
     },
 
-    remove: async (uuid: string, config?: AxiosRequestConfig) => {
-      const response = await client.delete(`/group/${uuid}`, config);
+    remove: async (
+      {
+        uuid,
+        deleteBeneficiaryFlag,
+      }: { uuid: string; deleteBeneficiaryFlag: boolean },
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.delete(
+        `/group/${uuid}/${deleteBeneficiaryFlag}`,
+        config,
+      );
       return formatResponse<GroupResponse>(response);
     },
 

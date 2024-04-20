@@ -118,27 +118,11 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'Citizenship',
-  })
-  @IsString()
-  @IsOptional()
-  govtIDType?: string;
-
-  @ApiProperty({
-    type: 'string',
     example: '1234-4545',
   })
   @IsString()
   @IsOptional()
   govtIDNumber?: string;
-
-  @ApiProperty({
-    type: 'string',
-    example: 'https://www.google.com/ram.jpg',
-  })
-  @IsString()
-  @IsOptional()
-  govtIDPhoto?: string;
 
   @ApiProperty({
     type: 'string',
@@ -175,6 +159,14 @@ export class CreateBeneficiaryDto {
   @IsOptional()
   @IsEnum(Enums.PhoneStatus)
   phoneStatus?: Enums.PhoneStatus;
+
+  @ApiProperty({
+    type: 'boolean',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  archived?: boolean;
 
   @ApiProperty({
     format: 'json',

@@ -57,7 +57,7 @@ export class BeneficiaryImportService {
     // // 5. Save Benef and source
     for (let p of final_payload) {
       count++;
-      const benef = await this.benefService.upsertByCustomID(p);
+      const benef = await this.benefService.upsertBeneficiary(p);
       if (benef) {
         await this.benefSourceService.create({
           beneficiaryId: benef.id,

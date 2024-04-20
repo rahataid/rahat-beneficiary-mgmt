@@ -22,13 +22,11 @@ model Beneficiary {
   walletAddress String?
   phone         String?
   email         String?
-
+  archived      Boolean   @default(false)
   location     String?
   latitude     Float?
   longitude    Float?
-  govtIDType   String?
   govtIDNumber String?
-  govtIDPhoto  String?
 
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)

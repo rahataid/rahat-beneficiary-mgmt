@@ -36,12 +36,23 @@ export class BeneficiariesService {
     return { scalarFields, extraFields };
   }
 
-  async upsertByCustomID(payload: any) {
+  async upsertBeneficiary(payload: any) {
+    let condition = {} as any;
+    if (payload.customId) condition = { customId: payload.customId.toString() };
+    if (payload.rahat_uuid) condition = { uuid: payload.rahat_uuid };
     if (payload.birthDate) {
       payload.birthDate = convertDateToISO(payload.birthDate);
     }
+
+    if (payload.extras.hasOwnProperty('isDuplicate')) {
+      delete payload.extras.isDuplicate;
+    }
+    if (payload.extras.hasOwnProperty('rahat_uuid')) {
+      delete payload.extras.rahat_uuid;
+    }
+
     return this.prisma.beneficiary.upsert({
-      where: { customId: payload.customId.toString() },
+      where: condition,
       update: payload,
       create: payload,
     });
@@ -124,7 +135,7 @@ export class BeneficiariesService {
 
     return paginate(
       this.prisma.beneficiary,
-      { where: conditions },
+      { where: { ...conditions, archived: false } },
       {
         page: +filters?.page,
         perPage: +filters?.perPage,
@@ -190,9 +201,13 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    const rData = await this.prisma.beneficiary.delete({
+
+    const rData = await this.prisma.beneficiary.update({
       where: {
         uuid,
+      },
+      data: {
+        archived: true,
       },
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
