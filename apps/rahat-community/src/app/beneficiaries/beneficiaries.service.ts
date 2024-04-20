@@ -201,10 +201,17 @@ export class BeneficiariesService {
     });
 
     if (!findUuid) throw new Error('Not Found');
-    const rData = await this.prisma.beneficiary.delete({
+    // const rData = await this.prisma.beneficiary.delete({
+    //   where: {
+    //     uuid,
+    //   },
+    // });
+    const payload = { archived: true };
+    const rData = await this.prisma.beneficiary.update({
       where: {
         uuid,
       },
+      data: payload,
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
 

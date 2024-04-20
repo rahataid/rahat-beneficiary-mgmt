@@ -162,6 +162,14 @@ export class CreateBeneficiaryDto {
   phoneStatus?: Enums.PhoneStatus;
 
   @ApiProperty({
+    type: 'boolean',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  archived?: boolean;
+
+  @ApiProperty({
     format: 'json',
     description: 'Additional JSON data',
     required: false,

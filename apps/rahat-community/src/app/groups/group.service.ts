@@ -123,14 +123,7 @@ export class GroupService {
       });
     }
 
-    // finally delete from group table (tbl_groups)
-    const deletedGroup = await this.prisma.group.delete({
-      where: {
-        uuid,
-      },
-    });
-
-    return deletedGroup;
+    return 'Beneficiaries and their associations were successfully removed from the group.';
   }
 
   downloadData(data: any[], res: Response) {
