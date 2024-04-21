@@ -5,12 +5,7 @@ import { PrismaService } from '@rumsan/prisma';
 export class LogService {
   constructor(private prisma: PrismaService) {}
 
-  async addLog(userUUID: string, action: string, data?: any) {
-    const logData: any = {
-      userUUID,
-      action,
-      data,
-    };
+  async addLog(logData: { userUUID: string; action: string; data?: any }) {
     return this.prisma.log.create({
       data: logData,
     });

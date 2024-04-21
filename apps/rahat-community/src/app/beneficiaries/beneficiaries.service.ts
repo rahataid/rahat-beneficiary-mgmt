@@ -19,14 +19,14 @@ import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
-import { LogService } from '../auditLog/log.service';
+// import { LogService } from '../auditLog/log.service';
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
+    // private logService: LogService,
     private fieldDefService: FieldDefinitionsService,
     private eventEmitter: EventEmitter2,
-    private logService: LogService,
   ) {}
 
   async fetchDBFields() {
@@ -212,7 +212,14 @@ export class BeneficiariesService {
       },
     });
 
-    await this.logService.addLog('2251', 'Beneficiary Removed');
+    const logData: any = {
+      userUUID: userUUID,
+      action: `Deleted ${rData.firstName} ${rData.lastName}`,
+    };
+
+    await this.prisma.log.create({ data: logData });
+
+    // await this.logService.addLog(logData);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
 
     return rData;

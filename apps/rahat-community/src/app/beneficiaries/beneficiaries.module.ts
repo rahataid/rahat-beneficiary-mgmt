@@ -7,8 +7,8 @@ import { BullModule } from '@nestjs/bull';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { StatsModule } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
-import { LogModule } from '../auditLog/log.module';
-import { LogService } from '../auditLog/log.service';
+// import { LogModule } from '../auditLog/log.module';
+// import { LogService } from '../auditLog/log.service';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { LogService } from '../auditLog/log.service';
       name: BQUEUE.COMMUNITY_BENEFICIARY,
     }),
     StatsModule,
-    LogModule,
+    // LogModule,
   ],
   controllers: [BeneficiariesController],
   providers: [
@@ -24,7 +24,7 @@ import { LogService } from '../auditLog/log.service';
     PrismaService,
     FieldDefinitionsService,
     BeneficiaryStatService,
-    LogService,
+    // LogService,
   ],
 })
 export class BeneficiariesModule {}
