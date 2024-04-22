@@ -39,7 +39,8 @@ export class BeneficiariesService {
 
   async upsertBeneficiary(payload: any) {
     let condition = {} as any;
-    if (payload.customId) condition = { customId: payload.customId.toString() };
+    if (payload.govtIDNumber)
+      condition = { govtIDNumber: payload.govtIDNumber.toString() };
     if (payload.birthDate) {
       payload.birthDate = convertDateToISO(payload.birthDate);
     }
@@ -76,7 +77,6 @@ export class BeneficiariesService {
 
     const createdData = await this.prisma.beneficiary.create({
       data: {
-        customId: uuid(),
         ...dto,
       },
     });
@@ -232,10 +232,7 @@ export class BeneficiariesService {
   }
 
   addBulk(dto: BulkInsertDto) {
-    const withCustomID = dto.data.map((d: any) => {
-      return { ...d, customId: uuid() };
-    });
-    const rdata = this.prisma.beneficiary.createMany({ data: withCustomID });
+    const rdata = this.prisma.beneficiary.createMany({ data: dto.data });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
     return rdata;
   }

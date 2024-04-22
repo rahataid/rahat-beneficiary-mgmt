@@ -12,6 +12,7 @@ import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
+  GOVT_ID_NUMBER: 'govtIdNumber',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -47,17 +48,17 @@ function removeDuplicatesByObjectKey(fields: any) {
 }
 
 export const validateSchemaFields = async (
-  customUniqueField: string,
   payload: any,
   extraFields: IExtraField[],
-  hasRahatUUID: boolean,
+  hasUUID: boolean,
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
+    BENEFICIARY_REQ_FIELDS.GOVT_ID_NUMBER,
   ];
-  if (customUniqueField) requiredFields.push(customUniqueField);
-  if (hasRahatUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
+  // if (customUniqueField) requiredFields.push(customUniqueField);
+  if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,

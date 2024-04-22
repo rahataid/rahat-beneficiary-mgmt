@@ -47,11 +47,11 @@ export class BeneficiaryImportService {
     };
     const mapped_fields = jsonData.data;
     const splittedData = await this.splitPrimaryAndExtraFields(mapped_fields);
-    const omitRawData = splittedData.map((item: any) => {
+    const final_payload = splittedData.map((item: any) => {
       delete item.rawData;
       return item;
     });
-    const final_payload = injectCustomID(customUniqueField, omitRawData);
+    // const final_payload = injectCustomID(customUniqueField, omitRawData);
     let count = 0;
 
     // // 5. Save Benef and source
