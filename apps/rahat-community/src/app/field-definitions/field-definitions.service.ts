@@ -82,9 +82,20 @@ export class FieldDefinitionsService {
         ? false
         : undefined;
 
+    let where: any = {};
+
+    if (query.name) {
+      where = {
+        name: {
+          contains: query.name,
+          mode: 'insensitive',
+        },
+      };
+    }
+
     return paginate(
       this.prisma.fieldDefinition,
-      { select, where: { isTargeting: isTargeting } },
+      { select, where: { isTargeting: isTargeting, ...where } },
       {
         page: query?.page,
         perPage: query?.perPage,

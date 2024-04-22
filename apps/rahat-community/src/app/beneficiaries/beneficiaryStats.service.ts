@@ -93,7 +93,6 @@ export class BeneficiaryStatService {
   }
 
   async getStatsByName(name: string) {
-    console.log(name);
     return await this.statsService.findOne(name);
   }
 

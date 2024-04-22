@@ -116,7 +116,6 @@ export class BeneficiariesController {
     @Param('uuid') uuid: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
   ) {
-    console.log(updateBeneficiaryDto);
     return this.beneficiariesService.update(uuid, updateBeneficiaryDto);
   }
 
