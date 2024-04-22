@@ -56,11 +56,16 @@ export class BeneficiariesService {
       delete payload.extras.rahat_uuid;
     }
 
-    return this.prisma.beneficiary.upsert({
+    if (!payload.walletAddress) {
+      payload.walletAddress = generateRandomWallet().address;
+    }
+    const rData = this.prisma.beneficiary.upsert({
       where: condition,
       update: payload,
       create: payload,
     });
+
+    return rData;
   }
 
   async create(dto: CreateBeneficiaryDto) {
