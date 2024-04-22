@@ -14,6 +14,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   Put,
+  Req,
 } from '@nestjs/common';
 import { BeneficiariesService } from './beneficiaries.service';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -94,7 +95,6 @@ export class BeneficiariesController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   findAll(@Query('') filters: ListBeneficiaryDto) {
-    // console.log(filters);
     return this.beneficiariesService.findAll(filters);
   }
 
@@ -123,7 +123,8 @@ export class BeneficiariesController {
   @Delete(':uuid')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
   @HttpCode(HttpStatus.OK)
-  remove(@Param('uuid') uuid: string) {
-    return this.beneficiariesService.remove(uuid);
+  remove(@Param('uuid') uuid: string, @Req() req: any) {
+    const userUUID = req?.user?.uuid;
+    return this.beneficiariesService.remove(uuid, userUUID);
   }
 }
