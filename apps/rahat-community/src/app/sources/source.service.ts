@@ -116,7 +116,7 @@ export class SourceService {
       return { ...d, uuid: uuid() };
     });
     const extraFields = await this.listExtraFields();
-    const hasRahatUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+    const hasRahatUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasRahatUUID) {
       customUniqueField = '';
       payloadWithUUID = data.map((d: any) => {
@@ -194,7 +194,12 @@ export class SourceService {
         });
         if (res) {
           p.isDuplicate = true;
-          result.push({ ...res, isDuplicate: true, exportOnly: true });
+          result.push({
+            ...res,
+            rahat_uuid,
+            isDuplicate: true,
+            exportOnly: true,
+          });
         }
       }
       result.push(p);

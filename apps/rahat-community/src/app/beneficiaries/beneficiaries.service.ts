@@ -39,7 +39,6 @@ export class BeneficiariesService {
   async upsertBeneficiary(payload: any) {
     let condition = {} as any;
     if (payload.customId) condition = { customId: payload.customId.toString() };
-    if (payload.rahat_uuid) condition = { uuid: payload.rahat_uuid };
     if (payload.birthDate) {
       payload.birthDate = convertDateToISO(payload.birthDate);
     }
@@ -48,6 +47,8 @@ export class BeneficiariesService {
       delete payload.extras.isDuplicate;
     }
     if (payload.extras.hasOwnProperty('rahat_uuid')) {
+      condition = { uuid: payload.extras.rahat_uuid };
+      payload.uuid = payload.extras.rahat_uuid;
       delete payload.extras.rahat_uuid;
     }
 
