@@ -195,6 +195,15 @@ export class BeneficiariesService {
     return beneficiaryData;
   }
 
+  async beneficiaryArchivedLog(logData) {
+    try {
+      await this.prisma.log.create({ data: logData });
+    } catch (error) {
+      console.error('Error in beneficiaryArchivedLog method:', error);
+      throw new Error('Failed to create log entry');
+    }
+  }
+
   async remove(uuid: string, userUUID: string) {
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
@@ -215,10 +224,11 @@ export class BeneficiariesService {
 
     const logData: any = {
       userUUID: userUUID,
-      action: `Deleted ${rData.firstName} ${rData.lastName}`,
+      action: BeneficiaryEvents.BENEFICIARY_REMOVED,
+      data: rData,
     };
 
-    await this.prisma.log.create({ data: logData });
+    this.beneficiaryArchivedLog(logData);
 
     // await this.logService.addLog(logData);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
