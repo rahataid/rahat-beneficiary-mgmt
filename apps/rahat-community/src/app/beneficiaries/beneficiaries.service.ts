@@ -195,8 +195,8 @@ export class BeneficiariesService {
     return beneficiaryData;
   }
 
-  createLog(logData) {
-    return this.prisma.log.create({ data: logData });
+  async createLog(logData) {
+    return await this.prisma.log.create({ data: logData });
   }
 
   async remove(uuid: string, userUUID: string) {
