@@ -195,13 +195,8 @@ export class BeneficiariesService {
     return beneficiaryData;
   }
 
-  async beneficiaryArchivedLog(logData) {
-    try {
-      await this.prisma.log.create({ data: logData });
-    } catch (error) {
-      console.error('Error in beneficiaryArchivedLog method:', error);
-      throw new Error('Failed to create log entry');
-    }
+  createLog(logData) {
+    return this.prisma.log.create({ data: logData });
   }
 
   async remove(uuid: string, userUUID: string) {
@@ -224,11 +219,11 @@ export class BeneficiariesService {
 
     const logData: any = {
       userUUID: userUUID,
-      action: BeneficiaryEvents.BENEFICIARY_REMOVED,
+      action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
       data: rData,
     };
 
-    this.beneficiaryArchivedLog(logData);
+    await this.createLog(logData);
 
     // await this.logService.addLog(logData);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
