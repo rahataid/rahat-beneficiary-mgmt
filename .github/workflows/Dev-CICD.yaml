@@ -7,7 +7,7 @@ on:
     branches:
       - 'dev'
   workflow_dispatch:
-  
+
 env:
   CI: false
   env_npmrc: ${{ secrets.ENV_NPMRC }}
@@ -31,7 +31,7 @@ jobs:
 
       - name: install dependencies and build apps
         run: |
-          npm install -g pnpm
+          npm install -g pnpm tslib
           pnpm install
           pnpm prisma:generate
           pnpm build:all
