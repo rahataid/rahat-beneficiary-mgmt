@@ -195,6 +195,10 @@ export class BeneficiariesService {
     return beneficiaryData;
   }
 
+  async createLog(logData) {
+    return await this.prisma.log.create({ data: logData });
+  }
+
   async remove(uuid: string, userUUID: string) {
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
@@ -215,10 +219,11 @@ export class BeneficiariesService {
 
     const logData: any = {
       userUUID: userUUID,
-      action: `Deleted ${rData.firstName} ${rData.lastName}`,
+      action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
+      data: rData,
     };
 
-    await this.prisma.log.create({ data: logData });
+    await this.createLog(logData);
 
     // await this.logService.addLog(logData);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
