@@ -52,7 +52,6 @@ export class BeneficiaryGroupController {
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query('') filters: any) {
-    console.log(filters);
     return this.beneficiaryGroupService.findAll(filters);
   }
 
