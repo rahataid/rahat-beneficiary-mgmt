@@ -63,6 +63,12 @@ export class GroupController {
     return this.groupService.update(uuid, updateGroupDto);
   }
 
+  @Delete(':uuid/purge')
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  purgeGroup(@Param('uuid') uuid: string) {
+    return this.groupService.purgeGroup(uuid);
+  }
+
   @Delete(':uuid/:deleteBeneficiaryFlag')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
   remove(
@@ -70,11 +76,5 @@ export class GroupController {
     @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,
   ) {
     return this.groupService.remove(uuid, deleteBeneficiaryFlag);
-  }
-
-  @Delete(':uuid/purge')
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
-  purgeGroup(@Param('uuid') uuid: string) {
-    return this.groupService.purgeGroup(uuid);
   }
 }

@@ -25,6 +25,12 @@ export type GroupClient = {
     { uuid, data }: { uuid?: string; data?: GroupInput },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
+
+  purgeGroup: (
+    uuid: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<GroupResponse>>;
+
   remove: (
     {
       uuid,
@@ -40,9 +46,4 @@ export type GroupClient = {
     groupedBeneficiaries: any[];
     config: AxiosRequestConfig;
   }) => Promise<any>;
-
-  purgeGroup: (
-    uuid: string,
-    config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<GroupResponse>>;
 };

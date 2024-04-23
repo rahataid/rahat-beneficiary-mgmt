@@ -207,17 +207,17 @@ export class GroupService {
             },
           });
 
-          // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-          const deletedBeneficiaryData = await prisma.beneficiary.delete({
-            where: {
-              uuid: item.beneficiaryUID,
-            },
-          });
-
           // delete beneficiary from the beneficiary source (tbl_beneficiary_source)
           await prisma.beneficiarySource.deleteMany({
             where: {
               beneficiaryUID: item.beneficiaryUID,
+            },
+          });
+
+          // delete beneficiary from the beneficiary table (tbl_beneficiaries)
+          const deletedBeneficiaryData = await prisma.beneficiary.delete({
+            where: {
+              uuid: item.beneficiaryUID,
             },
           });
 
@@ -229,6 +229,7 @@ export class GroupService {
       });
     }
 
+    // finally delete group
     return await this.prisma.group.delete({
       where: {
         uuid,
