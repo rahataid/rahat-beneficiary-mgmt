@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { paginate } from '../utils/paginate';
 import {
   CreateGroupDto,
+  ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { generateExcelData } from '../utils/export-to-excel';
@@ -34,7 +35,19 @@ export class GroupService {
     });
   }
 
-  async findAll(query: any) {
+  async findAll(query: ListGroupDto) {
+    const OR_CONDITIONS = [];
+    let conditions = {};
+
+    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
+
+    if (query.name) {
+      OR_CONDITIONS.push({
+        name: { contains: query.name, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
     const select: Prisma.GroupSelect = {
       name: true,
       uuid: true,
@@ -68,6 +81,7 @@ export class GroupService {
     return paginate(
       this.prisma.group,
       {
+        where: { ...conditions },
         select,
         where,
       },

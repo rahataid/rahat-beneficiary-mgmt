@@ -21,6 +21,16 @@ import { convertDateToISO } from '../utils';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
+
+import { DB_MODELS } from '../../constants';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { convertDateToISO } from '../utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  BeneficiaryEvents,
+  generateRandomWallet,
+} from '@rahataid/community-tool-sdk';
+
 @Injectable()
 export class BeneficiariesService {
   constructor(
@@ -104,9 +114,12 @@ export class BeneficiariesService {
   }
 
   async create(dto: CreateBeneficiaryDto) {
-    const { birthDate, extras } = dto;
+    const { birthDate, extras, walletAddress } = dto;
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
 
+    if (!walletAddress) {
+      dto.walletAddress = generateRandomWallet().address;
+    }
     if (extras) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
