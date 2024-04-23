@@ -5,9 +5,11 @@ import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-sou
 import { SourceService } from '../sources/source.service';
 import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
-import { ImportField } from '@prisma/client';
+import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
+import { PrismaService } from '@rumsan/prisma';
+
+const { ImportField } = Enums;
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -17,6 +19,7 @@ export class BeneficiaryImportService {
     private benefService: BeneficiariesService,
     private eventEmitter: EventEmitter2,
     private groupService: GroupService,
+    private prisma: PrismaService,
   ) {}
 
   async splitPrimaryAndExtraFields(data: any) {
@@ -46,7 +49,7 @@ export class BeneficiaryImportService {
       isSystem: true,
     });
     const importGroup = await this.groupService.upsertByName({
-      name: `import_${new Date().toLocaleDateString()}`,
+      name: `import_${new Date().getTime()}`,
     });
     return {
       defaultGroupUID: defaultGroup.uuid,
@@ -70,7 +73,7 @@ export class BeneficiaryImportService {
     });
 
     const { defaultGroupUID, importGroupUID } =
-      this.createDefaultAndImportGroup() as any;
+      (await this.createDefaultAndImportGroup()) as any;
 
     const { importField } = source;
     // Import by UUID
@@ -82,21 +85,21 @@ export class BeneficiaryImportService {
           importGroupUID,
           beneficiary: p,
         });
-        if (benef) await this.addBenefToSource(benef.id, source.id);
+        if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
       }
     }
     // Import by GOVT_ID_NUMBER
-    if (importField === ImportField.GOVT_ID_NUMBER) {
-      for (let p of final_payload) {
-        upsertCount++;
-        const benef = await this.benefService.upsertByGovtID({
-          defaultGroupUID,
-          importGroupUID,
-          beneficiary: p,
-        });
-        if (benef) await this.addBenefToSource(benef.id, source.id);
-      }
-    }
+    // if (importField === ImportField.GOVT_ID_NUMBER) {
+    //   for (let p of final_payload) {
+    //     upsertCount++;
+    //     const benef = await this.benefService.upsertByGovtID({
+    //       defaultGroupUID,
+    //       importGroupUID,
+    //       beneficiary: p,
+    //     });
+    //     if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
+    //   }
+    // }
     await this.sourceService.updateImportFlag(source.uuid, true);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 
@@ -107,10 +110,21 @@ export class BeneficiaryImportService {
     };
   }
 
-  addBenefToSource(beneficiaryId: number, sourceId: number) {
-    return this.benefSourceService.create({
-      beneficiaryId: beneficiaryId,
-      sourceId: sourceId,
+  async addBenefToSource(benefUID: string, sourceUID: string) {
+    const rData = await this.prisma.beneficiarySource.findUnique({
+      where: {
+        benefSourceIdentifier: {
+          beneficiaryUID: benefUID,
+          sourceUID: sourceUID,
+        },
+      },
+    });
+    if (rData) return;
+    return this.prisma.beneficiarySource.create({
+      data: {
+        beneficiaryUID: benefUID,
+        sourceUID: sourceUID,
+      },
     });
   }
 

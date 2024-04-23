@@ -126,8 +126,8 @@ export class GroupService {
         beneficiariesGroup: {
           select: {
             id: true,
-            groupId: true,
-            beneficiaryId: true,
+            groupUID: true,
+            beneficiaryUID: true,
           },
         },
       },
@@ -140,7 +140,7 @@ export class GroupService {
 
           await prisma.beneficiaryGroup.deleteMany({
             where: {
-              beneficiaryId: item.beneficiaryId,
+              id: item.id,
             },
           });
 
@@ -148,7 +148,7 @@ export class GroupService {
             // delete beneficiary from the beneficiary table (tbl_beneficiaries)
             await prisma.beneficiary.delete({
               where: {
-                id: item?.beneficiaryId,
+                uuid: item.beneficiaryUID,
               },
             });
           }
