@@ -5,6 +5,11 @@ export enum Gender {
   UKNOWN = 'UNKNOWN',
 }
 
+export enum ImportField {
+  UUID = 'UUID',
+  GOVT_ID_NUMBER = 'GOVT_ID_NUMBER',
+}
+
 export enum BankedStatus {
   UNKNOWN = 'UNKNOWN',
   UNBANKED = 'UNBANKED',

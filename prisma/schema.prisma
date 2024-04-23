@@ -73,19 +73,24 @@ model Beneficiary {
 }
 
 model Source {
-  id                Int                 @id @default(autoincrement()) @db.Integer()
-  uuid              String              @unique @default(uuid()) @db.Uuid()
-  name              String
-  importId          String              @unique
-  uniqueField       String?
-  isImported        Boolean             @default(false)
-  beneficiarySource BeneficiarySource[]
-  details           Json?               @db.JsonB()
-  fieldMapping      Json
+  id           Int         @id @default(autoincrement()) @db.Integer()
+  uuid         String      @unique @default(uuid()) @db.Uuid()
+  name         String
+  importId     String      @unique
+  importField  ImportField @default(UUID)
+  isImported   Boolean     @default(false)
+  fieldMapping Json
+
   createdAt         DateTime            @default(now())
   updatedAt         DateTime?           @updatedAt()
+  beneficiarySource BeneficiarySource[]
 
   @@map("tbl_sources")
+}
+
+enum ImportField {
+  UUID
+  GOVT_ID_NUMBER
 }
 
 model BeneficiarySource {

@@ -133,7 +133,7 @@ export class SourceService {
     }
   }
 
-  async createSourceAndAddToQueue(data: any) {
+  async createSourceAndAddToQueue(data: CreateSourceDto) {
     const row = await this.prisma.source.upsert({
       where: { importId: data.importId },
       update: { ...data, isImported: false },

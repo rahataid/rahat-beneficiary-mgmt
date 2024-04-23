@@ -47,7 +47,6 @@ export class BeneficiaryImportService {
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
     if (source.isImported) return 'Already imported!';
-    const customUniqueField = source.uniqueField || '';
     const jsonData = source.fieldMapping as {
       data: object;
     };
