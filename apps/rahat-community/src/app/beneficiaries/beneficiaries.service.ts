@@ -89,23 +89,23 @@ export class BeneficiariesService {
   // }
 
   async upsertByGovtID({ defaultGroupUID, importGroupUID, beneficiary }) {
-    if (beneficiary.birthDate) {
-      beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
-    }
-    const exist = await this.findOneByGovtID(beneficiary.govtIDNumber);
-    if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
-    const res = await this.prisma.beneficiary.upsert({
-      where: { govtIDNumber: beneficiary.govtIDNumber },
-      update: beneficiary,
-      create: beneficiary,
-    });
-    if (!exist)
-      await this.addToGroups({
-        benefUID: res.uuid,
-        defaultGroupUID,
-        importGroupUID,
-      });
-    return res;
+    // if (beneficiary.birthDate) {
+    //   beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
+    // }
+    // const exist = await this.findOneByGovtID(beneficiary.govtIDNumber);
+    // if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
+    // const res = await this.prisma.beneficiary.upsert({
+    //   where: { govtIDNumber: beneficiary.govtIDNumber },
+    //   update: beneficiary,
+    //   create: beneficiary,
+    // });
+    // if (!exist)
+    //   await this.addToGroups({
+    //     benefUID: res.uuid,
+    //     defaultGroupUID,
+    //     importGroupUID,
+    //   });
+    // return res;
   }
 
   async upsertByUUID({ defaultGroupUID, importGroupUID, beneficiary }) {
@@ -233,9 +233,9 @@ export class BeneficiariesService {
   }
 
   findOneByGovtID(govtID: string) {
-    return this.prisma.beneficiary.findUnique({
-      where: { govtIDNumber: govtID },
-    });
+    // return this.prisma.beneficiary.findUnique({
+    //   where: { govtIDNumber: govtID },
+    // });
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {

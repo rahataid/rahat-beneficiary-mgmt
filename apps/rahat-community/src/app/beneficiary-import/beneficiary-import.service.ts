@@ -5,11 +5,11 @@ import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-sou
 import { SourceService } from '../sources/source.service';
 import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
-import { ImportField } from '@prisma/client';
+import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
-import { UUID } from 'crypto';
 import { PrismaService } from '@rumsan/prisma';
+
+const { ImportField } = Enums;
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -89,17 +89,17 @@ export class BeneficiaryImportService {
       }
     }
     // Import by GOVT_ID_NUMBER
-    if (importField === ImportField.GOVT_ID_NUMBER) {
-      for (let p of final_payload) {
-        upsertCount++;
-        const benef = await this.benefService.upsertByGovtID({
-          defaultGroupUID,
-          importGroupUID,
-          beneficiary: p,
-        });
-        if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
-      }
-    }
+    // if (importField === ImportField.GOVT_ID_NUMBER) {
+    //   for (let p of final_payload) {
+    //     upsertCount++;
+    //     const benef = await this.benefService.upsertByGovtID({
+    //       defaultGroupUID,
+    //       importGroupUID,
+    //       beneficiary: p,
+    //     });
+    //     if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
+    //   }
+    // }
     await this.sourceService.updateImportFlag(source.uuid, true);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 

@@ -50,7 +50,7 @@ export class CreateBeneficiaryDto {
     example: '1234-4545',
   })
   @IsString()
-  govtIDNumber: string;
+  govtIDNumber?: string;
 
   @ApiProperty({
     type: 'string',

@@ -41,12 +41,12 @@ model BeneficiaryArchive {
 }
 
 model Beneficiary {
-  id           Int    @id @default(autoincrement()) @db.Integer()
-  uuid         String @unique @default(uuid()) @db.Uuid()
+  id           Int     @id @default(autoincrement()) @db.Integer()
+  uuid         String  @unique @default(uuid()) @db.Uuid()
   // customId  String @unique
   firstName    String
   lastName     String
-  govtIDNumber String @unique
+  govtIDNumber String?
 
   gender        Gender    @default(UNKNOWN)
   birthDate     DateTime?
