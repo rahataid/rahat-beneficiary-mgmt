@@ -87,14 +87,15 @@ export class BeneficiaryGroupService {
     );
   }
 
-  async findOne(id: number) {
-    await this.prisma.beneficiaryGroup.findUnique({
+  async findOne(uuid: string) {
+    return await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
       select: {
         beneficiary: {
           select: {
+            uuid: true,
             firstName: true,
             lastName: true,
             email: true,
@@ -106,6 +107,7 @@ export class BeneficiaryGroupService {
         },
         group: {
           select: {
+            uuid: true,
             name: true,
           },
         },
@@ -113,18 +115,17 @@ export class BeneficiaryGroupService {
     });
   }
 
-  // FIx with UUID
-  async update(id: number, dto: UpdateBeneficiaryGroupDto) {
-    await this.prisma.beneficiaryGroup.update({
-      where: { id },
+  async update(uuid: string, dto: UpdateBeneficiaryGroupDto) {
+    return await this.prisma.beneficiaryGroup.update({
+      where: { uuid },
       data: {},
     });
   }
 
-  async remove(id: number) {
+  async remove(uuid: string) {
     const findBenefGroup = await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
     });
 
@@ -139,7 +140,7 @@ export class BeneficiaryGroupService {
 
     return await this.prisma.beneficiaryGroup.delete({
       where: {
-        id,
+        uuid,
       },
     });
   }
