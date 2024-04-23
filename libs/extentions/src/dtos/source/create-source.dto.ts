@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Enums } from '@rahataid/community-tool-sdk';
+import { Enums, ImportField } from '@rahataid/community-tool-sdk';
 import {
   IsEnum,
   IsNotEmpty,
@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+
 
 export class CreateSourceDto {
   @ApiProperty({
