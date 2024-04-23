@@ -40,4 +40,9 @@ export type GroupClient = {
     groupedBeneficiaries: any[];
     config: AxiosRequestConfig;
   }) => Promise<any>;
+
+  purgeGroup: (
+    uuid: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<GroupResponse>>;
 };

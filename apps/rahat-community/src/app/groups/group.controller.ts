@@ -71,4 +71,10 @@ export class GroupController {
   ) {
     return this.groupService.remove(uuid, deleteBeneficiaryFlag);
   }
+
+  @Delete(':uuid/purge')
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  purgeGroup(@Param('uuid') uuid: string) {
+    return this.groupService.purgeGroup(uuid);
+  }
 }

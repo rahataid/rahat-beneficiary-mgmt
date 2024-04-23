@@ -126,6 +126,7 @@ export class GroupService {
         beneficiariesGroup: {
           select: {
             id: true,
+            uuid: true,
             groupUID: true,
             beneficiaryUID: true,
           },
@@ -140,15 +141,18 @@ export class GroupService {
 
           await prisma.beneficiaryGroup.deleteMany({
             where: {
-              id: item.id,
+              uuid: item.uuid,
             },
           });
 
           if (deleteBeneficiaryFlag) {
-            // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-            await prisma.beneficiary.delete({
+            // archive beneficiary from the beneficiary table (tbl_beneficiaries)
+            await prisma.beneficiary.update({
               where: {
                 uuid: item.beneficiaryUID,
+              },
+              data: {
+                archived: true,
               },
             });
           }
@@ -170,5 +174,65 @@ export class GroupService {
       'attachment; filename=beneficiaries.xlsx',
     );
     return res.send(excelBuffer);
+  }
+
+  async purgeGroup(uuid: string) {
+    // get relevant informationn from the group table
+    const getInfo = await this.prisma.group.findUnique({
+      where: {
+        uuid,
+      },
+      select: {
+        beneficiariesGroup: {
+          select: {
+            id: true,
+            uuid: true,
+            groupUID: true,
+            beneficiaryUID: true,
+          },
+        },
+      },
+    });
+
+    if (!getInfo) throw new Error('Not Found');
+
+    if (getInfo?.beneficiariesGroup?.length > 0) {
+      await this.prisma.$transaction(async (prisma) => {
+        for (const item of getInfo.beneficiariesGroup) {
+          // first delete from the combine table (tbl_beneficiary_groups)
+
+          await prisma.beneficiaryGroup.deleteMany({
+            where: {
+              uuid: item.uuid,
+            },
+          });
+
+          // delete beneficiary from the beneficiary table (tbl_beneficiaries)
+          const deletedBeneficiaryData = await prisma.beneficiary.delete({
+            where: {
+              uuid: item.beneficiaryUID,
+            },
+          });
+
+          // delete beneficiary from the beneficiary source (tbl_beneficiary_source)
+          await prisma.beneficiarySource.deleteMany({
+            where: {
+              beneficiaryUID: item.beneficiaryUID,
+            },
+          });
+
+          // add to archive beneficiary table (tbl_archive_beneficiaries)
+          await prisma.beneficiaryArchive.create({
+            data: deletedBeneficiaryData,
+          });
+        }
+      });
+    }
+
+    return await this.prisma.group.delete({
+      where: {
+        uuid,
+      },
+    });
   }
 }

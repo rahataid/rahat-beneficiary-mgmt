@@ -48,6 +48,11 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<GroupResponse>(response);
     },
 
+    purgeGroup: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.delete(`/group/${uuid}/purge`, config);
+      return formatResponse<GroupResponse>(response);
+    },
+
     download: async ({
       groupedBeneficiaries,
       // responseType,
