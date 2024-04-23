@@ -10,6 +10,11 @@ export enum ImportField {
   GOVT_ID_NUMBER = 'GOVT_ID_NUMBER',
 }
 
+export enum ArchiveType {
+  DELETED = 'DELETED',
+  UPDATED = 'UPDATED',
+}
+
 export enum BankedStatus {
   UNKNOWN = 'UNKNOWN',
   UNBANKED = 'UNBANKED',

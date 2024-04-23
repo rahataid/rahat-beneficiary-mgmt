@@ -16,5 +16,5 @@ export class CreateGroupDto {
     description: 'Cant delete this group if true',
   })
   @IsBoolean()
-  isSystem!: boolean;
+  isSystem?: boolean;
 }

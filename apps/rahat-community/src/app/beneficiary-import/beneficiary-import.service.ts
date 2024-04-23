@@ -7,6 +7,7 @@ import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { ImportField } from '@prisma/client';
+import { GroupService } from '../groups/group.service';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -15,6 +16,7 @@ export class BeneficiaryImportService {
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
     private eventEmitter: EventEmitter2,
+    private groupService: GroupService,
   ) {}
 
   async splitPrimaryAndExtraFields(data: any) {
@@ -38,12 +40,20 @@ export class BeneficiaryImportService {
     return modifiedData;
   }
 
-  // Import by UUID or GOVTID
-  // Check if each data exists in the DB
-  // If Exist? add to the archive table with flag "UPDATED"
-  // Upsert via UUID or GOVTID benef to BENEFICIARY table
-  // Add created benef to source, groups [default and import_timestamp]
-  // Update import flag in source
+  async createDefaultAndImportGroup() {
+    const defaultGroup = await this.groupService.upsertByName({
+      name: 'default',
+      isSystem: true,
+    });
+    const importGroup = await this.groupService.upsertByName({
+      name: `import_${new Date().toLocaleDateString()}`,
+    });
+    return {
+      defaultGroupUID: defaultGroup.uuid,
+      importGroupUID: importGroup.uuid,
+    };
+  }
+
   async importBySourceUUID(uuid: string) {
     let upsertCount = 0;
     const source = await this.sourceService.findOne(uuid);
@@ -59,21 +69,32 @@ export class BeneficiaryImportService {
       return item;
     });
 
-    const { importField } = source;
-    if (importField === ImportField.UUID) {
-    }
-    if (importField === ImportField.GOVT_ID_NUMBER) {
-    }
+    const { defaultGroupUID, importGroupUID } =
+      this.createDefaultAndImportGroup() as any;
 
-    // // 5. Save Benef and source
-    for (let p of final_payload) {
-      upsertCount++;
-      const benef = await this.benefService.upsertBeneficiary(p);
-      if (benef) {
-        await this.benefSourceService.create({
-          beneficiaryId: benef.id,
-          sourceId: source.id,
+    const { importField } = source;
+    // Import by UUID
+    if (importField === ImportField.UUID) {
+      for (let p of final_payload) {
+        upsertCount++;
+        const benef = await this.benefService.upsertByUUID({
+          defaultGroupUID,
+          importGroupUID,
+          beneficiary: p,
         });
+        if (benef) await this.addBenefToSource(benef.id, source.id);
+      }
+    }
+    // Import by GOVT_ID_NUMBER
+    if (importField === ImportField.GOVT_ID_NUMBER) {
+      for (let p of final_payload) {
+        upsertCount++;
+        const benef = await this.benefService.upsertByGovtID({
+          defaultGroupUID,
+          importGroupUID,
+          beneficiary: p,
+        });
+        if (benef) await this.addBenefToSource(benef.id, source.id);
       }
     }
     await this.sourceService.updateImportFlag(source.uuid, true);
@@ -84,6 +105,13 @@ export class BeneficiaryImportService {
       status: 200,
       message: `${upsertCount} out of ${final_payload.length} Beneficiaries updated!`,
     };
+  }
+
+  addBenefToSource(beneficiaryId: number, sourceId: number) {
+    return this.benefSourceService.create({
+      beneficiaryId: beneficiaryId,
+      sourceId: sourceId,
+    });
   }
 
   findAll() {

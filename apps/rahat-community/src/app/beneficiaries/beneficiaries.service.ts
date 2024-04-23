@@ -1,30 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { uuid } from 'uuidv4';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ImportField } from '@prisma/client';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
+import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
+import { UUID } from 'crypto';
+import { ArchiveType } from 'libs/sdk/src/enums';
 import XLSX from 'xlsx';
+import { DB_MODELS } from '../../constants';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
+import { convertDateToISO } from '../utils';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
-import { DB_MODELS } from '../../constants';
-import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { convertDateToISO } from '../utils';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
-// import { LogService } from '../auditLog/log.service';
 @Injectable()
 export class BeneficiariesService {
   constructor(
     private prisma: PrismaService,
-    // private logService: LogService,
     private fieldDefService: FieldDefinitionsService,
     private eventEmitter: EventEmitter2,
   ) {}
@@ -37,28 +37,70 @@ export class BeneficiariesService {
     return { scalarFields, extraFields };
   }
 
-  async upsertBeneficiary(payload: any) {
-    let condition = {} as any;
-    if (payload.govtIDNumber)
-      condition = { govtIDNumber: payload.govtIDNumber.toString() };
-    if (payload.birthDate) {
-      payload.birthDate = convertDateToISO(payload.birthDate);
-    }
-
-    if (payload.extras.hasOwnProperty('isDuplicate')) {
-      delete payload.extras.isDuplicate;
-    }
-    if (payload.extras.hasOwnProperty('rahat_uuid')) {
-      condition = { uuid: payload.extras.rahat_uuid };
-      payload.uuid = payload.extras.rahat_uuid;
-      delete payload.extras.rahat_uuid;
-    }
-
-    return this.prisma.beneficiary.upsert({
-      where: condition,
-      update: payload,
-      create: payload,
+  async addToGroups({ benefUID, defaultGroupUID, importGroupUID }) {
+    // Add to default group
+    await this.prisma.beneficiaryGroup.create({
+      data: {
+        group: { connect: { uuid: defaultGroupUID } },
+        beneficiary: { connect: { uuid: benefUID } },
+      },
     });
+    // Add to import_timestamp group
+    await this.prisma.beneficiaryGroup.create({
+      data: {
+        group: { connect: { uuid: importGroupUID } },
+        beneficiary: { connect: { uuid: benefUID } },
+      },
+    });
+  }
+
+  // if (beneficiaryData.extras.hasOwnProperty('uuid')) {
+  //   beneficiaryData.uuid = beneficiaryData.extras.uuid;
+  //   delete beneficiaryData.extras.uuid;
+  // }
+
+  async upsertByGovtID({ defaultGroupUID, importGroupUID, beneficiary }) {
+    if (beneficiary.birthDate) {
+      beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
+    }
+    const benef = await this.findOneByGovtID(beneficiary.govtIDNumber);
+    if (benef) await this.addBeneficiaryToArchive(benef, ArchiveType.UPDATED);
+    const res = await this.prisma.beneficiary.upsert({
+      where: { govtIDNumber: benef.govtIDNumber },
+      update: beneficiary,
+      create: beneficiary,
+    });
+    await this.addToGroups({
+      benefUID: res.uuid,
+      defaultGroupUID,
+      importGroupUID,
+    });
+    return res;
+  }
+
+  async upsertByUUID({ defaultGroupUID, importGroupUID, beneficiary }) {
+    if (beneficiary.birthDate) {
+      beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
+    }
+    const benef = await this.findOne(beneficiary.uuid);
+    if (benef) await this.addBeneficiaryToArchive(benef, ArchiveType.UPDATED);
+    const res = await this.prisma.beneficiary.upsert({
+      where: { uuid: beneficiary.uuid },
+      update: beneficiary,
+      create: beneficiary,
+    });
+    await this.addToGroups({
+      benefUID: res.uuid,
+      defaultGroupUID,
+      importGroupUID,
+    });
+    return res;
+  }
+
+  async addBeneficiaryToArchive(beneficiary: any, flag: ArchiveType) {
+    beneficiary.createdAt = new Date();
+    beneficiary.archiveType = flag;
+    return this.prisma.beneficiaryArchive.create({ data: beneficiary });
   }
 
   async create(dto: CreateBeneficiaryDto) {
@@ -145,18 +187,17 @@ export class BeneficiariesService {
     );
   }
 
-  async findOne(uuid: string) {
-    const findUuid = await this.prisma.beneficiary.findUnique({
+  findOne(uuid: string) {
+    return this.prisma.beneficiary.findUnique({
       where: {
         uuid,
       },
     });
+  }
 
-    if (!findUuid) throw new Error('Data not Found');
-    return await this.prisma.beneficiary.findUnique({
-      where: {
-        uuid,
-      },
+  findOneByGovtID(govtID: string) {
+    return this.prisma.beneficiary.findUnique({
+      where: { govtIDNumber: govtID },
     });
   }
 
