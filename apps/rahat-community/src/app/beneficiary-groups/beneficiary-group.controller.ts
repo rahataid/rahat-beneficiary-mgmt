@@ -55,18 +55,18 @@ export class BeneficiaryGroupController {
     return this.beneficiaryGroupService.findAll(filters);
   }
 
-  @Get(':id')
+  @Get(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.READ,
     subject: SUBJECTS.ALL,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findOne(@Param('id') id: string) {
-    return this.beneficiaryGroupService.findOne(+id);
+  findOne(@Param('uuid') uuid: string) {
+    return this.beneficiaryGroupService.findOne(uuid);
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.UPDATE,
@@ -74,20 +74,20 @@ export class BeneficiaryGroupController {
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
     @Body() updateBeneficiaryGroupDto: UpdateBeneficiaryGroupDto,
   ) {
-    return this.beneficiaryGroupService.update(+id, updateBeneficiaryGroupDto);
+    return this.beneficiaryGroupService.update(uuid, updateBeneficiaryGroupDto);
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @CheckAbilities({
     actions: ACTIONS.DELETE,
     subject: SUBJECTS.ALL,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string) {
-    return this.beneficiaryGroupService.remove(+id);
+  remove(@Param('uuid') uuid: string) {
+    return this.beneficiaryGroupService.remove(uuid);
   }
 }

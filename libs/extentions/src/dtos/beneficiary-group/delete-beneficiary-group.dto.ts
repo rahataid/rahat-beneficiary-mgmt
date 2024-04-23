@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class DeleteBeneficiaryGroupDto {
   @ApiProperty({
-    type: 'number',
-    example: '1',
-    description: 'id of beneficiary',
+    type: 'string',
+    example: '0584a396-fc5a-48ff-be62-c4d98f410cc3',
+    description: 'uuid of beneficiary',
     required: true,
   })
-  @IsNumber()
-  beneficiaryId!: number;
+  @IsString()
+  beneficiaryUID!: string;
 
   @ApiProperty({
-    type: 'number',
-    example: '1',
-    description: 'id of group',
+    type: 'string',
+    example: '0584a396-fc5a-48ff-be62-c4d98f410cd8',
+    description: 'uuid of group',
     required: true,
   })
-  @IsNumber()
-  groupId!: number;
+  @IsString()
+  groupUID!: string;
 }

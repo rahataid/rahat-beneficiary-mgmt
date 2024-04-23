@@ -13,65 +13,65 @@ import { Prisma } from '@prisma/client';
 export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateBeneficiaryGroupDto) {
-    // const groupBenefData = await this.prisma.$transaction(async (prisma) => {
-    //   const resultArray = [];
-    //   const errors = [];
-    //   for (const beneficiaryId of dto.beneficiariesId) {
-    //     const data = await prisma.beneficiaryGroup.findFirst({
-    //       where: {
-    //         beneficiaryId: beneficiaryId,
-    //         groupId: dto.groupId,
-    //       },
-    //     });
-    //     if (data) {
-    //       const beneficiaryName = await prisma.beneficiary.findUnique({
-    //         where: {
-    //           id: beneficiaryId,
-    //         },
-    //         select: {
-    //           firstName: true,
-    //           lastName: true,
-    //         },
-    //       });
-    //       errors.push(
-    //         `${beneficiaryName.firstName} ${beneficiaryName.lastName}`,
-    //       );
-    //       continue;
-    //     }
-    //     const createdBenefGroup = await prisma.beneficiaryGroup.create({
-    //       data: {
-    //         beneficiary: {
-    //           connect: {
-    //             id: beneficiaryId,
-    //           },
-    //         },
-    //         group: {
-    //           connect: {
-    //             id: dto.groupId,
-    //           },
-    //         },
-    //       },
-    //     });
-    //     resultArray.push(createdBenefGroup);
-    //   }
-    //   const errorMessage = errors.length > 0 && errors.join(',');
-    //   const groupName = await prisma.group.findUnique({
-    //     where: {
-    //       id: dto.groupId,
-    //     },
-    //     select: {
-    //       name: true,
-    //     },
-    //   });
-    //   const finalResult = {
-    //     finalMessage: `${resultArray.length} beneficiary associated with ${groupName.name}`,
-    //     info:
-    //       errors.length > 0 &&
-    //       `${errorMessage} is already associated with ${groupName.name}`,
-    //   };
-    //   return finalResult;
-    // });
-    // return groupBenefData;
+    const groupBenefData = await this.prisma.$transaction(async (prisma) => {
+      const resultArray = [];
+      const errors = [];
+      for (const beneficiaryUUID of dto.beneficiaryUID) {
+        const data = await prisma.beneficiaryGroup.findFirst({
+          where: {
+            beneficiaryUID: beneficiaryUUID,
+            groupUID: dto.groupUID,
+          },
+        });
+        if (data) {
+          const beneficiaryName = await prisma.beneficiary.findUnique({
+            where: {
+              uuid: beneficiaryUUID,
+            },
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          });
+          errors.push(
+            `${beneficiaryName.firstName} ${beneficiaryName.lastName}`,
+          );
+          continue;
+        }
+        const createdBenefGroup = await prisma.beneficiaryGroup.create({
+          data: {
+            beneficiary: {
+              connect: {
+                uuid: beneficiaryUUID,
+              },
+            },
+            group: {
+              connect: {
+                uuid: dto.groupUID,
+              },
+            },
+          },
+        });
+        resultArray.push(createdBenefGroup);
+      }
+      const errorMessage = errors.length > 0 && errors.join(',');
+      const groupName = await prisma.group.findUnique({
+        where: {
+          uuid: dto.groupUID,
+        },
+        select: {
+          name: true,
+        },
+      });
+      const finalResult = {
+        finalMessage: `${resultArray.length} beneficiary associated with ${groupName.name}`,
+        info:
+          errors.length > 0 &&
+          `${errorMessage} is already associated with ${groupName.name}`,
+      };
+      return finalResult;
+    });
+    return groupBenefData;
   }
 
   async findAll(filters: any) {
@@ -87,14 +87,15 @@ export class BeneficiaryGroupService {
     );
   }
 
-  async findOne(id: number) {
-    await this.prisma.beneficiaryGroup.findUnique({
+  async findOne(uuid: string) {
+    return await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
       select: {
         beneficiary: {
           select: {
+            uuid: true,
             firstName: true,
             lastName: true,
             email: true,
@@ -106,6 +107,7 @@ export class BeneficiaryGroupService {
         },
         group: {
           select: {
+            uuid: true,
             name: true,
           },
         },
@@ -113,18 +115,17 @@ export class BeneficiaryGroupService {
     });
   }
 
-  // FIx with UUID
-  async update(id: number, dto: UpdateBeneficiaryGroupDto) {
-    await this.prisma.beneficiaryGroup.update({
-      where: { id },
+  async update(uuid: string, dto: UpdateBeneficiaryGroupDto) {
+    return await this.prisma.beneficiaryGroup.update({
+      where: { uuid },
       data: {},
     });
   }
 
-  async remove(id: number) {
+  async remove(uuid: string) {
     const findBenefGroup = await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
     });
 
@@ -139,7 +140,7 @@ export class BeneficiaryGroupService {
 
     return await this.prisma.beneficiaryGroup.delete({
       where: {
-        id,
+        uuid,
       },
     });
   }

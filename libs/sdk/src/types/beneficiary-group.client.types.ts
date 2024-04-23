@@ -14,24 +14,24 @@ export type BeneficiaryGroupClient = {
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup[]>>;
 
-  listById: (
-    id: string,
+  listByUUID: (
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 
   update: (
     {
-      id,
+      uuid,
       data,
     }: {
-      id: string;
+      uuid: string;
       data: BeneficiaryGroup;
     },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 
   remove: (
-    id: string,
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 };

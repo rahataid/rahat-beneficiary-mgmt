@@ -144,7 +144,8 @@ export class BeneficiariesService {
     if (!walletAddress) {
       dto.walletAddress = generateRandomWallet().address;
     }
-    if (extras) {
+
+    if (Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
       const nonMatching = validateAllowedFieldAndTypes(extras, fields);
