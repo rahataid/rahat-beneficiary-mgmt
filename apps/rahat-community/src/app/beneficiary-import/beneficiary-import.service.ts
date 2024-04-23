@@ -73,6 +73,7 @@ export class BeneficiaryImportService {
       this.createDefaultAndImportGroup() as any;
 
     const { importField } = source;
+    console.log({ importField });
     // Import by UUID
     if (importField === ImportField.UUID) {
       for (let p of final_payload) {
