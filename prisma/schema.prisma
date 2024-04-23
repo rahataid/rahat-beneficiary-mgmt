@@ -11,7 +11,7 @@ datasource db {
 }
 
 model BeneficiaryArchive {
-  id           Int    @id @default(autoincrement()) @db.Integer()
+  id           Int    @db.Integer()
   uuid         String @unique @default(uuid()) @db.Uuid()
   firstName    String
   lastName     String
@@ -33,6 +33,7 @@ model BeneficiaryArchive {
   extras         Json?          @db.JsonB()
 
   createdAt   DateTime
+  updatedAt   DateTime?
   deletedAt   DateTime?
   archiveType ArchiveType @default(DELETED)
 

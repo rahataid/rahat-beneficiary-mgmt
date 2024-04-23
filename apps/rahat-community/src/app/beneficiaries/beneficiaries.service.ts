@@ -23,7 +23,6 @@ import {
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
-import { existsSync } from 'fs';
 
 @Injectable()
 export class BeneficiariesService {
@@ -42,16 +41,42 @@ export class BeneficiariesService {
   }
 
   async addToGroups({ benefUID, defaultGroupUID, importGroupUID }) {
-    // Add to default group
-    await this.prisma.beneficiaryGroup.create({
-      data: {
+    await this.upsertToDefaultGroup({ defaultGroupUID, benefUID });
+    await this.upsertToImportGroup({ importGroupUID, benefUID });
+  }
+
+  upsertToDefaultGroup({ defaultGroupUID, benefUID }) {
+    return this.prisma.beneficiaryGroup.upsert({
+      where: {
+        benefGroupIdentifier: {
+          beneficiaryUID: benefUID,
+          groupUID: defaultGroupUID,
+        },
+      },
+      update: {
+        groupUID: defaultGroupUID,
+        beneficiaryUID: benefUID,
+      },
+      create: {
         groupUID: defaultGroupUID,
         beneficiaryUID: benefUID,
       },
     });
-    // Add to import_timestamp group
-    await this.prisma.beneficiaryGroup.create({
-      data: {
+  }
+
+  upsertToImportGroup({ importGroupUID, benefUID }) {
+    return this.prisma.beneficiaryGroup.upsert({
+      where: {
+        benefGroupIdentifier: {
+          beneficiaryUID: benefUID,
+          groupUID: importGroupUID,
+        },
+      },
+      update: {
+        groupUID: importGroupUID,
+        beneficiaryUID: benefUID,
+      },
+      create: {
         groupUID: importGroupUID,
         beneficiaryUID: benefUID,
       },
@@ -68,19 +93,18 @@ export class BeneficiariesService {
       beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
     }
     const exist = await this.findOneByGovtID(beneficiary.govtIDNumber);
-    console.log('Exist=>', exist);
     if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
     const res = await this.prisma.beneficiary.upsert({
       where: { govtIDNumber: beneficiary.govtIDNumber },
       update: beneficiary,
       create: beneficiary,
     });
-    console.log('RES==>', res);
-    await this.addToGroups({
-      benefUID: res.uuid,
-      defaultGroupUID,
-      importGroupUID,
-    });
+    if (!exist)
+      await this.addToGroups({
+        benefUID: res.uuid,
+        defaultGroupUID,
+        importGroupUID,
+      });
     return res;
   }
 
@@ -88,25 +112,29 @@ export class BeneficiariesService {
     if (beneficiary.birthDate) {
       beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
     }
-    const benef = await this.findOne(beneficiary.uuid);
-    if (benef) await this.addBeneficiaryToArchive(benef, ArchiveType.UPDATED);
+    const exist = await this.findOne(beneficiary.uuid);
+    if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
     const res = await this.prisma.beneficiary.upsert({
       where: { uuid: beneficiary.uuid },
       update: beneficiary,
       create: beneficiary,
     });
-    await this.addToGroups({
-      benefUID: res.uuid,
-      defaultGroupUID,
-      importGroupUID,
-    });
+    if (!exist)
+      await this.addToGroups({
+        benefUID: res.uuid,
+        defaultGroupUID,
+        importGroupUID,
+      });
     return res;
   }
 
   async addBeneficiaryToArchive(beneficiary: any, flag: ArchiveType) {
-    beneficiary.createdAt = new Date();
     beneficiary.archiveType = flag;
-    return this.prisma.beneficiaryArchive.create({ data: beneficiary });
+    return this.prisma.beneficiaryArchive.upsert({
+      where: { uuid: beneficiary.uuid },
+      update: beneficiary,
+      create: beneficiary,
+    });
   }
 
   async create(dto: CreateBeneficiaryDto) {

@@ -51,6 +51,7 @@ export class SourceService {
         uuid: uuid(),
       };
     });
+    console.log('Payload Before==>', payloadWithUUID);
     const extraFields = await this.listExtraFields();
     const hasUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasUUID) {
@@ -75,6 +76,7 @@ export class SourceService {
 
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
+      rest.fieldMapping.data = payloadWithUUID;
       rest.importField = hasUUID
         ? ImportField.UUID
         : ImportField.GOVT_ID_NUMBER;
