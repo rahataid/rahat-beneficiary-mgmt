@@ -7,7 +7,6 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ImportField } from 'libs/sdk/src/enums';
 
 export class CreateSourceDto {
   @ApiProperty({
@@ -32,11 +31,11 @@ export class CreateSourceDto {
   importId!: string;
 
   @ApiProperty({
-    example: ImportField.UUID,
+    example: Enums.ImportField.UUID,
   })
   @IsEnum(Enums.ImportField)
   @IsOptional()
-  importField?: ImportField;
+  importField?: Enums.ImportField;
 
   @IsOptional()
   @IsNotEmptyObject()
