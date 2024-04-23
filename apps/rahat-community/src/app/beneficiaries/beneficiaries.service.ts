@@ -18,7 +18,10 @@ import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
+import {
+  BeneficiaryEvents,
+  generateRandomWallet,
+} from '@rahataid/community-tool-sdk';
 // import { LogService } from '../auditLog/log.service';
 @Injectable()
 export class BeneficiariesService {
@@ -53,17 +56,25 @@ export class BeneficiariesService {
       delete payload.extras.rahat_uuid;
     }
 
-    return this.prisma.beneficiary.upsert({
+    if (!payload.walletAddress) {
+      payload.walletAddress = generateRandomWallet().address;
+    }
+    const rData = this.prisma.beneficiary.upsert({
       where: condition,
       update: payload,
       create: payload,
     });
+
+    return rData;
   }
 
   async create(dto: CreateBeneficiaryDto) {
-    const { birthDate, extras } = dto;
+    const { birthDate, extras, walletAddress } = dto;
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
 
+    if (!walletAddress) {
+      dto.walletAddress = generateRandomWallet().address;
+    }
     if (extras) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');

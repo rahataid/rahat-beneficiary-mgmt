@@ -20,6 +20,7 @@ import {
 } from '@rumsan/user';
 import {
   CreateGroupDto,
+  ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { Response } from 'express';
@@ -46,7 +47,7 @@ export class GroupController {
 
   @Get()
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  findAll(@Query() query: any) {
+  findAll(@Query() query: ListGroupDto) {
     return this.groupService.findAll(query);
   }
 
@@ -62,7 +63,6 @@ export class GroupController {
     return this.groupService.update(uuid, updateGroupDto);
   }
 
-
   @Delete(':uuid/:deleteBeneficiaryFlag')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
   remove(
@@ -70,6 +70,5 @@ export class GroupController {
     @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,
   ) {
     return this.groupService.remove(uuid, deleteBeneficiaryFlag);
-
   }
 }
