@@ -19,7 +19,7 @@ import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { parseIsoDateToString } from '../utils';
 import { paginate } from '../utils/paginate';
-import { ImportField } from 'libs/sdk/src/enums';
+import { Enums } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class SourceService {
@@ -75,9 +75,8 @@ export class SourceService {
 
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
-      rest.importField = hasUUID
-        ? ImportField.UUID
-        : ImportField.GOVT_ID_NUMBER;
+      rest.fieldMapping.data = payloadWithUUID;
+      rest.importField = Enums.ImportField.UUID;
       return this.createSourceAndAddToQueue(rest);
     }
   }
@@ -104,17 +103,17 @@ export class SourceService {
   }
 
   async getDuplicateCountByGovtIDNumber(payload: []) {
-    let count = 0;
-    for (let p of payload) {
-      const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-      if (keyExist) {
-        const res = await this.prisma.beneficiary.findUnique({
-          where: { govtIDNumber: p['govtIDNumber'] },
-        });
-        if (res) count++;
-      }
-    }
-    return count;
+    // let count = 0;
+    // for (let p of payload) {
+    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
+    //   if (keyExist) {
+    //     const res = await this.prisma.beneficiary.findUnique({
+    //       where: { govtIDNumber: p['govtIDNumber'] },
+    //     });
+    //     if (res) count++;
+    //   }
+    // }
+    // return count;
   }
 
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
@@ -125,15 +124,12 @@ export class SourceService {
       hasUUID,
     );
 
-    result = await this.checkDuplicateByGovtIDNumber(processedData);
+    // result = await this.checkDuplicateByGovtIDNumber(processedData);
 
-    if (hasUUID) {
-      result = await this.checkDuplicateByExternalUUID(
-        processedData,
-        EXTERNAL_UUID_FIELD,
-      );
-    }
-
+    result = await this.checkDuplicateByExternalUUID(
+      processedData,
+      EXTERNAL_UUID_FIELD,
+    );
     const duplicates = result.filter((f) => f.isDuplicate);
     const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };
@@ -165,23 +161,22 @@ export class SourceService {
   }
 
   async checkDuplicateByGovtIDNumber(data: any) {
-    const result = [];
-    for (let p of data) {
-      p.isDuplicate = false;
-      const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-
-      if (keyExist && p['govtIDNumber']) {
-        const res = await this.prisma.beneficiary.findUnique({
-          where: { govtIDNumber: p['govtIDNumber'].toString() },
-        });
-        if (res) {
-          p.isDuplicate = true;
-          result.push({ ...res, isDuplicate: true, exportOnly: true });
-        }
-      }
-      result.push(p);
-    }
-    return result;
+    // const result = [];
+    // for (let p of data) {
+    //   p.isDuplicate = false;
+    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
+    //   if (keyExist && p['govtIDNumber']) {
+    //     const res = await this.prisma.beneficiary.findUnique({
+    //       where: { govtIDNumber: p['govtIDNumber'].toString() },
+    //     });
+    //     if (res) {
+    //       p.isDuplicate = true;
+    //       result.push({ ...res, isDuplicate: true, exportOnly: true });
+    //     }
+    //   }
+    //   result.push(p);
+    // }
+    // return result;
   }
 
   async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
