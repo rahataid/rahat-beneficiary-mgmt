@@ -6,6 +6,7 @@ import { SourceService } from '../sources/source.service';
 import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
+import { ImportField } from '@prisma/client';
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -44,9 +45,10 @@ export class BeneficiaryImportService {
   // Add created benef to source, groups [default and import_timestamp]
   // Update import flag in source
   async importBySourceUUID(uuid: string) {
+    let upsertCount = 0;
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
-    if (source.isImported) return 'Already imported!';
+    if (source.isImported) throw new Error('Beneficiaries  already imported!');
     const jsonData = source.fieldMapping as {
       data: object;
     };
@@ -56,12 +58,16 @@ export class BeneficiaryImportService {
       delete item.rawData;
       return item;
     });
-    // const final_payload = injectCustomID(customUniqueField, omitRawData);
-    let count = 0;
+
+    const { importField } = source;
+    if (importField === ImportField.UUID) {
+    }
+    if (importField === ImportField.GOVT_ID_NUMBER) {
+    }
 
     // // 5. Save Benef and source
     for (let p of final_payload) {
-      count++;
+      upsertCount++;
       const benef = await this.benefService.upsertBeneficiary(p);
       if (benef) {
         await this.benefSourceService.create({
@@ -76,7 +82,7 @@ export class BeneficiaryImportService {
     return {
       success: true,
       status: 200,
-      message: `${count} out of ${final_payload.length} Beneficiaries updated!`,
+      message: `${upsertCount} out of ${final_payload.length} Beneficiaries updated!`,
     };
   }
 

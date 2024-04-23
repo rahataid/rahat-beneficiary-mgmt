@@ -35,6 +35,7 @@ export class CreateSourceDto {
     example: ImportField.UUID,
   })
   @IsEnum(Enums.ImportField)
+  @IsOptional()
   importField?: ImportField;
 
   @IsOptional()

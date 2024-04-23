@@ -19,6 +19,7 @@ import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { parseIsoDateToString } from '../utils';
 import { paginate } from '../utils/paginate';
+import { ImportField } from 'libs/sdk/src/enums';
 
 @Injectable()
 export class SourceService {
@@ -97,7 +98,6 @@ export class SourceService {
   }
 
   async create(dto: CreateSourceDto) {
-    // let customUniqueField = '';
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
@@ -129,6 +129,9 @@ export class SourceService {
 
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
+      rest.importField = hasUUID
+        ? ImportField.UUID
+        : ImportField.GOVT_ID_NUMBER;
       return this.createSourceAndAddToQueue(rest);
     }
   }
