@@ -83,7 +83,6 @@ export class GroupService {
       {
         where: { ...conditions },
         select,
-        where,
       },
       {
         page: query.page,

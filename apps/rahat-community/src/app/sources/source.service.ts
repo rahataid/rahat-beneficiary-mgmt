@@ -29,6 +29,59 @@ export class SourceService {
     private readonly fdService: FieldDefinitionsService,
   ) {}
 
+  formatEnumFieldValues(item: any) {
+    if (item.gender) item.gender = item.gender.toUpperCase();
+    if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
+    if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
+    if (item.internetStatus)
+      item.internetStatus = item.internetStatus.toUpperCase();
+    return item;
+  }
+
+  async create(dto: CreateSourceDto) {
+    const { action, ...rest } = dto;
+    const { data } = dto.fieldMapping;
+    if (!data.length) throw new Error('No data found!');
+
+    let payloadWithUUID = data.map((d: any) => {
+      if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+      const formatted = this.formatEnumFieldValues(d);
+      return {
+        ...formatted,
+        uuid: uuid(),
+      };
+    });
+    const extraFields = await this.listExtraFields();
+    const hasUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
+    if (hasUUID) {
+      payloadWithUUID = data.map((d: any) => {
+        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
+      });
+    }
+
+    if (action === IMPORT_ACTION.VALIDATE)
+      return this.ValidateBeneficiaryImort({
+        data: payloadWithUUID,
+        extraFields,
+        hasUUID,
+      });
+
+    if (action === IMPORT_ACTION.IMPORT) {
+      const { allValidationErrors } = await validateSchemaFields(
+        payloadWithUUID,
+        extraFields,
+        hasUUID,
+      );
+
+      if (allValidationErrors.length)
+        throw new Error('Invalid data submitted!');
+      rest.importField = hasUUID
+        ? ImportField.UUID
+        : ImportField.GOVT_ID_NUMBER;
+      return this.createSourceAndAddToQueue(rest);
+    }
+  }
+
   async getMappingsByImportId(importId: string) {
     const res: any = await this.prisma.source.findUnique({
       where: { importId },
@@ -95,45 +148,6 @@ export class SourceService {
       result: finalResult,
       duplicates: dateParsedDuplicates,
     };
-  }
-
-  async create(dto: CreateSourceDto) {
-    const { action, ...rest } = dto;
-    const { data } = dto.fieldMapping;
-    if (!data.length) throw new Error('No data found!');
-
-    let payloadWithUUID = data.map((d: any) => {
-      return { ...d, uuid: uuid() };
-    });
-    const extraFields = await this.listExtraFields();
-    const hasUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
-    if (hasUUID) {
-      payloadWithUUID = data.map((d: any) => {
-        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
-      });
-    }
-
-    if (action === IMPORT_ACTION.VALIDATE)
-      return this.ValidateBeneficiaryImort({
-        data: payloadWithUUID,
-        extraFields,
-        hasUUID,
-      });
-
-    if (action === IMPORT_ACTION.IMPORT) {
-      const { allValidationErrors } = await validateSchemaFields(
-        payloadWithUUID,
-        extraFields,
-        hasUUID,
-      );
-
-      if (allValidationErrors.length)
-        throw new Error('Invalid data submitted!');
-      rest.importField = hasUUID
-        ? ImportField.UUID
-        : ImportField.GOVT_ID_NUMBER;
-      return this.createSourceAndAddToQueue(rest);
-    }
   }
 
   async createSourceAndAddToQueue(data: CreateSourceDto) {

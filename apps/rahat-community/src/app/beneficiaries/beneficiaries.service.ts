@@ -1,23 +1,16 @@
 import { Injectable } from '@nestjs/common';
 
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ImportField } from '@prisma/client';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
   ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
-import { UUID } from 'crypto';
 import { ArchiveType } from 'libs/sdk/src/enums';
 import XLSX from 'xlsx';
-import { DB_MODELS } from '../../constants';
-import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
-import { convertDateToISO } from '../utils';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
