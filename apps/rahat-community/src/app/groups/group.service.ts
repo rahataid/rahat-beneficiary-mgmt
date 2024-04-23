@@ -68,16 +68,6 @@ export class GroupService {
       },
     };
 
-    let where: any = {};
-    if (query.name) {
-      where = {
-        name: {
-          contains: query.name,
-          mode: 'insensitive',
-        },
-      };
-    }
-
     return paginate(
       this.prisma.group,
       {
