@@ -10,12 +10,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model BeneficiaryArchive {
+  id           Int    @id @default(autoincrement()) @db.Integer()
+  uuid         String @unique @default(uuid()) @db.Uuid()
+  firstName    String
+  lastName     String
+  govtIDNumber String
+
+  gender         Gender         @default(UNKNOWN)
+  birthDate      DateTime?
+  walletAddress  String?
+  phone          String?
+  email          String?
+  archived       Boolean        @default(false)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  notes          String?
+  bankedStatus   BankedStatus   @default(UNKNOWN)
+  internetStatus InternetStatus @default(UNKNOWN)
+  phoneStatus    PhoneStatus    @default(UNKNOWN)
+  extras         Json?          @db.JsonB()
+
+  createdAt   DateTime
+  deletedAt   DateTime?
+  archiveType ArchiveType @default(DELETED)
+
+  @@map("tbl_archive_beneficiaries")
+}
+
 model Beneficiary {
-  id        Int    @id @default(autoincrement()) @db.Integer()
-  uuid      String @unique @default(uuid()) @db.Uuid()
-  customId  String @unique
-  firstName String
-  lastName  String
+  id           Int    @id @default(autoincrement()) @db.Integer()
+  uuid         String @unique @default(uuid()) @db.Uuid()
+  // customId  String @unique
+  firstName    String
+  lastName     String
+  govtIDNumber String @unique
 
   gender        Gender    @default(UNKNOWN)
   birthDate     DateTime?
@@ -23,10 +53,9 @@ model Beneficiary {
   phone         String?
   email         String?
   archived      Boolean   @default(false)
-  location     String?
-  latitude     Float?
-  longitude    Float?
-  govtIDNumber String?
+  location      String?
+  latitude      Float?
+  longitude     Float?
 
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)
@@ -44,19 +73,24 @@ model Beneficiary {
 }
 
 model Source {
-  id                Int                 @id @default(autoincrement()) @db.Integer()
-  uuid              String              @unique @default(uuid()) @db.Uuid()
-  name              String
-  importId          String              @unique
-  uniqueField       String?
-  isImported        Boolean             @default(false)
-  beneficiarySource BeneficiarySource[]
-  details           Json?               @db.JsonB()
-  fieldMapping      Json
+  id           Int         @id @default(autoincrement()) @db.Integer()
+  uuid         String      @unique @default(uuid()) @db.Uuid()
+  name         String
+  importId     String      @unique
+  importField  ImportField @default(UUID)
+  isImported   Boolean     @default(false)
+  fieldMapping Json
+
   createdAt         DateTime            @default(now())
   updatedAt         DateTime?           @updatedAt()
+  beneficiarySource BeneficiarySource[]
 
   @@map("tbl_sources")
+}
+
+enum ImportField {
+  UUID
+  GOVT_ID_NUMBER
 }
 
 model BeneficiarySource {
@@ -90,6 +124,7 @@ model Group {
   uuid               String             @unique @default(uuid()) @db.Uuid()
   name               String             @unique
   beneficiariesGroup BeneficiaryGroup[]
+  isSystem           Boolean            @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
@@ -154,6 +189,11 @@ model TargetResult {
 enum TargetQueryStatus {
   PENDING
   COMPLETED
+}
+
+enum ArchiveType {
+  DELETED
+  UPDATED
 }
 
 enum BankedStatus {

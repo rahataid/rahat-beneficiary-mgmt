@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class CreateGroupDto {
   @ApiProperty({
@@ -9,4 +9,12 @@ export class CreateGroupDto {
   })
   @IsString()
   name!: string;
+
+  @ApiProperty({
+    type: 'boolean',
+    example: false,
+    description: 'Cant delete this group if true',
+  })
+  @IsBoolean()
+  isSystem?: boolean;
 }

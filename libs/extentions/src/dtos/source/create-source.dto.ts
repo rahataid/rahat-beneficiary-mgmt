@@ -1,10 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Enums } from '@rahataid/community-tool-sdk';
 import {
+  IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { ImportField } from 'libs/sdk/src/enums';
 
 export class CreateSourceDto {
   @ApiProperty({
@@ -17,43 +20,24 @@ export class CreateSourceDto {
     example: 'Validate',
   })
   @IsString()
-  action!: string;
+  @IsOptional()
+  action?: string;
 
   @ApiProperty({
     example: 'Kobotool',
   })
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   importId!: string;
 
   @ApiProperty({
-    example: '101',
+    example: ImportField.UUID,
   })
-  @IsString()
-  uniqueField?: string;
-
-  @ApiProperty({
-    type: 'object',
-    example: { data: 'any' },
-  })
+  @IsEnum(Enums.ImportField)
   @IsOptional()
-  details?: any;
+  importField?: ImportField;
 
-  @ApiProperty({
-    type: 'object',
-    example: {
-      data: [
-        {
-          email: 'alice@mailinator.com',
-          phone: '5551234567',
-          gender: 'FEMALE',
-          lastName: 'Smith',
-          birthDate: '1990-05-20T00:00:00.000Z',
-          firstName: 'Alice',
-        },
-      ],
-    },
-  })
   @IsOptional()
   @IsNotEmptyObject()
   fieldMapping!: any;

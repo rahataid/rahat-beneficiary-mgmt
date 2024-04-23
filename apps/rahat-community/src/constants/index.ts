@@ -57,4 +57,4 @@ export enum GenderEnum {
   OTHER = 'OTHER',
 }
 
-export const EXTERNAL_UUID_FIELD = 'rahat_uuid';
+export const EXTERNAL_UUID_FIELD = 'uuid';

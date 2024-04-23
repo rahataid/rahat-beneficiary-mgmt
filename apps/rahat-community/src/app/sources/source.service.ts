@@ -19,6 +19,7 @@ import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { parseIsoDateToString } from '../utils';
 import { paginate } from '../utils/paginate';
+import { ImportField } from 'libs/sdk/src/enums';
 
 @Injectable()
 export class SourceService {
@@ -49,13 +50,13 @@ export class SourceService {
     });
   }
 
-  async getDuplicateCountByUnqueId(customUniqueField: string, payload: []) {
+  async getDuplicateCountByGovtIDNumber(payload: []) {
     let count = 0;
     for (let p of payload) {
-      const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+      const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
       if (keyExist) {
         const res = await this.prisma.beneficiary.findUnique({
-          where: { customId: p[customUniqueField] },
+          where: { govtIDNumber: p['govtIDNumber'] },
         });
         if (res) count++;
       }
@@ -63,26 +64,17 @@ export class SourceService {
     return count;
   }
 
-  async ValidateBeneficiaryImort({
-    customUniqueField,
-    data,
-    extraFields,
-    hasRahatUUID,
-  }) {
+  async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
     let result = [] as any;
     const { allValidationErrors, processedData } = await validateSchemaFields(
-      customUniqueField,
       data,
       extraFields,
-      hasRahatUUID,
+      hasUUID,
     );
 
-    result = await this.checkDuplicateByCustomID(
-      processedData,
-      customUniqueField,
-    );
+    result = await this.checkDuplicateByGovtIDNumber(processedData);
 
-    if (hasRahatUUID) {
+    if (hasUUID) {
       result = await this.checkDuplicateByExternalUUID(
         processedData,
         EXTERNAL_UUID_FIELD,
@@ -106,9 +98,7 @@ export class SourceService {
   }
 
   async create(dto: CreateSourceDto) {
-    let customUniqueField = '';
     const { action, ...rest } = dto;
-    if (rest.uniqueField) customUniqueField = rest.uniqueField;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
 
@@ -116,37 +106,37 @@ export class SourceService {
       return { ...d, uuid: uuid() };
     });
     const extraFields = await this.listExtraFields();
-    const hasRahatUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
-    if (hasRahatUUID) {
-      customUniqueField = '';
+    const hasUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
+    if (hasUUID) {
       payloadWithUUID = data.map((d: any) => {
-        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] }; // attach rahat_uuid
+        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
       });
     }
 
     if (action === IMPORT_ACTION.VALIDATE)
       return this.ValidateBeneficiaryImort({
-        customUniqueField,
         data: payloadWithUUID,
         extraFields,
-        hasRahatUUID,
+        hasUUID,
       });
 
     if (action === IMPORT_ACTION.IMPORT) {
       const { allValidationErrors } = await validateSchemaFields(
-        customUniqueField,
         payloadWithUUID,
         extraFields,
-        hasRahatUUID,
+        hasUUID,
       );
 
       if (allValidationErrors.length)
         throw new Error('Invalid data submitted!');
+      rest.importField = hasUUID
+        ? ImportField.UUID
+        : ImportField.GOVT_ID_NUMBER;
       return this.createSourceAndAddToQueue(rest);
     }
   }
 
-  async createSourceAndAddToQueue(data: any) {
+  async createSourceAndAddToQueue(data: CreateSourceDto) {
     const row = await this.prisma.source.upsert({
       where: { importId: data.importId },
       update: { ...data, isImported: false },
@@ -160,15 +150,15 @@ export class SourceService {
     return { message: 'Source created and added to queue' };
   }
 
-  async checkDuplicateByCustomID(data: any, customUniqueField: string) {
+  async checkDuplicateByGovtIDNumber(data: any) {
     const result = [];
     for (let p of data) {
       p.isDuplicate = false;
-      const keyExist = Object.hasOwnProperty.call(p, customUniqueField);
+      const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
 
-      if (keyExist && p[customUniqueField]) {
+      if (keyExist && p['govtIDNumber']) {
         const res = await this.prisma.beneficiary.findUnique({
-          where: { customId: p[customUniqueField].toString() },
+          where: { govtIDNumber: p['govtIDNumber'].toString() },
         });
         if (res) {
           p.isDuplicate = true;
@@ -196,7 +186,7 @@ export class SourceService {
           p.isDuplicate = true;
           result.push({
             ...res,
-            rahat_uuid,
+            uuid: rahat_uuid,
             isDuplicate: true,
             exportOnly: true,
           });

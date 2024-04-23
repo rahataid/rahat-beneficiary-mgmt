@@ -3,7 +3,6 @@ import { BankedStatus, Gender, InternetStatus, PhoneStatus } from '../enums';
 export type Beneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;
@@ -34,7 +33,6 @@ export type ImportBeneficiary = {
 export type UpdateBeneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;
@@ -59,7 +57,6 @@ export type UpdateBeneficiary = {
 export type ListBeneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;

@@ -14,15 +14,24 @@ import { Response } from 'express';
 export class GroupService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateGroupDto) {
-    const check = await this.prisma.group.findUnique({
+    const exist = await this.findOneByName(dto.name);
+    if (exist) throw new Error('Group alread exist!');
+    return await this.prisma.group.create({
+      data: dto,
+    });
+  }
+
+  findOneByName(name: string) {
+    return this.prisma.group.findUnique({ where: { name } });
+  }
+
+  upsertByName(dto: CreateGroupDto) {
+    return this.prisma.group.upsert({
       where: {
         name: dto.name,
       },
-    });
-
-    if (check) throw new Error('Already inserted');
-    return await this.prisma.group.create({
-      data: dto,
+      update: dto,
+      create: dto,
     });
   }
 
