@@ -37,6 +37,12 @@ export class BeneficiaryImportService {
     return modifiedData;
   }
 
+  // Import by UUID or GOVTID
+  // Check if each data exists in the DB
+  // If Exist? add to the archive table with flag "UPDATED"
+  // Upsert via UUID or GOVTID benef to BENEFICIARY table
+  // Add created benef to source, groups [default and import_timestamp]
+  // Update import flag in source
   async importBySourceUUID(uuid: string) {
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');

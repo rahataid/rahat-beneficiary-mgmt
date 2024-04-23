@@ -12,7 +12,7 @@ import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
-  GOVT_ID_NUMBER: 'govtIdNumber',
+  GOVT_ID_NUMBER: 'govtIDNumber',
 };
 
 export const PRISMA_FIELD_TYPES = {

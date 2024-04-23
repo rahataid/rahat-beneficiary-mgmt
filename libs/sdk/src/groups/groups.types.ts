@@ -2,10 +2,12 @@ import { Beneficiary } from '../beneficiary';
 
 export type GroupInput = {
   name: string;
+  isSystem: boolean;
 };
 
 export type ListGroup = {
   name: string;
+  isSystem: boolean;
   uuid: string;
   id: number;
   beneficiariesGroup: [
@@ -16,6 +18,7 @@ export type ListGroup = {
 };
 export type GroupResponse = {
   uuid: string;
+  isSystem: boolean;
   id: number;
   name: string;
   createdAt: Date;
