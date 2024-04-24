@@ -281,43 +281,44 @@ export class BeneficiariesService {
   }
 
   async remove(uuid: string, userUUID: string) {
-    const getInfo = await this.prisma.beneficiary.findUnique({
+    const benef = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
       },
       select: {
         beneficiariesGroup: {
           select: {
-            uuid: true,
+            beneficiaryUID: true,
           },
         },
       },
     });
 
-    if (!getInfo) throw new Error('Not Found');
-
+    if (!benef) throw new Error('Beneficiary not found!');
+    // 1. Archive the beneficiary
     const rData = await this.update(uuid, { archived: true });
-
     const logData: any = {
       userUUID: userUUID,
       action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
       data: rData,
     };
 
-    // create entry in logs table when archived
-    await this.createLog(logData);
-
-    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
-
-    if (getInfo?.beneficiariesGroup?.length > 0) {
-      // remove beneficiary from all the groups
-      for (const item of getInfo.beneficiariesGroup) {
+    if (benef?.beneficiariesGroup?.length > 0) {
+      for (const item of benef.beneficiariesGroup) {
+        // 2. Remove beneficiary from all the groups
         await this.beneficiaryGroupService.removeBeneficiaryFromGroup(
-          item.uuid,
+          item.beneficiaryUID,
         );
+        // 3. Remove all the sources
+        await this.prisma.beneficiarySource.deleteMany({
+          where: { beneficiaryUID: item.beneficiaryUID },
+        });
       }
     }
 
+    // 3. Create log
+    await this.createLog(logData);
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
     return rData;
   }
 
