@@ -1,15 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
-
-export enum FieldTypeEnum {
-  Checkbox = 'CHECKBOX',
-  Dropdown = 'DROPDOWN',
-  Number = 'NUMBER',
-  Password = 'PASSWORD',
-  Radio = 'RADIO',
-  Text = 'TEXT',
-  Textarea = 'TEXTAREA',
-}
+import { Enums } from '@rahataid/community-tool-sdk';
 
 export class CreateFieldDefinitionDto {
   @ApiProperty({
@@ -28,7 +19,7 @@ export class CreateFieldDefinitionDto {
   })
   @IsString()
   @IsNotEmpty()
-  fieldType!: FieldTypeEnum;
+  fieldType!: Enums.FieldTypeEnum;
 
   @ApiProperty({
     type: 'boolean',
@@ -48,8 +39,8 @@ export class CreateFieldDefinitionDto {
     type: 'object',
     example: {
       data: [
-        { key: 'yes', value: 'Yes' },
-        { key: 'no', value: 'No' },
+        { label: 'yes', value: 'Yes' },
+        { label: 'no', value: 'No' },
       ],
     },
   })

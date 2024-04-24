@@ -5,6 +5,17 @@ export enum Gender {
   UKNOWN = 'UNKNOWN',
 }
 
+export enum FieldTypeEnum {
+  CHECKBOX = 'CHECKBOX',
+  DROPDOWN = 'DROPDOWN',
+  NUMBER = 'NUMBER',
+  PASSWORD = 'PASSWORD',
+  RADIO = 'RADIO',
+  TEXT = 'TEXT',
+  TEXTAREA = 'TEXTAREA',
+  DATE = 'DATE',
+}
+
 export enum ImportField {
   UUID = 'UUID',
   GOVT_ID_NUMBER = 'GOVT_ID_NUMBER',
