@@ -13,6 +13,7 @@ import { StatsService } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
 import { GroupService } from '../groups/group.service';
 import { EmailService } from './mail.service';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { EmailService } from './mail.service';
     StatsService,
     BeneficiaryStatService,
     GroupService,
+    BeneficiaryGroupService,
   ],
 })
 export class ListenersModule {}

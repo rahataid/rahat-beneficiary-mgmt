@@ -26,5 +26,6 @@ import { BeneficiaryStatService } from './beneficiaryStats.service';
     BeneficiaryStatService,
     // LogService,
   ],
+  exports: [BeneficiariesService],
 })
 export class BeneficiariesModule {}

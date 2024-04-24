@@ -9,10 +9,18 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { generateExcelData } from '../utils/export-to-excel';
 import { Response } from 'express';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 
 @Injectable()
 export class GroupService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private beneficaryGroup: BeneficiaryGroupService,
+    private beneficaryService: BeneficiariesService,
+    private beneficarySourceService: BeneficiarySourceService,
+  ) {}
   async create(dto: CreateGroupDto) {
     const exist = await this.findOneByName(dto.name);
     if (exist) throw new Error('Group alread exist!');
@@ -67,16 +75,6 @@ export class GroupService {
         },
       },
     };
-
-    let where: any = {};
-    if (query.name) {
-      where = {
-        name: {
-          contains: query.name,
-          mode: 'insensitive',
-        },
-      };
-    }
 
     return paginate(
       this.prisma.group,
@@ -138,22 +136,12 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
           // first delete from the combine table (tbl_beneficiary_groups)
-
-          await prisma.beneficiaryGroup.deleteMany({
-            where: {
-              uuid: item.uuid,
-            },
-          });
+          await this.beneficaryGroup.removeBeneficiaryFromGroup(item.uuid);
 
           if (deleteBeneficiaryFlag) {
             // archive beneficiary from the beneficiary table (tbl_beneficiaries)
-            await prisma.beneficiary.update({
-              where: {
-                uuid: item.beneficiaryUID,
-              },
-              data: {
-                archived: true,
-              },
+            await this.beneficaryService.update(item.beneficiaryUID, {
+              archived: true,
             });
           }
         }
@@ -174,6 +162,12 @@ export class GroupService {
       'attachment; filename=beneficiaries.xlsx',
     );
     return res.send(excelBuffer);
+  }
+
+  async archiveDeletedBeneficiary(deletedBeneficiaryData) {
+    await this.prisma.beneficiaryArchive.create({
+      data: deletedBeneficiaryData,
+    });
   }
 
   async purgeGroup(uuid: string) {
@@ -200,31 +194,19 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
           // first delete from the combine table (tbl_beneficiary_groups)
-
-          await prisma.beneficiaryGroup.deleteMany({
-            where: {
-              uuid: item.uuid,
-            },
-          });
+          await this.beneficaryGroup.removeBeneficiaryFromGroup(item.uuid);
 
           // delete beneficiary from the beneficiary source (tbl_beneficiary_source)
-          await prisma.beneficiarySource.deleteMany({
-            where: {
-              beneficiaryUID: item.beneficiaryUID,
-            },
-          });
+          await this.beneficarySourceService.removeBeneficiaryFromSource(
+            item.beneficiaryUID,
+          );
 
           // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-          const deletedBeneficiaryData = await prisma.beneficiary.delete({
-            where: {
-              uuid: item.beneficiaryUID,
-            },
-          });
+          const deletedBeneficiaryData =
+            await this.beneficaryService.deletePermanently(item.beneficiaryUID);
 
           // add to archive beneficiary table (tbl_archive_beneficiaries)
-          await prisma.beneficiaryArchive.create({
-            data: deletedBeneficiaryData,
-          });
+          await this.archiveDeletedBeneficiary(deletedBeneficiaryData);
         }
       });
     }
