@@ -177,6 +177,7 @@ export class GroupService {
         uuid,
       },
       select: {
+        isSystem: true,
         beneficiariesGroup: {
           select: {
             id: true,
@@ -189,6 +190,8 @@ export class GroupService {
     });
 
     if (!getInfo) throw new Error('Not Found');
+
+    if (getInfo.isSystem) throw new Error('Group cannot be purged');
 
     if (getInfo?.beneficiariesGroup?.length > 0) {
       await this.prisma.$transaction(async (prisma) => {
