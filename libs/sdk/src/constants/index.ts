@@ -45,6 +45,7 @@ export const APP = {
 
 export const FIELD_DEF_TYPES = {
   TEXT: 'TEXT',
+  DATE: 'DATE',
   NUMBER: 'NUMBER',
   TEXTAREA: 'TEXTAREA',
   RADIO: 'RADIO',

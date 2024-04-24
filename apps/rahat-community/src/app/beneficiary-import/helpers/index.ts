@@ -117,6 +117,8 @@ function validateValueByType({ value, type, fieldName, extraFields }) {
       return checkIfPopulateValuesMatch(fieldName, value, extraFields);
     case FIELD_DEF_TYPES.CHECKBOX:
       return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.DATE:
+      return isValidDateFormat(value);
     default:
       return true;
   }
@@ -301,3 +303,39 @@ const ENUM_MAPPING = {
   ],
   bankedStatus: ['UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED'],
 };
+
+function isValidDateFormat(dateString: string) {
+  // Regular expression to match the YYYY-MM-DD format
+  var dateFormat = /^\d{4}-\d{2}-\d{2}$/;
+
+  // Check if the string matches the desired format
+  if (!dateFormat.test(dateString)) {
+    return false;
+  }
+
+  // Further validation for the date parts
+  var parts = dateString.split('-');
+  var year = parseInt(parts[0]);
+  var month = parseInt(parts[1]);
+  var day = parseInt(parts[2]);
+
+  // Check if month and day values are within valid ranges
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return false;
+  }
+
+  // Check for specific cases like February with 30 or 31 days
+  if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) {
+    return false;
+  }
+
+  if (month == 2) {
+    var isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    if ((isLeapYear && day > 29) || (!isLeapYear && day > 28)) {
+      return false;
+    }
+  }
+
+  // If all validations pass, return true
+  return true;
+}
