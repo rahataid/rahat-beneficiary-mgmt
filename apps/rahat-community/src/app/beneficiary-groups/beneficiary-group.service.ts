@@ -146,9 +146,9 @@ export class BeneficiaryGroupService {
   }
 
   async removeBeneficiaryFromGroup(uuid: string) {
-    await this.prisma.beneficiaryGroup.deleteMany({
+    return this.prisma.beneficiaryGroup.deleteMany({
       where: {
-        uuid,
+        beneficiaryUID: uuid,
       },
     });
   }

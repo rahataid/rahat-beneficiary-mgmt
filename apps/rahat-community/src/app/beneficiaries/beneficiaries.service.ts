@@ -322,22 +322,12 @@ export class BeneficiariesService {
   }
 
   async deletePermanently(uuid: string) {
-    const findUuid = await this.prisma.beneficiary.findUnique({
-      where: {
-        uuid,
-      },
-    });
-
-    if (!findUuid) throw new Error('Not Found');
-
     const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
-
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
-
     return rData;
   }
 

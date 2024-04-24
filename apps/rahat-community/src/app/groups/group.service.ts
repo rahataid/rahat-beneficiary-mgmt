@@ -12,6 +12,7 @@ import { Response } from 'express';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { ArchiveType } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class GroupService {
@@ -101,6 +102,26 @@ export class GroupService {
           },
         },
         name: true,
+        isSystem: true,
+      },
+    });
+  }
+
+  findUnique(uuid: string) {
+    return this.prisma.group.findUnique({
+      where: {
+        uuid,
+      },
+      select: {
+        beneficiariesGroup: {
+          select: {
+            uuid: true,
+            groupUID: true,
+            beneficiaryUID: true,
+          },
+        },
+        isSystem: true,
+        name: true,
       },
     });
   }
@@ -116,22 +137,7 @@ export class GroupService {
 
   async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
     // get relevant informationn from the group table
-    const getInfo = await this.prisma.group.findUnique({
-      where: {
-        uuid,
-      },
-      select: {
-        beneficiariesGroup: {
-          select: {
-            id: true,
-            uuid: true,
-            groupUID: true,
-            beneficiaryUID: true,
-          },
-        },
-      },
-    });
-
+    const getInfo = await this.findUnique(uuid);
     if (getInfo?.beneficiariesGroup?.length > 0) {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
@@ -147,8 +153,7 @@ export class GroupService {
         }
       });
     }
-
-    return 'Beneficiaries and their associations were successfully removed from the group.';
+    return 'Group and beneficiar deleted permanently!';
   }
 
   downloadData(data: any[], res: Response) {
@@ -164,52 +169,42 @@ export class GroupService {
     return res.send(excelBuffer);
   }
 
-  async archiveDeletedBeneficiary(deletedBeneficiaryData) {
-    await this.prisma.beneficiaryArchive.create({
-      data: deletedBeneficiaryData,
+  async archiveDeletedBeneficiary(beneficiary: any, flag: string) {
+    beneficiary.archiveType = flag;
+    return this.prisma.beneficiaryArchive.upsert({
+      where: { uuid: beneficiary.uuid },
+      update: beneficiary,
+      create: beneficiary,
     });
   }
 
   async purgeGroup(uuid: string) {
-    // get relevant informationn from the group table
-    const getInfo = await this.prisma.group.findUnique({
-      where: {
-        uuid,
-      },
-      select: {
-        isSystem: true,
-        beneficiariesGroup: {
-          select: {
-            id: true,
-            uuid: true,
-            groupUID: true,
-            beneficiaryUID: true,
-          },
-        },
-      },
-    });
+    const group = await this.findUnique(uuid);
+    if (!group) throw new Error('Group not found');
+    if (group.isSystem) throw new Error('System group cannot be purged!');
 
-    if (!getInfo) throw new Error('Not Found');
-
-    if (getInfo.isSystem) throw new Error('This Group cannot be purged');
-
-    if (getInfo?.beneficiariesGroup?.length > 0) {
+    if (group?.beneficiariesGroup?.length > 0) {
       await this.prisma.$transaction(async (prisma) => {
-        for (const item of getInfo.beneficiariesGroup) {
-          // first delete from the combine table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBeneficiaryFromGroup(item.uuid);
+        for (const item of group.beneficiariesGroup) {
+          // Delete benef from the group table (tbl_beneficiary_groups)
+          await this.beneficaryGroup.removeBeneficiaryFromGroup(
+            item.beneficiaryUID,
+          );
 
-          // delete beneficiary from the beneficiary source (tbl_beneficiary_source)
+          // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
           await this.beneficarySourceService.removeBeneficiaryFromSource(
             item.beneficiaryUID,
           );
 
           // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-          const deletedBeneficiaryData =
+          const deletedBeneficiary =
             await this.beneficaryService.deletePermanently(item.beneficiaryUID);
 
           // add to archive beneficiary table (tbl_archive_beneficiaries)
-          await this.archiveDeletedBeneficiary(deletedBeneficiaryData);
+          await this.archiveDeletedBeneficiary(
+            deletedBeneficiary,
+            ArchiveType.DELETED,
+          );
         }
       });
     }
