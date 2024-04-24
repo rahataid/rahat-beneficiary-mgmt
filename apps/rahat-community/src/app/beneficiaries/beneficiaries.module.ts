@@ -7,6 +7,7 @@ import { BullModule } from '@nestjs/bull';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { StatsModule } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
+import { BeneficiaryGroupModule } from '../beneficiary-groups/beneficiary-group.module';
 // import { LogModule } from '../auditLog/log.module';
 // import { LogService } from '../auditLog/log.service';
 
@@ -16,6 +17,7 @@ import { BeneficiaryStatService } from './beneficiaryStats.service';
       name: BQUEUE.COMMUNITY_BENEFICIARY,
     }),
     StatsModule,
+    BeneficiaryGroupModule,
     // LogModule,
   ],
   controllers: [BeneficiariesController],
