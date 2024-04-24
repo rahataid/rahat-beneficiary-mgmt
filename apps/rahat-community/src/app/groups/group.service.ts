@@ -141,11 +141,13 @@ export class GroupService {
     if (getInfo?.beneficiariesGroup?.length > 0) {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of getInfo.beneficiariesGroup) {
-          // first delete from the combine table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBeneficiaryFromGroup(item.uuid);
+          // Delete from the group table (tbl_beneficiary_groups)
+          await this.beneficaryGroup.removeBeneficiaryFromGroup(
+            item.beneficiaryUID,
+          );
 
           if (deleteBeneficiaryFlag) {
-            // archive beneficiary from the beneficiary table (tbl_beneficiaries)
+            // Update archive flag of beneficiary from tbl_beneficiaries
             await this.beneficaryService.update(item.beneficiaryUID, {
               archived: true,
             });
@@ -153,7 +155,7 @@ export class GroupService {
         }
       });
     }
-    return 'Group and beneficiar deleted permanently!';
+    return 'Beneficiary removed successfully!';
   }
 
   downloadData(data: any[], res: Response) {

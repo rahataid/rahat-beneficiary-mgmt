@@ -145,10 +145,10 @@ export class BeneficiaryGroupService {
     });
   }
 
-  async removeBeneficiaryFromGroup(uuid: string) {
+  async removeBeneficiaryFromGroup(benefUID: string) {
     return this.prisma.beneficiaryGroup.deleteMany({
       where: {
-        beneficiaryUID: uuid,
+        beneficiaryUID: benefUID,
       },
     });
   }
