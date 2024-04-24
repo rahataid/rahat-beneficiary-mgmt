@@ -6,5 +6,6 @@ import { PrismaService } from '@rumsan/prisma';
 @Module({
   controllers: [BeneficiaryGroupController],
   providers: [BeneficiaryGroupService, PrismaService],
+  exports: [BeneficiaryGroupService],
 })
 export class BeneficiaryGroupModule {}

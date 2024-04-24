@@ -10,6 +10,7 @@ import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { GroupService } from '../groups/group.service';
     PrismaService,
     SourceService,
     GroupService,
+    BeneficiaryGroupService,
   ],
 })
 export class BeneficiaryImportModule {}

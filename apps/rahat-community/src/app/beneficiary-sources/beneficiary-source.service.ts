@@ -82,6 +82,14 @@ export class BeneficiarySourceService {
     });
   }
 
+  async removeBeneficiaryFromSource(beneficiaryUID: string) {
+    await this.prisma.beneficiarySource.deleteMany({
+      where: {
+        beneficiaryUID,
+      },
+    });
+  }
+
   async remove(id: string) {
     return await this.prisma.beneficiarySource.delete({
       where: {

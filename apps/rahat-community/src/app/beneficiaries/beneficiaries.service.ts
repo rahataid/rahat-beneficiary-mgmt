@@ -19,6 +19,7 @@ import { DB_MODELS } from '../../constants';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import {
   BeneficiaryEvents,
   generateRandomWallet,
@@ -30,6 +31,7 @@ export class BeneficiariesService {
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
     private eventEmitter: EventEmitter2,
+    private beneficiaryGroupService: BeneficiaryGroupService,
   ) {}
 
   async fetchDBFields() {
@@ -279,6 +281,47 @@ export class BeneficiariesService {
   }
 
   async remove(uuid: string, userUUID: string) {
+    const getInfo = await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+      select: {
+        beneficiariesGroup: {
+          select: {
+            uuid: true,
+          },
+        },
+      },
+    });
+
+    if (!getInfo) throw new Error('Not Found');
+
+    const rData = await this.update(uuid, { archived: true });
+
+    const logData: any = {
+      userUUID: userUUID,
+      action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
+      data: rData,
+    };
+
+    // create entry in logs table when archived
+    await this.createLog(logData);
+
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+
+    if (getInfo?.beneficiariesGroup?.length > 0) {
+      // remove beneficiary from all the groups
+      for (const item of getInfo.beneficiariesGroup) {
+        await this.beneficiaryGroupService.removeBeneficiaryFromGroup(
+          item.uuid,
+        );
+      }
+    }
+
+    return rData;
+  }
+
+  async deletePermanently(uuid: string) {
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
@@ -287,24 +330,12 @@ export class BeneficiariesService {
 
     if (!findUuid) throw new Error('Not Found');
 
-    const rData = await this.prisma.beneficiary.update({
+    const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
-      data: {
-        archived: true,
-      },
     });
 
-    const logData: any = {
-      userUUID: userUUID,
-      action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
-      data: rData,
-    };
-
-    await this.createLog(logData);
-
-    // await this.logService.addLog(logData);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
 
     return rData;
