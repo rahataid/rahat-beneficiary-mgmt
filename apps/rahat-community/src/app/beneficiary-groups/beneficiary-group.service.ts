@@ -153,4 +153,12 @@ export class BeneficiaryGroupService {
       },
     });
   }
+
+  async removeBenefFromMultipleGroups(benefUID: string) {
+    return this.prisma.beneficiaryGroup.deleteMany({
+      where: {
+        beneficiaryUID: benefUID,
+      },
+    });
+  }
 }

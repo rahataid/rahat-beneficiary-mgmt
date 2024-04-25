@@ -191,9 +191,8 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of group.beneficiariesGroup) {
           // Delete benef from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBeneficiaryFromGroup(
+          await this.beneficaryGroup.removeBenefFromMultipleGroups(
             item.beneficiaryUID,
-            group.uuid,
           );
 
           // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
