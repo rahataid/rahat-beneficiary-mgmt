@@ -24,6 +24,7 @@ import {
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
+import { it } from 'node:test';
 
 @Injectable()
 export class BeneficiariesService {
@@ -121,12 +122,11 @@ export class BeneficiariesService {
       update: beneficiary,
       create: beneficiary,
     });
-    if (!exist)
-      await this.addToGroups({
-        benefUID: res.uuid,
-        defaultGroupUID,
-        importGroupUID,
-      });
+    await this.addToGroups({
+      benefUID: res.uuid,
+      defaultGroupUID,
+      importGroupUID,
+    });
     return res;
   }
 
@@ -289,6 +289,7 @@ export class BeneficiariesService {
         beneficiariesGroup: {
           select: {
             beneficiaryUID: true,
+            groupUID: true,
           },
         },
       },
@@ -308,6 +309,7 @@ export class BeneficiariesService {
         // 2. Remove beneficiary from all the groups
         await this.beneficiaryGroupService.removeBeneficiaryFromGroup(
           item.beneficiaryUID,
+          item.groupUID,
         );
         // 3. Remove all the sources
         await this.prisma.beneficiarySource.deleteMany({

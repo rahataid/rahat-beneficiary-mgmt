@@ -120,6 +120,7 @@ export class GroupService {
             beneficiaryUID: true,
           },
         },
+        uuid: true,
         isSystem: true,
         name: true,
       },
@@ -137,13 +138,14 @@ export class GroupService {
 
   async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
     // get relevant informationn from the group table
-    const getInfo = await this.findUnique(uuid);
-    if (getInfo?.beneficiariesGroup?.length > 0) {
+    const group = await this.findUnique(uuid);
+    if (group?.beneficiariesGroup?.length > 0) {
       await this.prisma.$transaction(async (prisma) => {
-        for (const item of getInfo.beneficiariesGroup) {
+        for (const item of group.beneficiariesGroup) {
           // Delete from the group table (tbl_beneficiary_groups)
           await this.beneficaryGroup.removeBeneficiaryFromGroup(
             item.beneficiaryUID,
+            group.uuid,
           );
 
           if (deleteBeneficiaryFlag) {
@@ -191,6 +193,7 @@ export class GroupService {
           // Delete benef from the group table (tbl_beneficiary_groups)
           await this.beneficaryGroup.removeBeneficiaryFromGroup(
             item.beneficiaryUID,
+            group.uuid,
           );
 
           // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
