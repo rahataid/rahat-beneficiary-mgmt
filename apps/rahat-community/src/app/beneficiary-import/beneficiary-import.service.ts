@@ -8,6 +8,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
 import { PrismaService } from '@rumsan/prisma';
+import { formatDateAndTime } from '../utils';
 
 const { ImportField } = Enums;
 
@@ -49,7 +50,7 @@ export class BeneficiaryImportService {
       isSystem: true,
     });
     const importGroup = await this.groupService.upsertByName({
-      name: `import_${new Date().getTime()}`,
+      name: `import_${formatDateAndTime(new Date())}`,
     });
     return {
       defaultGroupUID: defaultGroup.uuid,
