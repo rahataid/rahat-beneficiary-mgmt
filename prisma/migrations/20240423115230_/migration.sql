@@ -1,5 +1,11 @@
 -- CreateEnum
+CREATE TYPE "ImportField" AS ENUM ('UUID', 'GOVT_ID_NUMBER');
+
+-- CreateEnum
 CREATE TYPE "TargetQueryStatus" AS ENUM ('PENDING', 'COMPLETED');
+
+-- CreateEnum
+CREATE TYPE "ArchiveType" AS ENUM ('DELETED', 'UPDATED');
 
 -- CreateEnum
 CREATE TYPE "BankedStatus" AS ENUM ('UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED');
@@ -29,24 +35,48 @@ CREATE TYPE "SignupStatus" AS ENUM ('PENDING', 'APPROVED', 'FAILED', 'REJECTED')
 CREATE TYPE "SettingDataType" AS ENUM ('STRING', 'NUMBER', 'BOOLEAN', 'OBJECT');
 
 -- CreateTable
-CREATE TABLE "tbl_beneficiaries" (
-    "id" SERIAL NOT NULL,
+CREATE TABLE "tbl_archive_beneficiaries" (
+    "id" INTEGER NOT NULL,
     "uuid" UUID NOT NULL,
-    "customId" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
+    "govtIDNumber" TEXT NOT NULL,
     "gender" "Gender" NOT NULL DEFAULT 'UNKNOWN',
     "birthDate" TIMESTAMP(3),
     "walletAddress" TEXT,
     "phone" TEXT,
     "email" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
     "location" TEXT,
     "latitude" DOUBLE PRECISION,
     "longitude" DOUBLE PRECISION,
-    "isVulnerable" BOOLEAN NOT NULL DEFAULT false,
-    "govtIDType" TEXT,
+    "notes" TEXT,
+    "bankedStatus" "BankedStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "internetStatus" "InternetStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "phoneStatus" "PhoneStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "extras" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3),
+    "deletedAt" TIMESTAMP(3),
+    "archiveType" "ArchiveType" NOT NULL DEFAULT 'DELETED'
+);
+
+-- CreateTable
+CREATE TABLE "tbl_beneficiaries" (
+    "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
     "govtIDNumber" TEXT,
-    "govtIDPhoto" TEXT,
+    "gender" "Gender" NOT NULL DEFAULT 'UNKNOWN',
+    "birthDate" TIMESTAMP(3),
+    "walletAddress" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
+    "location" TEXT,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
     "notes" TEXT,
     "bankedStatus" "BankedStatus" NOT NULL DEFAULT 'UNKNOWN',
     "internetStatus" "InternetStatus" NOT NULL DEFAULT 'UNKNOWN',
@@ -64,9 +94,8 @@ CREATE TABLE "tbl_sources" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "importId" TEXT NOT NULL,
-    "uniqueField" TEXT,
+    "importField" "ImportField" NOT NULL DEFAULT 'UUID',
     "isImported" BOOLEAN NOT NULL DEFAULT false,
-    "details" JSONB,
     "fieldMapping" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -77,8 +106,9 @@ CREATE TABLE "tbl_sources" (
 -- CreateTable
 CREATE TABLE "tbl_beneficiary_sources" (
     "id" SERIAL NOT NULL,
-    "sourceId" INTEGER NOT NULL,
-    "beneficiaryId" INTEGER NOT NULL,
+    "uuid" UUID NOT NULL,
+    "sourceUID" UUID NOT NULL,
+    "beneficiaryUID" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
@@ -88,6 +118,7 @@ CREATE TABLE "tbl_beneficiary_sources" (
 -- CreateTable
 CREATE TABLE "tbl_field_definitions" (
     "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "fieldType" "FieldType" NOT NULL,
     "fieldPopulate" JSONB,
@@ -104,6 +135,7 @@ CREATE TABLE "tbl_groups" (
     "id" SERIAL NOT NULL,
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
+    "isSystem" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
@@ -113,12 +145,26 @@ CREATE TABLE "tbl_groups" (
 -- CreateTable
 CREATE TABLE "tbl_beneficiary_groups" (
     "id" SERIAL NOT NULL,
-    "beneficiaryId" INTEGER NOT NULL,
-    "groupId" INTEGER NOT NULL,
+    "uuid" UUID NOT NULL,
+    "beneficiaryUID" UUID NOT NULL,
+    "groupUID" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "tbl_beneficiary_groups_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tbl_logs" (
+    "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
+    "userUUID" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "data" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "tbl_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -137,6 +183,7 @@ CREATE TABLE "tbl_target_queries" (
 -- CreateTable
 CREATE TABLE "tbl_target_results" (
     "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
     "benefUuid" UUID NOT NULL,
     "targetUuid" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -261,17 +308,37 @@ CREATE TABLE "tbl_settings" (
     CONSTRAINT "tbl_settings_pkey" PRIMARY KEY ("name")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "tbl_beneficiaries_uuid_key" ON "tbl_beneficiaries"("uuid");
+-- CreateTable
+CREATE TABLE "tbl_stats" (
+    "name" TEXT NOT NULL,
+    "data" JSONB NOT NULL,
+    "group" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "tbl_stats_pkey" PRIMARY KEY ("name")
+);
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tbl_beneficiaries_customId_key" ON "tbl_beneficiaries"("customId");
+CREATE UNIQUE INDEX "tbl_archive_beneficiaries_uuid_key" ON "tbl_archive_beneficiaries"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_beneficiaries_uuid_key" ON "tbl_beneficiaries"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_sources_uuid_key" ON "tbl_sources"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_sources_importId_key" ON "tbl_sources"("importId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_beneficiary_sources_uuid_key" ON "tbl_beneficiary_sources"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_beneficiary_sources_beneficiaryUID_sourceUID_key" ON "tbl_beneficiary_sources"("beneficiaryUID", "sourceUID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_field_definitions_uuid_key" ON "tbl_field_definitions"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_field_definitions_name_key" ON "tbl_field_definitions"("name");
@@ -283,10 +350,19 @@ CREATE UNIQUE INDEX "tbl_groups_uuid_key" ON "tbl_groups"("uuid");
 CREATE UNIQUE INDEX "tbl_groups_name_key" ON "tbl_groups"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tbl_beneficiary_groups_beneficiaryId_groupId_key" ON "tbl_beneficiary_groups"("beneficiaryId", "groupId");
+CREATE UNIQUE INDEX "tbl_beneficiary_groups_uuid_key" ON "tbl_beneficiary_groups"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_beneficiary_groups_beneficiaryUID_groupUID_key" ON "tbl_beneficiary_groups"("beneficiaryUID", "groupUID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_logs_uuid_key" ON "tbl_logs"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_target_queries_uuid_key" ON "tbl_target_queries"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_target_results_uuid_key" ON "tbl_target_results"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_users_uuid_key" ON "tbl_users"("uuid");
@@ -315,17 +391,23 @@ CREATE UNIQUE INDEX "tbl_users_signups_uuid_key" ON "tbl_users_signups"("uuid");
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_settings_name_key" ON "tbl_settings"("name");
 
--- AddForeignKey
-ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "tbl_sources"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_stats_name_key" ON "tbl_stats"("name");
 
 -- AddForeignKey
-ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_beneficiaryId_fkey" FOREIGN KEY ("beneficiaryId") REFERENCES "tbl_beneficiaries"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_sourceUID_fkey" FOREIGN KEY ("sourceUID") REFERENCES "tbl_sources"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_beneficiaryId_fkey" FOREIGN KEY ("beneficiaryId") REFERENCES "tbl_beneficiaries"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_beneficiaryUID_fkey" FOREIGN KEY ("beneficiaryUID") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "tbl_groups"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_beneficiaryUID_fkey" FOREIGN KEY ("beneficiaryUID") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_groupUID_fkey" FOREIGN KEY ("groupUID") REFERENCES "tbl_groups"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_logs" ADD CONSTRAINT "tbl_logs_userUUID_fkey" FOREIGN KEY ("userUUID") REFERENCES "tbl_users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_target_results" ADD CONSTRAINT "tbl_target_results_benefUuid_fkey" FOREIGN KEY ("benefUuid") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;

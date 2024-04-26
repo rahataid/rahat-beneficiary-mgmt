@@ -3,11 +3,16 @@ import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
-import { DB_MODELS } from 'apps/rahat-community/src/constants';
+import {
+  DB_MODELS,
+  EXTERNAL_UUID_FIELD,
+} from 'apps/rahat-community/src/constants';
+import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
+  GOVT_ID_NUMBER: 'govtIDNumber',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -43,15 +48,17 @@ function removeDuplicatesByObjectKey(fields: any) {
 }
 
 export const validateSchemaFields = async (
-  customUniqueField: string,
   payload: any,
   extraFields: IExtraField[],
+  hasUUID: boolean,
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
+    BENEFICIARY_REQ_FIELDS.GOVT_ID_NUMBER,
   ];
-  if (customUniqueField) requiredFields.push(customUniqueField);
+  // if (customUniqueField) requiredFields.push(customUniqueField);
+  if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
@@ -77,7 +84,12 @@ const validateSecondaryFields = async (
         const val = item[key];
         const found = extraFields.find((f) => f.name === key);
         if (found) {
-          const isValid = validateValueByType(val, found.type);
+          const isValid = validateValueByType({
+            value: val,
+            type: found.type,
+            fieldName: key,
+            extraFields,
+          });
           if (!isValid) {
             secondaryErrors.push({
               uuid: item.uuid,
@@ -93,17 +105,39 @@ const validateSecondaryFields = async (
   return secondaryErrors;
 };
 
-function validateValueByType(value: any, type: string) {
+function validateValueByType({ value, type, fieldName, extraFields }) {
   switch (type.toUpperCase()) {
-    case 'RADIO':
-      return value.toLowerCase() === 'yes' || value.toLowerCase() === 'no';
-    case 'NUMBER':
+    case FIELD_DEF_TYPES.NUMBER:
       return !isNaN(parseInt(value)) && isFinite(parseInt(value));
-    case 'TEXT':
-      return typeof value === 'string' && value.trim() !== '';
+    case FIELD_DEF_TYPES.TEXT:
+      return typeof value === 'string' || typeof value === 'number';
+    case FIELD_DEF_TYPES.DROPDOWN:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.RADIO:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.CHECKBOX:
+      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+    case FIELD_DEF_TYPES.DATE:
+      return isValidDateFormat(value);
     default:
-      return false;
+      return true;
   }
+}
+
+function checkIfPopulateValuesMatch(
+  fieldName: string,
+  value: string,
+  extraFields: any,
+) {
+  const values = getPopulateFieldValues(fieldName, extraFields);
+  return values.includes(value.toString());
+}
+
+function getPopulateFieldValues(fieldName: string, extraFields: any) {
+  const found = extraFields.find((f: any) => f.name === fieldName);
+  if (!found) return [];
+  const values = found.fieldPopulate?.data?.map((d: any) => d.value) || [];
+  return values;
 }
 
 const validatePrimaryFields = async (
@@ -132,7 +166,6 @@ const validatePrimaryFields = async (
     for (let f of requiredFields) {
       let exist = keys.includes(f);
       if (!exist) {
-        // Required field is missing
         emptyFields.push(f);
         primaryErrors.push({
           uuid: item.uuid,
@@ -270,3 +303,39 @@ const ENUM_MAPPING = {
   ],
   bankedStatus: ['UNKNOWN', 'UNBANKED', 'BANKED', 'UNDER_BANKED'],
 };
+
+function isValidDateFormat(dateString: string) {
+  // Regular expression to match the YYYY-MM-DD format
+  var dateFormat = /^\d{4}-\d{2}-\d{2}$/;
+
+  // Check if the string matches the desired format
+  if (!dateFormat.test(dateString)) {
+    return false;
+  }
+
+  // Further validation for the date parts
+  var parts = dateString.split('-');
+  var year = parseInt(parts[0]);
+  var month = parseInt(parts[1]);
+  var day = parseInt(parts[2]);
+
+  // Check if month and day values are within valid ranges
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return false;
+  }
+
+  // Check for specific cases like February with 30 or 31 days
+  if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) {
+    return false;
+  }
+
+  if (month == 2) {
+    var isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    if ((isLeapYear && day > 29) || (!isLeapYear && day > 28)) {
+      return false;
+    }
+  }
+
+  // If all validations pass, return true
+  return true;
+}

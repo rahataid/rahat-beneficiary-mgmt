@@ -8,6 +8,7 @@ import { RSError } from '@rumsan/core';
 import { paginate } from '../utils/paginate';
 import { Prisma } from '@prisma/client';
 
+// Fix the DTOs/Types and Service functions
 @Injectable()
 export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
@@ -15,65 +16,55 @@ export class BeneficiaryGroupService {
     const groupBenefData = await this.prisma.$transaction(async (prisma) => {
       const resultArray = [];
       const errors = [];
-
-      for (const beneficiaryId of dto.beneficiariesId) {
+      for (const beneficiaryUUID of dto.beneficiaryUID) {
         const data = await prisma.beneficiaryGroup.findFirst({
           where: {
-            beneficiaryId: beneficiaryId,
-            groupId: dto.groupId,
+            beneficiaryUID: beneficiaryUUID,
+            groupUID: dto.groupUID,
           },
         });
-
         if (data) {
           const beneficiaryName = await prisma.beneficiary.findUnique({
             where: {
-              id: beneficiaryId,
+              uuid: beneficiaryUUID,
             },
             select: {
               firstName: true,
               lastName: true,
             },
           });
-
           errors.push(
             `${beneficiaryName.firstName} ${beneficiaryName.lastName}`,
           );
           continue;
         }
-
         const createdBenefGroup = await prisma.beneficiaryGroup.create({
           data: {
             beneficiary: {
               connect: {
-                id: beneficiaryId,
+                uuid: beneficiaryUUID,
               },
             },
             group: {
               connect: {
-                id: dto.groupId,
+                uuid: dto.groupUID,
               },
             },
           },
         });
         resultArray.push(createdBenefGroup);
       }
-
       const errorMessage = errors.length > 0 && errors.join(',');
-
       const groupName = await prisma.group.findUnique({
         where: {
-          id: dto.groupId,
+          uuid: dto.groupUID,
         },
         select: {
           name: true,
         },
       });
-
       const finalResult = {
-        finalMessage: `${resultArray.length} beneficiary associated with ${groupName.name}`,
-        info:
-          errors.length > 0 &&
-          `${errorMessage} is already associated with ${groupName.name}`,
+        finalMessage: `${dto.beneficiaryUID.length} beneficiaries assigned to  ${groupName.name} group`,
       };
       return finalResult;
     });
@@ -81,11 +72,7 @@ export class BeneficiaryGroupService {
   }
 
   async findAll(filters: any) {
-    const select: Prisma.BeneficiaryGroupSelect = {
-      beneficiaryId: true,
-      groupId: true,
-      id: true,
-    };
+    const select: Prisma.BeneficiaryGroupSelect = {};
     // return await this.prisma.beneficiaryGroup.findMany({});
     return paginate(
       this.prisma.beneficiaryGroup,
@@ -97,14 +84,15 @@ export class BeneficiaryGroupService {
     );
   }
 
-  async findOne(id: number) {
-    await this.prisma.beneficiaryGroup.findUnique({
+  async findOne(uuid: string) {
+    return await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
       select: {
         beneficiary: {
           select: {
+            uuid: true,
             firstName: true,
             lastName: true,
             email: true,
@@ -116,6 +104,7 @@ export class BeneficiaryGroupService {
         },
         group: {
           select: {
+            uuid: true,
             name: true,
           },
         },
@@ -123,17 +112,17 @@ export class BeneficiaryGroupService {
     });
   }
 
-  async update(id: number, dto: UpdateBeneficiaryGroupDto) {
-    await this.prisma.beneficiaryGroup.update({
-      where: { id },
-      data: dto,
+  async update(uuid: string, dto: UpdateBeneficiaryGroupDto) {
+    return await this.prisma.beneficiaryGroup.update({
+      where: { uuid },
+      data: {},
     });
   }
 
-  async remove(id: number) {
+  async remove(uuid: string) {
     const findBenefGroup = await this.prisma.beneficiaryGroup.findUnique({
       where: {
-        id,
+        uuid,
       },
     });
 
@@ -148,7 +137,24 @@ export class BeneficiaryGroupService {
 
     return await this.prisma.beneficiaryGroup.delete({
       where: {
-        id,
+        uuid,
+      },
+    });
+  }
+
+  async removeBeneficiaryFromGroup(benefUID: string, uuid: string) {
+    return this.prisma.beneficiaryGroup.deleteMany({
+      where: {
+        groupUID: uuid,
+        beneficiaryUID: benefUID,
+      },
+    });
+  }
+
+  async removeBenefFromMultipleGroups(benefUID: string) {
+    return this.prisma.beneficiaryGroup.deleteMany({
+      where: {
+        beneficiaryUID: benefUID,
       },
     });
   }

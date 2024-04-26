@@ -13,8 +13,8 @@ import {
   AbilitiesGuard,
   CheckAbilities,
   JwtGuard,
-  SUBJECTS,
 } from '@rumsan/user';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
 @ApiTags('Beneficiary Import')
 @ApiBearerAuth('JWT')
@@ -27,7 +27,10 @@ export class BeneficiaryImportController {
 
   @Get(':source_uuid/import')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.CREATE,
+    subject: SUBJECTS.ALL,
+  })
   importBySourceUUID(@Param('source_uuid') uuid: string) {
     return this.beneficiaryImportService.importBySourceUUID(uuid);
   }

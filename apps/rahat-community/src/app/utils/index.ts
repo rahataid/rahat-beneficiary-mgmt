@@ -18,27 +18,32 @@ export const convertDateToISO = (date: string) => {
 };
 
 export const convertToValidString = (inputString: string) => {
-  // Trim leading and trailing whitespace
-  const trimmedString = inputString.trim();
+  // Remove special characters using regular expression
+  const cleanedString = inputString.replace(/[^\w\s]/gi, '');
 
-  // Replace spaces with underscores and collapse consecutive underscores
-  const stringWithUnderscores = trimmedString
-    .replace(/\s+/g, '_')
-    .replace(/_+/g, '_');
+  // Split the string into words
+  const words = cleanedString.split(/\s+/);
 
-  // Remove special characters using regex
-  const stringWithoutSpecialChars = stringWithUnderscores.replace(
-    /[^\w\s]/gi,
-    '',
-  );
+  // Join the words with underscore
+  return words.join('_').toLocaleLowerCase();
+};
 
-  // Remove underscores at the beginning and end of the string
-  const stringWithoutLeadingTrailingUnderscores =
-    stringWithoutSpecialChars.replace(/^_+|_+$/g, '');
+export const formatDateAndTime = (date: Date) => {
+  // Add leading zero if number is single digit
+  const addLeadingZero = (number) => {
+    return number < 10 ? '0' + number : number;
+  };
 
-  // Replace consecutive underscores with a single underscore
-  const stringWithoutConsecutiveUnderscores =
-    stringWithoutLeadingTrailingUnderscores.replace(/_+/g, '_');
+  // Get date components
+  const year = date.getFullYear();
+  const month = addLeadingZero(date.getMonth() + 1);
+  const day = addLeadingZero(date.getDate());
+  const hours = addLeadingZero(date.getHours());
+  const minutes = addLeadingZero(date.getMinutes());
+  const seconds = addLeadingZero(date.getSeconds());
 
-  return stringWithoutConsecutiveUnderscores;
+  // Format date and time
+  const formattedDate = `${year}-${month}-${day}`;
+  const formattedTime = `${hours}H:${minutes}M:${seconds}S`;
+  return `${formattedDate}(${formattedTime})`;
 };

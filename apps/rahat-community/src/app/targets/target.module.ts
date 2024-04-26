@@ -7,6 +7,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { BullModule } from '@nestjs/bull';
 import { QUEUE } from '../../constants';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { BQUEUE } from '@rahataid/community-tool-sdk';
     BeneficiariesService,
     PrismaService,
     FieldDefinitionsService,
+    BeneficiaryGroupService,
   ],
 })
 export class TargetModule {}

@@ -8,10 +8,37 @@ import {
   updateFieldStatusDto,
 } from '@rahataid/community-tool-extensions';
 import { convertToValidString } from '../utils';
+import { ExcelParser } from '../utils/excel.parser';
 
 @Injectable()
 export class FieldDefinitionsService {
   constructor(private prisma: PrismaService) {}
+
+  bulkUpload(file: Express.Multer.File) {
+    const data = ExcelParser(file.buffer) as CreateFieldDefinitionDto[];
+    if (!data.length) throw new Error('No data found in the file!');
+    return this.createBulk(data);
+  }
+  async createBulk(data: CreateFieldDefinitionDto[]) {
+    let uploadedCount = 0;
+    for (let d of data) {
+      await this.upsertByName(d);
+      uploadedCount++;
+    }
+    return { message: `${uploadedCount} fields uploaded successfully!` };
+  }
+
+  upsertByName(data: CreateFieldDefinitionDto) {
+    const { name, fieldType, ...rest } = data;
+    const parsedName = convertToValidString(name);
+    const payload = { name: parsedName, fieldType };
+    return this.prisma.fieldDefinition.upsert({
+      where: { name: parsedName },
+      update: payload,
+      create: payload,
+    });
+  }
+
   create(dto: CreateFieldDefinitionDto) {
     const payload = {
       ...dto,
@@ -20,8 +47,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],
@@ -45,6 +72,7 @@ export class FieldDefinitionsService {
       fieldType: true,
       isActive: true,
       isTargeting: true,
+      fieldPopulate: true,
     };
 
     const isTargeting =
@@ -54,9 +82,20 @@ export class FieldDefinitionsService {
         ? false
         : undefined;
 
+    let where: any = {};
+
+    if (query.name) {
+      where = {
+        name: {
+          contains: query.name,
+          mode: 'insensitive',
+        },
+      };
+    }
+
     return paginate(
       this.prisma.fieldDefinition,
-      { select, where: { isTargeting: isTargeting } },
+      { select, where: { isTargeting: isTargeting, ...where } },
       {
         page: query?.page,
         perPage: query?.perPage,
@@ -80,8 +119,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],

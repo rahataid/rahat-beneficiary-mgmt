@@ -21,25 +21,28 @@ export const getBeneficiaryGroupClient = (
       return formatResponse<BeneficiaryGroup[]>(response);
     },
 
-    listById: async (id: string, config?: AxiosRequestConfig) => {
-      const response = await client.get(`/beneficiary-group/${id}`, config);
+    listByUUID: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.get(`/beneficiary-group/${uuid}`, config);
       return formatResponse<BeneficiaryGroup>(response);
     },
 
     update: async (
-      { id, data }: { id: string; data: BeneficiaryGroup },
+      { uuid, data }: { uuid: string; data: BeneficiaryGroup },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.put(
-        `/beneficiary-group/${id}`,
+        `/beneficiary-group/${uuid}`,
         data,
         config,
       );
       return formatResponse<BeneficiaryGroup>(response);
     },
 
-    remove: async (id: string, config?: AxiosRequestConfig) => {
-      const response = await client.delete(`/beneficiary-group/${id}`, config);
+    remove: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.delete(
+        `/beneficiary-group/${uuid}`,
+        config,
+      );
       return formatResponse<BeneficiaryGroup>(response);
     },
   };
