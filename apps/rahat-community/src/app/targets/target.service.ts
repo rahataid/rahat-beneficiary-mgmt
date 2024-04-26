@@ -41,7 +41,7 @@ export class TargetService {
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
-    return { message: 'Target query created and added to queue' };
+    return target;
   }
 
   async saveTargetResult(data: CreateTargetResultDto) {
@@ -49,22 +49,26 @@ export class TargetService {
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
-    for (let item of filterOptions) {
-      const keys = Object.keys(item);
-      const values = Object.values(item);
-      // 1. Split primary and extra queries
-      const { primary, extra } = createPrimaryAndExtraQuery(
-        primary_fields,
-        keys,
-        values,
-      );
-      // 2. Fetch data using primary AND query
-      const data = await this.benefService.searchTargets(primary);
-      // 3. Filter data using extras AND query
-      const filteredData = filterExtraFieldValues(data.rows, extra);
-      // 4.Merge result i.e. final_result UNION filteredDta
-      final_result = createFinalResult(final_result, filteredData);
-    }
+    const getFilterData = filterOptions[0]?.data;
+    const keys = Object.keys(getFilterData);
+    const values = Object.values(getFilterData);
+
+    // 1. Split primary and extra queries
+    const { primary, extra } = createPrimaryAndExtraQuery(
+      primary_fields,
+      keys,
+      values,
+    );
+
+    // 2. Fetch data using primary AND query
+    const benefData = await this.benefService.searchTargets(primary);
+
+    // 3. Filter data using extras AND query
+    const filteredData = filterExtraFieldValues(benefData.rows, extra);
+
+    // 4.Merge result i.e. final_result UNION filteredDta
+    final_result = createFinalResult(final_result, filteredData);
+
     // 5. Save final result in the TargetResult && Update Status to COMPLETED
     await this.createManySearchResult(final_result, targetUuid);
     await this.updateTargetQuery(targetUuid, {
