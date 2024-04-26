@@ -64,10 +64,7 @@ export class BeneficiaryGroupService {
         },
       });
       const finalResult = {
-        finalMessage: `${resultArray.length} beneficiary associated with ${groupName.name}`,
-        info:
-          errors.length > 0 &&
-          `${errorMessage} is already associated with ${groupName.name}`,
+        finalMessage: `${dto.beneficiaryUID.length} beneficiaries assigned to  ${groupName.name} group`,
       };
       return finalResult;
     });
