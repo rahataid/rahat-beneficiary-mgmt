@@ -15,16 +15,15 @@ import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
 
-import { DB_MODELS } from '../../constants';
-import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { convertDateToISO } from '../utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import {
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
-import { it } from 'node:test';
+import { DB_MODELS } from '../../constants';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { convertDateToISO } from '../utils';
 
 @Injectable()
 export class BeneficiariesService {
@@ -117,6 +116,9 @@ export class BeneficiariesService {
     }
     const exist = await this.findOne(beneficiary.uuid);
     if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
+    if (!beneficiary.walletAddress) {
+      beneficiary.walletAddress = generateRandomWallet().address;
+    }
     const res = await this.prisma.beneficiary.upsert({
       where: { uuid: beneficiary.uuid },
       update: beneficiary,
