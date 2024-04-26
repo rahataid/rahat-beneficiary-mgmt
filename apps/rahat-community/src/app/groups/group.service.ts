@@ -182,6 +182,14 @@ export class GroupService {
     });
   }
 
+  removeMultipleBenefFromTargetResult(benefUuid: string) {
+    return this.prisma.targetResult.deleteMany({
+      where: {
+        benefUuid,
+      },
+    });
+  }
+
   async purgeGroup(uuid: string) {
     const group = await this.findUnique(uuid);
     if (!group) throw new Error('Group not found');
@@ -194,6 +202,9 @@ export class GroupService {
           await this.beneficaryGroup.removeBenefFromMultipleGroups(
             item.beneficiaryUID,
           );
+
+          // Remove benef from targetResult
+          await this.removeMultipleBenefFromTargetResult(item.beneficiaryUID);
 
           // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
           await this.beneficarySourceService.removeBeneficiaryFromSource(
