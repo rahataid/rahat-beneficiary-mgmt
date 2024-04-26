@@ -1,3 +1,5 @@
+import { SUBJECTS as Subject } from '@rumsan/user';
+
 export const APP_JOBS = {
   EMAIL: 'email',
   SLACK: 'slack',
@@ -25,12 +27,29 @@ export const ACTIONS = {
 };
 
 export const SUBJECTS = {
-  ALL: 'all',
+  ...Subject,
   BENEFICIARY: 'beneficiary',
-  PROJECT: 'project',
-  VENDOR: 'vendor',
+  SOURCE: 'source',
+  GROUP: 'group',
+  BENEFICIARY_SOURCE: 'beneficiarySource',
+  BENEFICIARY_GROUP: 'beneficiaryGroup',
+  TARGET: 'target',
+  FIELD_DEFINITION: 'fieldDefinition',
+  SETTINGS: 'settings',
+  BENEFICIARY_IMPORT: 'beneficiary-import',
 };
 
 export const APP = {
   JWT_BEARER: 'JWT',
+};
+
+export const FIELD_DEF_TYPES = {
+  TEXT: 'TEXT',
+  DATE: 'DATE',
+  NUMBER: 'NUMBER',
+  TEXTAREA: 'TEXTAREA',
+  RADIO: 'RADIO',
+  PASSWORD: 'PASSWORD',
+  CHECKBOX: 'CHECKBOX',
+  DROPDOWN: 'DROPDOWN',
 };

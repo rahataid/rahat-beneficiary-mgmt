@@ -1,22 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsString } from 'class-validator';
+import { UUID } from 'crypto';
 
 export class CreateBeneficiaryGroupDto {
   @ApiProperty({
-    type: [Number],
-    example: [1, 2, 3],
-    description: 'Array of beneficiary IDs',
+    type: [String],
+    example: ['0584a396-fc5a-48ff-be62-c4d98f410cc3'],
+    description: 'Array of beneficiary UIDs',
     required: true,
   })
-  @IsNumber({}, { each: true }) // Ensure each element in the array is a number
-  beneficiariesId!: number[];
+  @IsString({ each: true }) // Ensure each element in the array is a string
+  beneficiaryUID!: UUID[];
 
   @ApiProperty({
-    type: 'number',
-    example: '1',
-    description: 'id of group',
+    type: 'string',
+    example: '0584a396-fc5a-48ff-be62-c4d98f410cd8',
+    description: 'uuid of group',
     required: true,
   })
-  @IsNumber()
-  groupId!: number;
+  @IsString()
+  groupUID!: UUID;
 }

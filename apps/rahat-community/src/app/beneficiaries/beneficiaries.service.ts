@@ -1,23 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { uuid } from 'uuidv4';
 
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
+  ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
+import { ArchiveType } from 'libs/sdk/src/enums';
 import XLSX from 'xlsx';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
 import { createSearchQuery } from './helpers';
+
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  BeneficiaryEvents,
+  generateRandomWallet,
+} from '@rahataid/community-tool-sdk';
 import { DB_MODELS } from '../../constants';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class BeneficiariesService {
@@ -25,6 +31,7 @@ export class BeneficiariesService {
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
     private eventEmitter: EventEmitter2,
+    private beneficiaryGroupService: BeneficiaryGroupService,
   ) {}
 
   async fetchDBFields() {
@@ -35,22 +42,114 @@ export class BeneficiariesService {
     return { scalarFields, extraFields };
   }
 
-  async upsertByCustomID(payload: any) {
-    if (payload.birthDate) {
-      payload.birthDate = convertDateToISO(payload.birthDate);
+  async addToGroups({ benefUID, defaultGroupUID, importGroupUID }) {
+    await this.upsertToDefaultGroup({ defaultGroupUID, benefUID });
+    await this.upsertToImportGroup({ importGroupUID, benefUID });
+  }
+
+  upsertToDefaultGroup({ defaultGroupUID, benefUID }) {
+    return this.prisma.beneficiaryGroup.upsert({
+      where: {
+        benefGroupIdentifier: {
+          beneficiaryUID: benefUID,
+          groupUID: defaultGroupUID,
+        },
+      },
+      update: {
+        groupUID: defaultGroupUID,
+        beneficiaryUID: benefUID,
+      },
+      create: {
+        groupUID: defaultGroupUID,
+        beneficiaryUID: benefUID,
+      },
+    });
+  }
+
+  upsertToImportGroup({ importGroupUID, benefUID }) {
+    return this.prisma.beneficiaryGroup.upsert({
+      where: {
+        benefGroupIdentifier: {
+          beneficiaryUID: benefUID,
+          groupUID: importGroupUID,
+        },
+      },
+      update: {
+        groupUID: importGroupUID,
+        beneficiaryUID: benefUID,
+      },
+      create: {
+        groupUID: importGroupUID,
+        beneficiaryUID: benefUID,
+      },
+    });
+  }
+
+  // if (beneficiaryData.extras.hasOwnProperty('uuid')) {
+  //   beneficiaryData.uuid = beneficiaryData.extras.uuid;
+  //   delete beneficiaryData.extras.uuid;
+  // }
+
+  async upsertByGovtID({ defaultGroupUID, importGroupUID, beneficiary }) {
+    // if (beneficiary.birthDate) {
+    //   beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
+    // }
+    // const exist = await this.findOneByGovtID(beneficiary.govtIDNumber);
+    // if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
+    // const res = await this.prisma.beneficiary.upsert({
+    //   where: { govtIDNumber: beneficiary.govtIDNumber },
+    //   update: beneficiary,
+    //   create: beneficiary,
+    // });
+    // if (!exist)
+    //   await this.addToGroups({
+    //     benefUID: res.uuid,
+    //     defaultGroupUID,
+    //     importGroupUID,
+    //   });
+    // return res;
+  }
+
+  async upsertByUUID({ defaultGroupUID, importGroupUID, beneficiary }) {
+    if (beneficiary.birthDate) {
+      beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
     }
-    return this.prisma.beneficiary.upsert({
-      where: { customId: payload.customId.toString() },
-      update: payload,
-      create: payload,
+    const exist = await this.findOne(beneficiary.uuid);
+    if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
+    if (!beneficiary.walletAddress) {
+      beneficiary.walletAddress = generateRandomWallet().address;
+    }
+    const res = await this.prisma.beneficiary.upsert({
+      where: { uuid: beneficiary.uuid },
+      update: beneficiary,
+      create: beneficiary,
+    });
+    await this.addToGroups({
+      benefUID: res.uuid,
+      defaultGroupUID,
+      importGroupUID,
+    });
+    return res;
+  }
+
+  async addBeneficiaryToArchive(beneficiary: any, flag: ArchiveType) {
+    beneficiary.archiveType = flag;
+    return this.prisma.beneficiaryArchive.upsert({
+      where: { uuid: beneficiary.uuid },
+      update: beneficiary,
+      create: beneficiary,
     });
   }
 
   async create(dto: CreateBeneficiaryDto) {
-    const { birthDate, extras } = dto;
+    const { birthDate, extras, walletAddress } = dto;
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
 
-    if (extras) {
+    if (!walletAddress) {
+      dto.walletAddress = generateRandomWallet().address;
+    }
+
+    if (Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
       const nonMatching = validateAllowedFieldAndTypes(extras, fields);
@@ -62,7 +161,6 @@ export class BeneficiariesService {
 
     const createdData = await this.prisma.beneficiary.create({
       data: {
-        customId: uuid(),
         ...dto,
       },
     });
@@ -82,7 +180,7 @@ export class BeneficiariesService {
     );
   }
 
-  async findAll(filters: any) {
+  async findAll(filters: ListBeneficiaryDto) {
     const OR_CONDITIONS = [];
     let conditions = {};
 
@@ -107,6 +205,13 @@ export class BeneficiariesService {
 
     if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
 
+    if (filters.location) {
+      OR_CONDITIONS.push({
+        location: { contains: filters.location, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
     if (filters.firstName) {
       OR_CONDITIONS.push({
         firstName: { contains: filters.firstName, mode: 'insensitive' },
@@ -114,16 +219,9 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
-    if (filters.lastName) {
-      OR_CONDITIONS.push({
-        lastName: { contains: filters.lastName, mode: 'insensitive' },
-      });
-      conditions = { OR: OR_CONDITIONS };
-    }
-
     return paginate(
       this.prisma.beneficiary,
-      { where: conditions },
+      { where: { ...conditions, archived: false } },
       {
         page: +filters?.page,
         perPage: +filters?.perPage,
@@ -131,19 +229,18 @@ export class BeneficiariesService {
     );
   }
 
-  async findOne(uuid: string) {
-    const findUuid = await this.prisma.beneficiary.findUnique({
+  findOne(uuid: string) {
+    return this.prisma.beneficiary.findUnique({
       where: {
         uuid,
       },
     });
+  }
 
-    if (!findUuid) throw new Error('Data not Found');
-    return await this.prisma.beneficiary.findUnique({
-      where: {
-        uuid,
-      },
-    });
+  findOneByGovtID(govtID: string) {
+    // return this.prisma.beneficiary.findUnique({
+    //   where: { govtIDNumber: govtID },
+    // });
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
@@ -181,29 +278,66 @@ export class BeneficiariesService {
     return beneficiaryData;
   }
 
-  async remove(uuid: string) {
-    const findUuid = await this.prisma.beneficiary.findUnique({
+  async createLog(logData) {
+    return await this.prisma.log.create({ data: logData });
+  }
+
+  async remove(uuid: string, userUUID: string) {
+    const benef = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
       },
+      select: {
+        beneficiariesGroup: {
+          select: {
+            beneficiaryUID: true,
+            groupUID: true,
+          },
+        },
+      },
     });
 
-    if (!findUuid) throw new Error('Not Found');
+    if (!benef) throw new Error('Beneficiary not found!');
+    // 1. Archive the beneficiary
+    const rData = await this.update(uuid, { archived: true });
+    const logData: any = {
+      userUUID: userUUID,
+      action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
+      data: rData,
+    };
+
+    if (benef?.beneficiariesGroup?.length > 0) {
+      for (const item of benef.beneficiariesGroup) {
+        // 2. Remove beneficiary from all the groups
+        await this.beneficiaryGroupService.removeBeneficiaryFromGroup(
+          item.beneficiaryUID,
+          item.groupUID,
+        );
+        // 3. Remove all the sources
+        await this.prisma.beneficiarySource.deleteMany({
+          where: { beneficiaryUID: item.beneficiaryUID },
+        });
+      }
+    }
+
+    // 3. Create log
+    await this.createLog(logData);
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+    return rData;
+  }
+
+  async deletePermanently(uuid: string) {
     const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
-
     return rData;
   }
 
   addBulk(dto: BulkInsertDto) {
-    const withCustomID = dto.data.map((d: any) => {
-      return { ...d, customId: uuid() };
-    });
-    const rdata = this.prisma.beneficiary.createMany({ data: withCustomID });
+    const rdata = this.prisma.beneficiary.createMany({ data: dto.data });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
     return rdata;
   }

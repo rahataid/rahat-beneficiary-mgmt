@@ -1,24 +1,22 @@
-import { Module } from '@nestjs/common';
-import { ListenerService } from './listeners.service';
-import { TargetService } from '../targets/target.service';
 import { BullModule } from '@nestjs/bull';
-import { QUEUE } from '../../constants';
+import { Module } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
+import { QUEUE } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { SourceService } from '../sources/source.service';
-// import { MailService } from '../mail/mail.service';
-// import { MailModule } from '../mail/mail.module';
-import { EmailService } from './mail.service';
+import { TargetService } from '../targets/target.service';
+import { ListenerService } from './listeners.service';
 import { StatsService } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
-import { BQUEUE } from '@rahataid/community-tool-sdk';
+import { GroupService } from '../groups/group.service';
+import { EmailService } from './mail.service';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 
 @Module({
   imports: [
-    // MailModule,
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
   ],
@@ -34,6 +32,8 @@ import { BQUEUE } from '@rahataid/community-tool-sdk';
     EmailService,
     StatsService,
     BeneficiaryStatService,
+    GroupService,
+    BeneficiaryGroupService,
   ],
 })
 export class ListenersModule {}

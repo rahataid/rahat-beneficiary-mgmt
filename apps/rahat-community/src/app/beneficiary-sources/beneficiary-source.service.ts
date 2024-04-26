@@ -10,11 +10,13 @@ import {
 @Injectable()
 export class BeneficiarySourceService {
   constructor(private prisma: PrismaService) {}
+
+  // Fix with UUID
   async create(dto: CreateBeneficiarySourceDto) {
     const exist = await this.prisma.beneficiarySource.findFirst({
       where: {
-        beneficiaryId: dto.beneficiaryId,
-        sourceId: dto.sourceId,
+        beneficiaryUID: '',
+        sourceUID: '',
       },
     });
     if (exist) return;
@@ -36,8 +38,8 @@ export class BeneficiarySourceService {
 
   async listAll(query: any) {
     const select: Prisma.BeneficiarySourceSelect = {
-      beneficiaryId: true,
-      sourceId: true,
+      beneficiaryUID: true,
+      sourceUID: true,
       createdAt: true,
       updatedAt: true,
     };
@@ -76,6 +78,14 @@ export class BeneficiarySourceService {
     return await this.prisma.beneficiarySource.findUnique({
       where: {
         id: parseInt(id),
+      },
+    });
+  }
+
+  async removeBeneficiaryFromSource(beneficiaryUID: string) {
+    return this.prisma.beneficiarySource.deleteMany({
+      where: {
+        beneficiaryUID,
       },
     });
   }

@@ -17,12 +17,12 @@ import {
   AbilitiesGuard,
   CheckAbilities,
   JwtGuard,
-  SUBJECTS,
 } from '@rumsan/user';
 import {
   CreateBeneficiarySourceDto,
   UpdateBeneficiarySourceDto,
 } from '@rahataid/community-tool-extensions';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
 @Controller('beneficiarySource')
 @ApiBearerAuth('JWT')
@@ -34,7 +34,10 @@ export class BeneficiarySourceController {
 
   @Post('')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.CREATE,
+    subject: SUBJECTS.ALL,
+  })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiarySourceDto) {
     return this.beneficiarySourceService.create(dto);
@@ -42,7 +45,10 @@ export class BeneficiarySourceController {
 
   @Get('')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.READ,
+    subject: SUBJECTS.ALL,
+  })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(query: any) {
     return this.beneficiarySourceService.listAll(query);
@@ -50,7 +56,10 @@ export class BeneficiarySourceController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.READ,
+    subject: SUBJECTS.ALL,
+  })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('id') id: string) {
     return this.beneficiarySourceService.findOne(id);
@@ -58,7 +67,10 @@ export class BeneficiarySourceController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.UPDATE,
+    subject: SUBJECTS.ALL,
+  })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(@Param('id') id: number, @Body() dto: UpdateBeneficiarySourceDto) {
     return this.beneficiarySourceService.update(id, dto);
@@ -66,7 +78,10 @@ export class BeneficiarySourceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.USER })
+  @CheckAbilities({
+    actions: ACTIONS.DELETE,
+    subject: SUBJECTS.ALL,
+  })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {

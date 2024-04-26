@@ -47,8 +47,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],
@@ -72,6 +72,7 @@ export class FieldDefinitionsService {
       fieldType: true,
       isActive: true,
       isTargeting: true,
+      fieldPopulate: true,
     };
 
     const isTargeting =
@@ -81,9 +82,20 @@ export class FieldDefinitionsService {
         ? false
         : undefined;
 
+    let where: any = {};
+
+    if (query.name) {
+      where = {
+        name: {
+          contains: query.name,
+          mode: 'insensitive',
+        },
+      };
+    }
+
     return paginate(
       this.prisma.fieldDefinition,
-      { select, where: { isTargeting: isTargeting } },
+      { select, where: { isTargeting: isTargeting, ...where } },
       {
         page: query?.page,
         perPage: query?.perPage,
@@ -107,8 +119,8 @@ export class FieldDefinitionsService {
         dto?.fieldPopulate?.data?.length > 0
           ? {
               data: dto.fieldPopulate.data.map((item) => ({
-                key: convertToValidString(item.key),
-                value: convertToValidString(item.value),
+                label: item.label,
+                value: item.value,
               })),
             }
           : [],

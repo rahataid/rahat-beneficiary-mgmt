@@ -53,4 +53,9 @@ export class AppService {
     });
     return sanitized;
   }
+
+  async getSettings() {
+    const rData = await this.prisma.setting.findMany();
+    return rData;
+  }
 }

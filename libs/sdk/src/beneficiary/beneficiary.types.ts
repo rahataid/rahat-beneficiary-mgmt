@@ -3,7 +3,6 @@ import { BankedStatus, Gender, InternetStatus, PhoneStatus } from '../enums';
 export type Beneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;
@@ -14,9 +13,7 @@ export type Beneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  govtIDType?: string;
   govtIDNumber?: string;
-  govtIDPhoto?: string;
   notes?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
@@ -36,7 +33,6 @@ export type ImportBeneficiary = {
 export type UpdateBeneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;
@@ -47,9 +43,7 @@ export type UpdateBeneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  govtIDType?: string;
   govtIDNumber?: string;
-  govtIDPhoto?: string;
   notes?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
@@ -63,7 +57,6 @@ export type UpdateBeneficiary = {
 export type ListBeneficiary = {
   id?: number;
   uuid?: string;
-  customId?: string;
   firstName?: string;
   lastName?: string;
   gender?: Gender;
@@ -74,9 +67,7 @@ export type ListBeneficiary = {
   location?: string;
   latitude?: number;
   longitude?: number;
-  govtIDType?: string;
   govtIDNumber?: string;
-  govtIDPhoto?: string;
   notes?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;

@@ -28,4 +28,9 @@ export type FieldDefinitionClient = {
     { id, isActive }: { id: string; isActive: boolean },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<FieldDefinition>>;
+
+  addBulk: (
+    { file }: { file: any },
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
 };

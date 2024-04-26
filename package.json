@@ -48,8 +48,8 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
-    "@rumsan/extensions": "^0.0.22",
     "@rumsan/core": "3.0.1",
+    "@rumsan/extensions": "^0.0.22",
     "@rumsan/prisma": "^1.0.125",
     "@rumsan/sdk": "^0.0.45",
     "@rumsan/settings": "^0.0.108",
@@ -84,6 +84,7 @@
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
     "uuidv4": "^6.2.13",
+    "viem": "^2.9.25",
     "xlsx": "^0.18.5",
     "zod": "^3.22.4"
   },

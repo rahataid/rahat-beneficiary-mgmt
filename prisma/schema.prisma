@@ -10,25 +10,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model BeneficiaryArchive {
+  id           Int    @db.Integer()
+  uuid         String @unique @default(uuid()) @db.Uuid()
+  firstName    String
+  lastName     String
+  govtIDNumber String
+
+  gender         Gender         @default(UNKNOWN)
+  birthDate      DateTime?
+  walletAddress  String?
+  phone          String?
+  email          String?
+  archived       Boolean        @default(false)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  notes          String?
+  bankedStatus   BankedStatus   @default(UNKNOWN)
+  internetStatus InternetStatus @default(UNKNOWN)
+  phoneStatus    PhoneStatus    @default(UNKNOWN)
+  extras         Json?          @db.JsonB()
+
+  createdAt   DateTime
+  updatedAt   DateTime?
+  deletedAt   DateTime?
+  archiveType ArchiveType @default(DELETED)
+
+  @@map("tbl_archive_beneficiaries")
+}
+
 model Beneficiary {
-  id        Int    @id @default(autoincrement()) @db.Integer()
-  uuid      String @unique @default(uuid()) @db.Uuid()
-  customId  String @unique
-  firstName String
-  lastName  String
+  id           Int     @id @default(autoincrement()) @db.Integer()
+  uuid         String  @unique @default(uuid()) @db.Uuid()
+  // customId  String @unique
+  firstName    String
+  lastName     String
+  govtIDNumber String?
 
   gender        Gender    @default(UNKNOWN)
   birthDate     DateTime?
   walletAddress String?
   phone         String?
   email         String?
-
-  location     String?
-  latitude     Float?
-  longitude    Float?
-  govtIDType   String?
-  govtIDNumber String?
-  govtIDPhoto  String?
+  archived      Boolean   @default(false)
+  location      String?
+  latitude      Float?
+  longitude     Float?
 
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)
@@ -46,36 +74,44 @@ model Beneficiary {
 }
 
 model Source {
-  id                Int                 @id @default(autoincrement()) @db.Integer()
-  uuid              String              @unique @default(uuid()) @db.Uuid()
-  name              String
-  importId          String              @unique
-  uniqueField       String?
-  isImported        Boolean             @default(false)
-  beneficiarySource BeneficiarySource[]
-  details           Json?               @db.JsonB()
-  fieldMapping      Json
+  id           Int         @id @default(autoincrement()) @db.Integer()
+  uuid         String      @unique @default(uuid()) @db.Uuid()
+  name         String
+  importId     String      @unique
+  importField  ImportField @default(UUID)
+  isImported   Boolean     @default(false)
+  fieldMapping Json
+
   createdAt         DateTime            @default(now())
   updatedAt         DateTime?           @updatedAt()
+  beneficiarySource BeneficiarySource[]
 
   @@map("tbl_sources")
 }
 
+enum ImportField {
+  UUID
+  GOVT_ID_NUMBER
+}
+
 model BeneficiarySource {
-  id            Int         @id @default(autoincrement()) @db.Integer()
-  source        Source      @relation(fields: [sourceId], references: [id])
-  sourceId      Int         @db.Integer()
-  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id])
-  beneficiaryId Int         @db.Integer()
+  id             Int         @id @default(autoincrement()) @db.Integer()
+  uuid           String      @unique @default(uuid()) @db.Uuid()
+  source         Source      @relation(fields: [sourceUID], references: [uuid])
+  sourceUID      String      @db.Uuid()
+  beneficiary    Beneficiary @relation(fields: [beneficiaryUID], references: [uuid])
+  beneficiaryUID String      @db.Uuid()
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 
+  @@unique([beneficiaryUID, sourceUID], name: "benefSourceIdentifier")
   @@map("tbl_beneficiary_sources")
 }
 
 model FieldDefinition {
   id            Int       @id @default(autoincrement()) @db.Integer()
+  uuid          String    @unique @default(uuid()) @db.Uuid()
   name          String    @unique
   fieldType     FieldType
   fieldPopulate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
@@ -92,6 +128,7 @@ model Group {
   uuid               String             @unique @default(uuid()) @db.Uuid()
   name               String             @unique
   beneficiariesGroup BeneficiaryGroup[]
+  isSystem           Boolean            @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
@@ -100,17 +137,33 @@ model Group {
 }
 
 model BeneficiaryGroup {
-  id            Int         @id @default(autoincrement()) @db.Integer()
-  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id])
-  beneficiaryId Int         @db.Integer()
-  group         Group       @relation(fields: [groupId], references: [id])
-  groupId       Int         @db.Integer()
+  id             Int         @id @default(autoincrement()) @db.Integer()
+  uuid           String      @unique @default(uuid()) @db.Uuid()
+  beneficiary    Beneficiary @relation(fields: [beneficiaryUID], references: [uuid])
+  beneficiaryUID String      @db.Uuid()
+  group          Group       @relation(fields: [groupUID], references: [uuid])
+  groupUID       String      @db.Uuid()
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 
-  @@unique([beneficiaryId, groupId])
+  @@unique([beneficiaryUID, groupUID], name: "benefGroupIdentifier")
   @@map("tbl_beneficiary_groups")
+}
+
+model Log {
+  id       Int    @id @default(autoincrement()) @db.Integer()
+  uuid     String @unique @default(uuid()) @db.Uuid()
+  user     User   @relation(fields: [userUUID], references: [uuid])
+  userUUID String
+
+  action String
+  data   Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  @@map("tbl_logs")
 }
 
 model TargetQuery {
@@ -128,6 +181,7 @@ model TargetQuery {
 
 model TargetResult {
   id          Int         @id @default(autoincrement()) @db.Integer()
+  uuid        String      @unique @default(uuid()) @db.Uuid()
   beneficiary Beneficiary @relation(fields: [benefUuid], references: [uuid])
   benefUuid   String      @db.Uuid()
   targetQuery TargetQuery @relation(fields: [targetUuid], references: [uuid])
@@ -141,6 +195,11 @@ model TargetResult {
 enum TargetQueryStatus {
   PENDING
   COMPLETED
+}
+
+enum ArchiveType {
+  DELETED
+  UPDATED
 }
 
 enum BankedStatus {
@@ -185,6 +244,7 @@ enum FieldType {
   RADIO
   TEXT
   TEXTAREA
+  DATE
 }
 
 // ============User Management Schema============
@@ -207,6 +267,7 @@ model User {
   deletedAt DateTime?
   createdBy Int?
   updatedBy Int?
+  Log       Log[]
 
   @@map("tbl_users")
 }

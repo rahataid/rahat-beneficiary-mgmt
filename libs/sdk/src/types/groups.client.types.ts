@@ -25,8 +25,17 @@ export type GroupClient = {
     { uuid, data }: { uuid?: string; data?: GroupInput },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
-  remove: (
+
+  purgeGroup: (
     uuid: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<GroupResponse>>;
+
+  remove: (
+    {
+      uuid,
+      deleteBeneficiaryFlag,
+    }: { uuid: string; deleteBeneficiaryFlag: boolean },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
 

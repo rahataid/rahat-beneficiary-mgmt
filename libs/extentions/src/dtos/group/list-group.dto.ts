@@ -1,8 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// import { PaginationDto } from '@rumsan/extensions/dtos';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class ListBeneficiaryDto {
+export class ListGroupDto {
   @ApiProperty({ example: 1 })
   @IsString()
   @IsOptional()
@@ -21,23 +20,8 @@ export class ListBeneficiaryDto {
   @IsNumber()
   perPage!: number;
 
-  @ApiPropertyOptional({ example: 'MALE' })
+  @ApiPropertyOptional({ example: 'Tayaba' })
   @IsString()
   @IsOptional()
-  gender?: string;
-
-  @ApiPropertyOptional({ example: 'Philip' })
-  @IsString()
-  @IsOptional()
-  firstName?: string;
-
-  @ApiPropertyOptional({ example: 'Philip' })
-  @IsString()
-  @IsOptional()
-  location?: string;
-
-  @ApiPropertyOptional({ example: 'Phil' })
-  @IsString()
-  @IsOptional()
-  nickName?: string;
+  name?: string;
 }
