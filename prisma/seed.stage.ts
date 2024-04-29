@@ -93,13 +93,13 @@ export const users: Array<{
   },
   {
     id: 4,
-    name: 'Karun Gyawali',
-    email: 'karun@rumsan.net',
+    name: 'Shristi Khayargoli',
+    email: 'shristi.khayargoli@agriclear.io',
   },
   {
     id: 5,
-    name: 'Subham Dhakal',
-    email: 'subham.rumsan@gmail.com',
+    name: 'Manjik Shrestha',
+    email: 'manjik.shrestha@rumsan.com',
   },
 ];
 
@@ -163,13 +163,13 @@ export const auths: Array<{
     id: 4,
     userId: 4,
     service: Service.EMAIL,
-    serviceId: 'karun@rumsan.net',
+    serviceId: 'shristi.khayargoli@agriclear.io',
   },
   {
     id: 5,
     userId: 5,
     service: Service.EMAIL,
-    serviceId: 'subham.rumsan@gmail.com',
+    serviceId: 'manjik.shrestha@rumsan.com',
   },
 ];
 
