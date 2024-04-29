@@ -78,8 +78,8 @@ export const users: Array<{
 }> = [
   {
     id: 1,
-    name: 'Rumsan Admin',
-    email: 'rumsan@mailinator.com',
+    name: 'Binod Chaudhary',
+    email: 'thebinod7@gmail.com',
   },
   {
     id: 2,
@@ -90,6 +90,16 @@ export const users: Array<{
     id: 3,
     name: 'Mr User',
     email: 'user@mailinator.com',
+  },
+  {
+    id: 4,
+    name: 'Shristi Khayargoli',
+    email: 'shristi.khayargoli@agriclear.io',
+  },
+  {
+    id: 5,
+    name: 'Manjik Shrestha',
+    email: 'manjik.shrestha@rumsan.com',
   },
 ];
 
@@ -113,6 +123,16 @@ export const userRoles: Array<{
     userId: 3,
     roleId: 3,
   },
+  {
+    id: 4,
+    userId: 4,
+    roleId: 1,
+  },
+  {
+    id: 5,
+    userId: 5,
+    roleId: 1,
+  },
 ];
 
 export const auths: Array<{
@@ -125,7 +145,7 @@ export const auths: Array<{
     id: 1,
     userId: 1,
     service: Service.EMAIL,
-    serviceId: 'rumsan@mailinator.com',
+    serviceId: 'thebinod7@gmail.com',
   },
   {
     id: 2,
@@ -139,20 +159,17 @@ export const auths: Array<{
     service: Service.EMAIL,
     serviceId: 'user@mailinator.com',
   },
-];
-
-const projectTypes: Array<{
-  id?: number;
-  name: string;
-  description?: string;
-}> = [
   {
-    id: 1,
-    name: 'anticipatory-action',
+    id: 4,
+    userId: 4,
+    service: Service.EMAIL,
+    serviceId: 'shristi.khayargoli@agriclear.io',
   },
   {
-    id: 2,
-    name: 'cva',
+    id: 5,
+    userId: 5,
+    service: Service.EMAIL,
+    serviceId: 'manjik.shrestha@rumsan.com',
   },
 ];
 
@@ -217,7 +234,10 @@ async function main() {
     delete userRoleAttrs.id;
     await prisma.userRole.upsert({
       where: {
-        id: userRole.id,
+        userRoleIdentifier: {
+          userId: userRoleAttrs.userId,
+          roleId: userRoleAttrs.roleId,
+        },
       },
       create: userRoleAttrs,
       update: userRoleAttrs,

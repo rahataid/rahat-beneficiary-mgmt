@@ -52,7 +52,7 @@ export class SourceService {
       };
     });
     const extraFields = await this.listExtraFields();
-    const hasUUID = data[0].rawData.hasOwnProperty(EXTERNAL_UUID_FIELD);
+    const hasUUID = payloadWithUUID.hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasUUID) {
       payloadWithUUID = data.map((d: any) => {
         return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
