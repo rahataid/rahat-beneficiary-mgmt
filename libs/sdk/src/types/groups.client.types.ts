@@ -1,5 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import {
+  GroupBeneficiaryQuery,
   GroupInput,
   GroupResponse,
   GroupResponseById,
@@ -19,6 +20,7 @@ export type GroupClient = {
   ) => Promise<FormattedResponse<ListGroup[]>>;
   listById: (
     uuid: string,
+    query: GroupBeneficiaryQuery,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponseById>>;
   update: (

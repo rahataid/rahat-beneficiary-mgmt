@@ -53,8 +53,8 @@ export class GroupController {
 
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  findOne(@Param('uuid') uuid: string) {
-    return this.groupService.findOne(uuid);
+  findOne(@Param('uuid') uuid: string, @Query() query: ListGroupDto) {
+    return this.groupService.findOne(uuid, query);
   }
 
   @Patch(':uuid')

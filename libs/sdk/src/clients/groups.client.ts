@@ -5,6 +5,7 @@ import {
   GroupResponseById,
   GroupResponse,
   ListGroup,
+  GroupBeneficiaryQuery,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -21,8 +22,15 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<ListGroup[]>(response);
     },
 
-    listById: async (uuid: string, config?: AxiosRequestConfig) => {
-      const response = await client.get(`/group/${uuid}`, config);
+    listById: async (
+      uuid: string,
+      query: GroupBeneficiaryQuery,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.get(`/group/${uuid}`, {
+        params: query,
+        ...config,
+      });
       return formatResponse<GroupResponseById>(response);
     },
 
