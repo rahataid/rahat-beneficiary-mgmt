@@ -41,8 +41,8 @@ export class GroupController {
 
   @Post('download')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  async downloadData(@Body() data: any[], @Res() res: Response) {
-    return this.groupService.downloadData(data, res);
+  async downloadData(@Body('uuid') uuid: string) {
+    return this.groupService.downloadData(uuid);
   }
 
   @Get()
@@ -53,8 +53,8 @@ export class GroupController {
 
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  findOne(@Param('uuid') uuid: string) {
-    return this.groupService.findOne(uuid);
+  findOne(@Param('uuid') uuid: string, @Query() query: ListGroupDto) {
+    return this.groupService.findOne(uuid, query);
   }
 
   @Patch(':uuid')

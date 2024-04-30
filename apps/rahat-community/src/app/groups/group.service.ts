@@ -18,7 +18,7 @@ import { ArchiveType } from '@rahataid/community-tool-sdk';
 export class GroupService {
   constructor(
     private prisma: PrismaService,
-    private beneficaryGroup: BeneficiaryGroupService,
+    private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
     private beneficarySourceService: BeneficiarySourceService,
   ) {}
@@ -90,21 +90,42 @@ export class GroupService {
     );
   }
 
-  findOne(uuid: string) {
-    return this.prisma.group.findUnique({
-      where: {
-        uuid,
-      },
+  async findOne(uuid: string, query?: ListGroupDto) {
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
       select: {
+        name: true,
         beneficiariesGroup: {
-          include: {
+          select: {
             beneficiary: true,
           },
         },
-        name: true,
-        isSystem: true,
       },
     });
+    if (query && query.page && query.perPage) {
+      const startIndex = (query.page - 1) * query.perPage;
+      const endIndex = query.page * query.perPage;
+      const paginatedBeneficiaries = group.beneficiariesGroup.slice(
+        startIndex,
+        endIndex,
+      );
+      const total = group.beneficiariesGroup.length;
+      const lastPage = Math.ceil(total / query.perPage);
+
+      const meta = {
+        total,
+        lastPage,
+        currentPage: query.page,
+        perPage: query.perPage,
+      };
+
+      return {
+        ...group,
+        beneficiariesGroup: paginatedBeneficiaries,
+        meta,
+      };
+    }
+    return group;
   }
 
   findUnique(uuid: string) {
@@ -143,7 +164,7 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of group.beneficiariesGroup) {
           // Delete from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBeneficiaryFromGroup(
+          await this.beneficaryGroupService.removeBeneficiaryFromGroup(
             item.beneficiaryUID,
             group.uuid,
           );
@@ -160,17 +181,29 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
-  downloadData(data: any[], res: Response) {
-    const excelBuffer = generateExcelData(data);
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  async downloadData(uuid: string) {
+    const getGrouppedBeneficiary = await this.findOne(uuid);
+    const groupName = getGrouppedBeneficiary.name;
+
+    const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
+      (item) => {
+        return { ...item.beneficiary, groupName };
+      },
     );
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename=beneficiaries.xlsx',
-    );
-    return res.send(excelBuffer);
+
+    const excelData = generateExcelData(formattedData);
+
+    // res.setHeader(
+    //   'Content-Type',
+    //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // );
+    // res.setHeader(
+    //   'Content-Disposition',
+    //   'attachment; filename=beneficiaries.xlsx',
+    // );
+    // return res.send(excelBuffer);
+
+    return excelData;
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {
@@ -199,7 +232,7 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of group.beneficiariesGroup) {
           // Delete benef from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBenefFromMultipleGroups(
+          await this.beneficaryGroupService.removeBenefFromMultipleGroups(
             item.beneficiaryUID,
           );
 
