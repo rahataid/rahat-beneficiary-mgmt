@@ -12,7 +12,7 @@ const flattenObject = (obj: any, prefix = '') => {
     return acc;
   }, {});
 };
-export const generateExcelData = (data: any[]): Buffer => {
+export const generateExcelData = (data: any): Buffer => {
   {
     const flattenedData = data.map((item) => {
       const flattenedItem = flattenObject(item);

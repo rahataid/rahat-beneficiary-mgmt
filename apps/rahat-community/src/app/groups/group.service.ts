@@ -90,10 +90,11 @@ export class GroupService {
     );
   }
 
-  async findOne(uuid: string, query: ListGroupDto) {
+  async findOne(uuid: string, query?: ListGroupDto) {
     const group = await this.prisma.group.findUnique({
       where: { uuid },
       select: {
+        name: true,
         beneficiariesGroup: {
           select: {
             beneficiary: true,
@@ -101,7 +102,7 @@ export class GroupService {
         },
       },
     });
-    if (query.page && query.perPage) {
+    if (query && query.page && query.perPage) {
       const startIndex = (query.page - 1) * query.perPage;
       const endIndex = query.page * query.perPage;
       const paginatedBeneficiaries = group.beneficiariesGroup.slice(
@@ -180,8 +181,18 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
-  downloadData(data: any[], res: Response) {
-    const excelBuffer = generateExcelData(data);
+  async downloadData(body: any, res: Response) {
+    const getGrouppedBeneficiary = await this.findOne(body?.uuid);
+    const groupName = getGrouppedBeneficiary.name;
+
+    const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
+      (item) => {
+        return { ...item.beneficiary, groupName };
+      },
+    );
+
+    const excelBuffer = generateExcelData(formattedData);
+
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -42,10 +42,10 @@ export type GroupClient = {
   ) => Promise<FormattedResponse<GroupResponse>>;
 
   download: ({
-    groupedBeneficiaries,
+    uuid,
     config,
   }: {
-    groupedBeneficiaries: any[];
+    uuid: string;
     config: AxiosRequestConfig;
   }) => Promise<any>;
 };
