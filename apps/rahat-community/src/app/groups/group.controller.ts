@@ -41,8 +41,8 @@ export class GroupController {
 
   @Post('download')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  async downloadData(@Body() body: any, @Res() res: Response) {
-    return this.groupService.downloadData(body, res);
+  async downloadData(@Body('uuid') uuid: string) {
+    return this.groupService.downloadData(uuid);
   }
 
   @Get()

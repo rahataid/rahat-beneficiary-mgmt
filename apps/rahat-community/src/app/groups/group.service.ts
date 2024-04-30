@@ -181,8 +181,8 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
-  async downloadData(body: any, res: Response) {
-    const getGrouppedBeneficiary = await this.findOne(body?.uuid);
+  async downloadData(uuid: string) {
+    const getGrouppedBeneficiary = await this.findOne(uuid);
     const groupName = getGrouppedBeneficiary.name;
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
@@ -191,17 +191,19 @@ export class GroupService {
       },
     );
 
-    const excelBuffer = generateExcelData(formattedData);
+    const excelData = generateExcelData(formattedData);
 
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename=beneficiaries.xlsx',
-    );
-    return res.send(excelBuffer);
+    // res.setHeader(
+    //   'Content-Type',
+    //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // );
+    // res.setHeader(
+    //   'Content-Disposition',
+    //   'attachment; filename=beneficiaries.xlsx',
+    // );
+    // return res.send(excelBuffer);
+
+    return excelData;
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {
