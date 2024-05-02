@@ -17,7 +17,7 @@ import {
 } from '../../constants';
 import { validateSchemaFields } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { parseIsoDateToString } from '../utils';
+import { parseIsoDateToString, sanitizePhoneAndGovtID } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums } from '@rahataid/community-tool-sdk';
 
@@ -38,6 +38,12 @@ export class SourceService {
     return item;
   }
 
+  // 1. Validate required fields
+  // 2. Fetch data from tbl_beneficiary with govtIDNumber and phone number
+  // 3. Sanitize phone and govtIDNumber as alphanumeric
+  // 4. Merge data with tbl_beneficiary and payload data
+  // 5. Compare payload data with merged data
+  // 6. Return payload data with isDuplicate flag
   async create(dto: CreateSourceDto) {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
@@ -45,6 +51,7 @@ export class SourceService {
 
     let payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+      if (d.phone) d.phone = d.phone.toString();
       const formatted = this.formatEnumFieldValues(d);
       return {
         ...formatted,
@@ -102,20 +109,6 @@ export class SourceService {
     });
   }
 
-  async getDuplicateCountByGovtIDNumber(payload: []) {
-    // let count = 0;
-    // for (let p of payload) {
-    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-    //   if (keyExist) {
-    //     const res = await this.prisma.beneficiary.findUnique({
-    //       where: { govtIDNumber: p['govtIDNumber'] },
-    //     });
-    //     if (res) count++;
-    //   }
-    // }
-    // return count;
-  }
-
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
     let result = [] as any;
     const { allValidationErrors, processedData } = await validateSchemaFields(
@@ -124,24 +117,26 @@ export class SourceService {
       hasUUID,
     );
 
-    // result = await this.checkDuplicateByGovtIDNumber(processedData);
+    // result = await this.checkDuplicateByExternalUUID(
+    //   processedData,
+    //   EXTERNAL_UUID_FIELD,
+    // );
+    // const duplicates = result.filter((f) => f.isDuplicate);
 
-    result = await this.checkDuplicateByExternalUUID(
-      processedData,
-      EXTERNAL_UUID_FIELD,
-    );
-    const duplicates = result.filter((f) => f.isDuplicate);
-    const dateParsedDuplicates = duplicates.map((d) => {
+    const dateParsedDuplicates = processedData.map((d) => {
       let item = { ...d };
       if (item.birthDate) {
         item.birthDate = parseIsoDateToString(item.birthDate);
       }
       return item;
     });
-    const finalResult = result.filter((f) => !f.exportOnly);
+    // const finalResult = result.filter((f) => !f.exportOnly);
+
+    // TODO: Attach isDuplicate to processedData and Parse DOB
+
     return {
       invalidFields: allValidationErrors,
-      result: finalResult,
+      result: processedData,
       duplicates: dateParsedDuplicates,
     };
   }
