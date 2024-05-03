@@ -20,7 +20,7 @@ import {
   validateSchemaFields,
 } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { parseIsoDateToString, bulkSanitizePhoneAndGovtID } from '../utils';
+import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums } from '@rahataid/community-tool-sdk';
 
@@ -44,22 +44,25 @@ export class SourceService {
 
   async checkDuplicateBeneficiary(payload: any) {
     const existing = await this.fetchExistingBeneficiaries();
-    // const mergedData = [...existing, ...payload];
     return this.compareDuplicateBeneficiary(payload, existing);
   }
 
   async compareDuplicateBeneficiary(payload: any, existingData: any) {
     let result = [];
-    const { sanitizedExistingData, sanitizedPayload } =
-      bulkSanitizePhoneAndGovtID(payload, existingData);
-    for (let p of sanitizedPayload) {
+    for (let p of payload) {
       if (p.phone) {
-        const found = sanitizedExistingData.find((f) => f.phone === p.phone);
+        const found = existingData.find(
+          (f) =>
+            allowOnlyAlphabetAndNumbers(f.phone) ===
+            allowOnlyAlphabetAndNumbers(p.phone),
+        );
         if (found) p.isDuplicate = true;
       }
       if (p.govtIDNumber) {
-        const found = sanitizedExistingData.find(
-          (f) => f.govtIDNumber === p.govtIDNumber,
+        const found = existingData.find(
+          (f) =>
+            allowOnlyAlphabetAndNumbers(f.govtIDNumber) ===
+            allowOnlyAlphabetAndNumbers(p.govtIDNumber),
         );
         if (found) p.isDuplicate = true;
       }
@@ -188,13 +191,7 @@ export class SourceService {
         const res = await this.prisma.beneficiary.findUnique({
           where: { uuid: rahat_uuid },
         });
-        if (res) {
-          p.isDuplicate = true;
-          // result.push({
-          //   ...res,
-          //   uuid: rahat_uuid,
-          // });
-        }
+        if (res) p.isDuplicate = true;
       }
       result.push(p);
     }
