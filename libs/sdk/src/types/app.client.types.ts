@@ -1,11 +1,10 @@
-import { AxiosRequestConfig } from 'axios';
-import { FormattedResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
-import { KoboImportInput } from '../app';
+import { FormattedResponse } from '@rumsan/sdk/utils';
+import { AxiosRequestConfig } from 'axios';
 
 export type AppClient = {
   koboImportByForm: (
-    data?: KoboImportInput,
+    name?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
   listKoboSettings: (
