@@ -49,11 +49,27 @@ export const formatDateAndTime = (date: Date) => {
 };
 
 export const sanitizePhoneAndGovtID = (inputString: string) => {
+  if (!inputString) return '';
   const pattern = /[0-9A-Za-z]/g;
   let matches = inputString.match(pattern);
   let result = matches ? matches.join('') : '';
-
-  console.log({ result });
-
   return result;
+};
+
+export const bulkSanitizePhoneAndGovtID = (payload: any, existingData: any) => {
+  const sanitizedExistingData = existingData.map((d) => {
+    return {
+      ...d,
+      phone: sanitizePhoneAndGovtID(d.phone),
+      govtIDNumber: sanitizePhoneAndGovtID(d.govtIDNumber),
+    };
+  });
+  const sanitizedPayload = payload.map((d) => {
+    return {
+      ...d,
+      phone: sanitizePhoneAndGovtID(d.phone),
+      govtIDNumber: sanitizePhoneAndGovtID(d.govtIDNumber),
+    };
+  });
+  return { sanitizedExistingData, sanitizedPayload };
 };

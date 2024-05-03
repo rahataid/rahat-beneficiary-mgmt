@@ -180,8 +180,6 @@ const validatePrimaryFields = async (
     }
   }
 
-  console.log('EmptyFields==>', emptyFields);
-  console.log('P==>', payload);
   const processedData = addEmptyFieldsToPayload(payload, emptyFields);
   return { primaryErrors, processedData };
 };
@@ -344,3 +342,12 @@ function isValidDateFormat(dateString: string) {
   // If all validations pass, return true
   return true;
 }
+
+export const formatEnumFieldValues = (item: any) => {
+  if (item.gender) item.gender = item.gender.toUpperCase();
+  if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
+  if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
+  if (item.internetStatus)
+    item.internetStatus = item.internetStatus.toUpperCase();
+  return item;
+};

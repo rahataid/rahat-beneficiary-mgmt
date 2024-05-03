@@ -15,9 +15,12 @@ import {
   QUEUE,
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
-import { validateSchemaFields } from '../beneficiary-import/helpers';
+import {
+  formatEnumFieldValues,
+  validateSchemaFields,
+} from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { parseIsoDateToString, sanitizePhoneAndGovtID } from '../utils';
+import { parseIsoDateToString, bulkSanitizePhoneAndGovtID } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums } from '@rahataid/community-tool-sdk';
 
@@ -29,13 +32,40 @@ export class SourceService {
     private readonly fdService: FieldDefinitionsService,
   ) {}
 
-  formatEnumFieldValues(item: any) {
-    if (item.gender) item.gender = item.gender.toUpperCase();
-    if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
-    if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
-    if (item.internetStatus)
-      item.internetStatus = item.internetStatus.toUpperCase();
-    return item;
+  async fetchExistingBeneficiaries() {
+    const res = await this.prisma.beneficiary.findMany({
+      select: {
+        phone: true,
+        govtIDNumber: true,
+      },
+    });
+    return res;
+  }
+
+  async checkDuplicateBeneficiary(payload: any) {
+    const existing = await this.fetchExistingBeneficiaries();
+    // const mergedData = [...existing, ...payload];
+    return this.compareDuplicateBeneficiary(payload, existing);
+  }
+
+  async compareDuplicateBeneficiary(payload: any, existingData: any) {
+    let result = [];
+    const { sanitizedExistingData, sanitizedPayload } =
+      bulkSanitizePhoneAndGovtID(payload, existingData);
+    for (let p of sanitizedPayload) {
+      if (p.phone) {
+        const found = sanitizedExistingData.find((f) => f.phone === p.phone);
+        if (found) p.isDuplicate = true;
+      }
+      if (p.govtIDNumber) {
+        const found = sanitizedExistingData.find(
+          (f) => f.govtIDNumber === p.govtIDNumber,
+        );
+        if (found) p.isDuplicate = true;
+      }
+      result.push(p);
+    }
+    return result;
   }
 
   // 1. Validate required fields
@@ -52,7 +82,7 @@ export class SourceService {
     let payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
-      const formatted = this.formatEnumFieldValues(d);
+      const formatted = formatEnumFieldValues(d);
       return {
         ...formatted,
         uuid: uuid(),
@@ -110,34 +140,26 @@ export class SourceService {
   }
 
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
-    let result = [] as any;
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
       hasUUID,
     );
 
-    // result = await this.checkDuplicateByExternalUUID(
-    //   processedData,
-    //   EXTERNAL_UUID_FIELD,
-    // );
-    // const duplicates = result.filter((f) => f.isDuplicate);
+    const duplicates = await this.checkDuplicateBeneficiary(processedData);
 
-    const dateParsedDuplicates = processedData.map((d) => {
+    const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };
       if (item.birthDate) {
         item.birthDate = parseIsoDateToString(item.birthDate);
       }
       return item;
     });
-    // const finalResult = result.filter((f) => !f.exportOnly);
-
-    // TODO: Attach isDuplicate to processedData and Parse DOB
-
+    console.log(dateParsedDuplicates, 'dateParsedDuplicates');
     return {
       invalidFields: allValidationErrors,
-      result: processedData,
-      duplicates: dateParsedDuplicates,
+      result: dateParsedDuplicates,
+      duplicates: [],
     };
   }
 
