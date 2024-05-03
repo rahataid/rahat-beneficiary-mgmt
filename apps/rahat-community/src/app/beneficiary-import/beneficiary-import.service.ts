@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { DB_MODELS } from '../../constants';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
-import { SourceService } from '../sources/source.service';
-import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
-import { GroupService } from '../groups/group.service';
 import { PrismaService } from '@rumsan/prisma';
+import { DB_MODELS } from '../../constants';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { GroupService } from '../groups/group.service';
+import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
+import { fetchSchemaFields } from './helpers';
 
 const { ImportField } = Enums;
 
 @Injectable()
 export class BeneficiaryImportService {
   constructor(
-    private benefSourceService: BeneficiarySourceService,
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
     private eventEmitter: EventEmitter2,

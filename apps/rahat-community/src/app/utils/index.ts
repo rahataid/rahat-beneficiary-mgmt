@@ -47,3 +47,11 @@ export const formatDateAndTime = (date: Date) => {
   const formattedTime = `${hours}H:${minutes}M:${seconds}S`;
   return `${formattedDate}(${formattedTime})`;
 };
+
+export const allowOnlyAlphabetAndNumbers = (inputString: string) => {
+  if (!inputString) return '';
+  const pattern = /[0-9A-Za-z]/g;
+  let matches = inputString.match(pattern);
+  let result = matches ? matches.join('') : '';
+  return result;
+};
