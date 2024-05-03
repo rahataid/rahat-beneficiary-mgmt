@@ -68,14 +68,14 @@ export class TargetController {
     return this.targetService.saveTargetResult(data);
   }
 
-  @Patch(':id/label')
+  @Patch(':uuid/label')
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
   updateTargetQueryLabel(
-    @Param('id') id: number,
+    @Param('uuid') uuid: string,
     @Body() dto: updateTargetQueryLabelDTO,
   ) {
-    return this.targetService.updateTargetQueryLabel(id, dto);
+    return this.targetService.updateTargetQueryLabel(uuid, dto);
   }
 
   @Get(':target_uuid/result')
