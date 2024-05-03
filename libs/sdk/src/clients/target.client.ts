@@ -46,7 +46,7 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     patchLabel: async (
-      { uuid, label }: { uuid: string; label?: string },
+      { uuid, label }: { uuid: string; label: string },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.patch(
