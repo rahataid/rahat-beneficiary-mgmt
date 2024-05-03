@@ -155,11 +155,10 @@ export class SourceService {
       }
       return item;
     });
-    console.log(dateParsedDuplicates, 'dateParsedDuplicates');
     return {
       invalidFields: allValidationErrors,
       result: dateParsedDuplicates,
-      duplicates: [],
+      hasUUID,
     };
   }
 
@@ -177,25 +176,6 @@ export class SourceService {
     return { message: 'Source created and added to queue' };
   }
 
-  async checkDuplicateByGovtIDNumber(data: any) {
-    // const result = [];
-    // for (let p of data) {
-    //   p.isDuplicate = false;
-    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-    //   if (keyExist && p['govtIDNumber']) {
-    //     const res = await this.prisma.beneficiary.findUnique({
-    //       where: { govtIDNumber: p['govtIDNumber'].toString() },
-    //     });
-    //     if (res) {
-    //       p.isDuplicate = true;
-    //       result.push({ ...res, isDuplicate: true, exportOnly: true });
-    //     }
-    //   }
-    //   result.push(p);
-    // }
-    // return result;
-  }
-
   async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
     const result = [];
     for (let p of data) {
@@ -204,18 +184,16 @@ export class SourceService {
       if (keyExist && p[external_uuid]) {
         const rahat_uuid = p[external_uuid];
         const isValid = isUuid(rahat_uuid);
-        if (!isValid) throw new Error('Data contains invalid rahat UUID!');
+        if (!isValid) throw new Error('Data contains invalid UUID!');
         const res = await this.prisma.beneficiary.findUnique({
           where: { uuid: rahat_uuid },
         });
         if (res) {
           p.isDuplicate = true;
-          result.push({
-            ...res,
-            uuid: rahat_uuid,
-            isDuplicate: true,
-            exportOnly: true,
-          });
+          // result.push({
+          //   ...res,
+          //   uuid: rahat_uuid,
+          // });
         }
       }
       result.push(p);
