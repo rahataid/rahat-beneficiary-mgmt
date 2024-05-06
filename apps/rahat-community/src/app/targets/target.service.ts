@@ -113,9 +113,7 @@ export class TargetService {
   updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
     return this.prismaService.targetQuery.update({
       where: { uuid },
-      data: {
-        label: dto.label,
-      },
+      data: dto,
     });
   }
 
