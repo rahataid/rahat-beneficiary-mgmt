@@ -1,11 +1,10 @@
 // email.service.ts
 
 import { Injectable } from '@nestjs/common';
-// import { SettingsService } from '@rumsan/settings';
+import { SettingsService } from '@rumsan/settings';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 
-// TODO: Inject creds from settings module
 @Injectable()
 export class EmailService {
   private transporter;
@@ -17,12 +16,12 @@ export class EmailService {
       console.log('Initializing email service');
       this.transporter = nodemailer.createTransport({
         pool: true,
-        host: this.config.get('EMAIL_HOST'),
-        port: this.config.get('EMAIL_PORT'),
+        host: SettingsService.get('SMTP.HOST'),
+        port: SettingsService.get('SMTP.PORT'),
         secure: true,
         auth: {
-          user: this.config.get('EMAIL_ADDRESS'),
-          pass: this.config.get('EMAIL_PASSWORD'),
+          user: SettingsService.get('SMTP.USERNAME'),
+          pass: SettingsService.get('SMTP.PASSWORD'),
         },
       });
     }
