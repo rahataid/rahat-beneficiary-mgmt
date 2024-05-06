@@ -1,18 +1,11 @@
+import { formatResponse } from '@rumsan/sdk/utils';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { AppClient } from '../types';
-import { formatResponse } from '@rumsan/sdk/utils';
-import { KoboImportInput } from '../app';
 
 export const getAppClient = (client: AxiosInstance): AppClient => {
   return {
-    koboImportByForm: async (
-      data?: KoboImportInput,
-      config?: AxiosRequestConfig,
-    ) => {
-      const response = await client.post(
-        `/app/kobo-import/${data?.name}`,
-        config,
-      );
+    koboImportByForm: async (name?: string, config?: AxiosRequestConfig) => {
+      const response = await client.post(`/app/kobo-import/${name}`, config);
       return formatResponse<any>(response);
     },
 
