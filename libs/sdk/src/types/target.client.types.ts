@@ -37,7 +37,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<TargetResults>>;
 
   patchLabel: (
-    { uuid, label }: { uuid: string; label: string },
+    { uuid, payload }: { uuid: string; payload: any },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PatchResult>>;
 
