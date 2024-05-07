@@ -46,11 +46,11 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     patchLabel: async (
-      { id, label }: { id?: number; label?: string },
+      { uuid, label }: { uuid: string; label: string },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.patch(
-        `/targets/${id}/label`,
+        `/targets/${uuid}/label`,
         label,
         config,
       );

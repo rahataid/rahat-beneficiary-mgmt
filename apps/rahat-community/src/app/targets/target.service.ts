@@ -110,12 +110,10 @@ export class TargetService {
     });
   }
 
-  updateTargetQueryLabel(id: number, dto: updateTargetQueryLabelDTO) {
+  updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
     return this.prismaService.targetQuery.update({
-      where: { id: +id },
-      data: {
-        label: dto.label,
-      },
+      where: { uuid },
+      data: dto,
     });
   }
 

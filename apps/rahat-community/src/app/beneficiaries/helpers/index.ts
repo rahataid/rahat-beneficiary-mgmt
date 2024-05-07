@@ -8,14 +8,22 @@ export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   const nonEmptyExtras = main_query_result.filter(
     (item: any) => item.extras !== null,
   );
+
   const filteredData = nonEmptyExtras.filter((item: any) => {
     // Iterate over the key-value pairs in extras
     for (const [key, value] of Object.entries(extras)) {
       // Check if the key exists in extras and the value matches
       if (key === FILTER_KEY.MAX_AGE) return item.extras['age'] < value;
       if (key === FILTER_KEY.MIN_AGE) return item.extras['age'] > value;
-      if (!new RegExp('^' + value + '$', 'i').test(item.extras[key]))
-        return false;
+      if (typeof value === 'string' && item.extras[key] !== undefined) {
+        // Check if item's extras key includes the provided value
+        if (!item.extras[key].includes(value)) {
+          return false;
+        }
+      } else {
+        if (!new RegExp('^' + value + '$', 'i').test(item.extras[key]))
+          return false;
+      }
     }
     // If all conditions pass, keep the item
     return true;
@@ -41,7 +49,12 @@ export const createSearchQuery = (filters: any) => {
       ) {
         condition[key] = { contains: filters[key], mode: 'insensitive' };
       } else {
-        condition[key] = filters[key];
+        if (filters[key].includes(',')) {
+          const values = filters[key].split(',').map((value) => value.trim());
+          condition[key] = { in: values };
+        } else {
+          condition[key] = filters[key];
+        }
       }
 
       AND_CONDITIONS.push(condition);
