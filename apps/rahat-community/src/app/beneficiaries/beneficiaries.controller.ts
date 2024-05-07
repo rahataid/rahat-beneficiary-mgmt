@@ -98,14 +98,10 @@ export class BeneficiariesController {
     return this.beneficiariesService.findAll(filters);
   }
 
-  @Get(':name')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  findStatsByName(@Param('name') name: string) {
-    return this.benStatsService.getStatsByName(name);
-  }
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   findOne(@Param('uuid') uuid: string) {
+    console.log(uuid);
     return this.beneficiariesService.findOne(uuid);
   }
 
@@ -125,5 +121,11 @@ export class BeneficiariesController {
   remove(@Param('uuid') uuid: string, @Req() req: any) {
     const userUUID = req?.user?.uuid;
     return this.beneficiariesService.remove(uuid, userUUID);
+  }
+
+  @Get(':name')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  findStatsByName(@Param('name') name: string) {
+    return this.benStatsService.getStatsByName(name);
   }
 }
