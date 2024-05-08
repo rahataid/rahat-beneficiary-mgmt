@@ -65,6 +65,8 @@ model Beneficiary {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime?      @updatedAt()
   extras         Json?          @db.JsonB()
+  createdBy      String?
+  user           User?          @relation(fields: [createdBy], references: [uuid])
 
   beneficiariesGroup BeneficiaryGroup[]
   beneficiarySource  BeneficiarySource[]
@@ -82,8 +84,11 @@ model Source {
   isImported   Boolean     @default(false)
   fieldMapping Json
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime?           @updatedAt()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+  createdBy String?
+  user      User?     @relation(fields: [createdBy], references: [uuid])
+
   beneficiarySource BeneficiarySource[]
 
   @@map("tbl_sources")
@@ -119,6 +124,8 @@ model FieldDefinition {
   isTargeting   Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime? @updatedAt()
+  createdBy     String?
+  user          User?     @relation(fields: [createdBy], references: [uuid])
 
   @@map("tbl_field_definitions")
 }
@@ -132,6 +139,8 @@ model Group {
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
+  createdBy String?
+  user      User?     @relation(fields: [createdBy], references: [uuid])
 
   @@map("tbl_groups")
 }
@@ -152,16 +161,16 @@ model BeneficiaryGroup {
 }
 
 model Log {
-  id       Int    @id @default(autoincrement()) @db.Integer()
-  uuid     String @unique @default(uuid()) @db.Uuid()
-  user     User   @relation(fields: [userUUID], references: [uuid])
-  userUUID String
+  id   Int    @id @default(autoincrement()) @db.Integer()
+  uuid String @unique @default(uuid()) @db.Uuid()
 
   action String
   data   Json?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
+  createdBy String?
+  user      User?     @relation(fields: [createdBy], references: [uuid])
 
   @@map("tbl_logs")
 }
@@ -174,6 +183,8 @@ model TargetQuery {
   status        TargetQueryStatus @default(PENDING)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime?         @updatedAt()
+  createdBy     String?
+  user          User?             @relation(fields: [createdBy], references: [uuid])
   TargetResult  TargetResult[]
 
   @@map("tbl_target_queries")
@@ -262,12 +273,17 @@ model User {
   UserRole UserRole[]
   Signup   Signup[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt()
-  deletedAt DateTime?
-  createdBy Int?
-  updatedBy Int?
-  Log       Log[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime?         @updatedAt()
+  deletedAt       DateTime?
+  createdBy       Int?
+  updatedBy       Int?
+  Log             Log[]
+  Beneficiary     Beneficiary[]
+  Source          Source[]
+  FieldDefinition FieldDefinition[]
+  Group           Group[]
+  TargetQuery     TargetQuery[]
 
   @@map("tbl_users")
 }

@@ -12,6 +12,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsAlphaString, IsValidDate } from '../../validators';
+import { UUID } from 'crypto';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -163,6 +164,13 @@ export class CreateBeneficiaryDto {
   @IsBoolean()
   @IsOptional()
   archived?: boolean;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'a1b2c3d4-1234-5678-1234-567812345678',
+  })
+  @IsOptional()
+  createdBy?: string;
 
   @ApiProperty({
     format: 'json',

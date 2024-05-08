@@ -64,7 +64,8 @@ export class BeneficiariesController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  async create(@Body() dto: CreateBeneficiaryDto) {
+  async create(@Body() dto: CreateBeneficiaryDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.beneficiariesService.create(dto);
   }
 
@@ -108,11 +109,8 @@ export class BeneficiariesController {
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
-  update(
-    @Param('uuid') uuid: string,
-    @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
-  ) {
-    return this.beneficiariesService.update(uuid, updateBeneficiaryDto);
+  update(@Param('uuid') uuid: string, @Body() dto: UpdateBeneficiaryDto) {
+    return this.beneficiariesService.update(uuid, dto);
   }
 
   @Delete(':uuid')
