@@ -1,37 +1,24 @@
-export const FILTER_KEY = {
-  MIN_AGE: 'minAge',
-  MAX_AGE: 'maxAge',
-};
-
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
-  const nonEmptyExtras = main_query_result.filter(
-    (item: any) => item.extras !== null,
-  );
 
-  const filteredData = nonEmptyExtras.filter((item: any) => {
-    // Iterate over the key-value pairs in extras
-    for (const [key, value] of Object.entries(extras)) {
-      // Check if the key exists in extras and the value matches
-      if (key === FILTER_KEY.MAX_AGE) return item.extras['age'] < value;
-      if (key === FILTER_KEY.MIN_AGE) return item.extras['age'] > value;
-      if (typeof value === 'string' && item.extras[key] !== undefined) {
-        // Check if item's extras key includes the provided value
-        if (!item.extras[key].includes(value)) {
-          return false;
+  const filteredArray = main_query_result.filter((item) => {
+    for (const key in extras) {
+      if (
+        item.extras &&
+        Object.prototype.hasOwnProperty.call(item.extras, key)
+      ) {
+        const filterValues = extras[key].split(',');
+        const itemValue = item.extras[key];
+        if (filterValues.includes(itemValue)) {
+          return true;
         }
-      } else {
-        if (!new RegExp('^' + value + '$', 'i').test(item.extras[key]))
-          return false;
       }
     }
-    // If all conditions pass, keep the item
-    return true;
+    return false;
   });
-  return filteredData;
+  return filteredArray;
 };
 
-// TODO: Support more fields
 export const createSearchQuery = (filters: any) => {
   const AND_CONDITIONS = [];
   const filtersKeys = Object.keys(filters);
@@ -41,19 +28,15 @@ export const createSearchQuery = (filters: any) => {
     if (filters[key]) {
       let condition = {};
 
-      if (
-        key === 'firstName' ||
-        key === 'lastName' ||
-        key === 'email' ||
-        key === 'location'
-      ) {
+      if (key === 'firstName' || key === 'lastName' || key === 'location') {
         condition[key] = { contains: filters[key], mode: 'insensitive' };
       } else {
         if (filters[key].includes(',')) {
+          // Multiple values
           const values = filters[key].split(',').map((value) => value.trim());
           condition[key] = { in: values };
         } else {
-          condition[key] = filters[key];
+          condition[key] = filters[key]; // Single Value
         }
       }
 

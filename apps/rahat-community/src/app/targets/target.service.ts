@@ -46,7 +46,6 @@ export class TargetService {
 
   async saveTargetResult(data: CreateTargetResultDto) {
     const { filterOptions, targetUuid } = data;
-    let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
     const getFilterData = filterOptions[0]?.data;
@@ -67,15 +66,15 @@ export class TargetService {
     const filteredData = filterExtraFieldValues(benefData.rows, extra);
 
     // 4.Merge result i.e. final_result UNION filteredDta
-    final_result = createFinalResult(final_result, filteredData);
+    // final_result = createFinalResult(final_result, filteredData);
 
     // 5. Save final result in the TargetResult && Update Status to COMPLETED
-    await this.createManySearchResult(final_result, targetUuid);
+    await this.createManySearchResult(filteredData, targetUuid);
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
     return {
-      message: `${final_result.length} Target result saved successfully`,
+      message: `${filteredData.length} Target result saved successfully`,
     };
   }
 
