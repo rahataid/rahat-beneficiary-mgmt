@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { TargetService } from './target.service';
 
@@ -42,7 +43,8 @@ export class TargetController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  create(@Body() dto: CreateTargetQueryDto) {
+  create(@Body() dto: CreateTargetQueryDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.targetService.create(dto);
   }
 

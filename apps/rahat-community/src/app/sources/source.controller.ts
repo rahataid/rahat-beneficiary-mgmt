@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { SourceService } from './source.service';
 
@@ -36,7 +37,8 @@ export class SourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  create(@Body() dto: CreateSourceDto) {
+  create(@Body() dto: CreateSourceDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.sourceService.create(dto);
   }
 

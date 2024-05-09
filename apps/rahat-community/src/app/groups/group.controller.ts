@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -35,7 +36,8 @@ export class GroupController {
 
   @Post()
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  create(@Body() dto: CreateGroupDto) {
+  create(@Body() dto: CreateGroupDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.groupService.create(dto);
   }
 

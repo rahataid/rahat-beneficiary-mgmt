@@ -12,6 +12,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
+  Req,
 } from '@nestjs/common';
 import { FieldDefinitionsService } from './field-definitions.service';
 
@@ -39,7 +40,8 @@ export class FieldDefinitionsController {
     subject: SUBJECTS.ALL,
   })
   @Post()
-  create(@Body() dto: CreateFieldDefinitionDto) {
+  create(@Body() dto: CreateFieldDefinitionDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.fieldDefService.create(dto);
   }
 
@@ -50,8 +52,8 @@ export class FieldDefinitionsController {
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
-  async upload(@UploadedFile() file: Express.Multer.File) {
-    return this.fieldDefService.bulkUpload(file);
+  async upload(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+    return this.fieldDefService.bulkUpload(file, req);
   }
 
   @ApiQuery({

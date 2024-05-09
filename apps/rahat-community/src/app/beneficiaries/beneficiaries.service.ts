@@ -301,7 +301,7 @@ export class BeneficiariesService {
     // 1. Archive the beneficiary
     const rData = await this.update(uuid, { archived: true });
     const logData: any = {
-      userUUID: userUUID,
+      createdBy: userUUID,
       action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
       data: rData,
     };
