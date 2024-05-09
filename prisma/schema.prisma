@@ -36,6 +36,7 @@ model BeneficiaryArchive {
   updatedAt   DateTime?
   deletedAt   DateTime?
   archiveType ArchiveType @default(DELETED)
+  createdBy   String?
 
   @@map("tbl_archive_beneficiaries")
 }
