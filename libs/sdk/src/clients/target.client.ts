@@ -9,7 +9,7 @@ import {
   TargetResult,
   TargetResults,
 } from '../targets';
-import { PaginatedResult } from '@rumsan/sdk/types';
+import { PaginatedResult, Pagination } from '@rumsan/sdk/types';
 import { Beneficiary } from '../beneficiary';
 
 export const getTargetClient = (client: AxiosInstance): TargetClient => {
@@ -19,8 +19,11 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
       return formatResponse<TargetResults>(response);
     },
 
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/targets', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/targets', {
+        params: data,
+        ...config,
+      });
       return formatResponse<PaginatedResult<TargetList>>(response);
     },
 

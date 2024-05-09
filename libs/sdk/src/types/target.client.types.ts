@@ -8,7 +8,7 @@ import {
   TargetResults,
   TargetResult,
 } from '../targets';
-import { PaginatedResult } from '@rumsan/sdk/types';
+import { PaginatedResult, Pagination } from '@rumsan/sdk/types';
 import { Beneficiary } from '../beneficiary';
 
 export type TargetClient = {
@@ -18,6 +18,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<TargetResults>>;
 
   list: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PaginatedResult<TargetList>>>;
 
