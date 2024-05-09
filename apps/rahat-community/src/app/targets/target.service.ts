@@ -24,9 +24,11 @@ import { calculateNumberOfDays } from '../utils';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ListTargetQueryDto,
   TargetQueryStatusEnum,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TargetService {
@@ -99,6 +101,7 @@ export class TargetService {
       // 4.Merge result i.e. final_result UNION filteredDta
       final_result = createFinalResult(final_result, filteredData);
     }
+
     return final_result;
   }
 
@@ -212,7 +215,38 @@ export class TargetService {
     return this.prismaService.targetResult.findUnique({ where: { id } });
   }
 
-  list() {
-    return paginate(this.prismaService.targetResult, { where: {} });
+  list(filters: ListTargetQueryDto) {
+    const AND_CONDITIONS = [];
+    let conditions = {};
+    if (filters.label) {
+      AND_CONDITIONS.push({
+        label: { contains: filters.label, mode: 'insensitive' },
+      });
+      conditions = { AND: AND_CONDITIONS };
+    }
+
+    const select: Prisma.TargetQuerySelect = {
+      uuid: true,
+      label: true,
+      createdAt: true,
+      createdBy: true,
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    };
+
+    return paginate(
+      this.prismaService.targetQuery,
+      {
+        where: { ...conditions },
+        select,
+      },
+      {
+        page: filters.page,
+        perPage: filters.perPage,
+      },
+    );
   }
 }
