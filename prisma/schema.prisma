@@ -136,6 +136,7 @@ model Group {
   name               String             @unique
   beneficiariesGroup BeneficiaryGroup[]
   isSystem           Boolean            @default(false)
+  autoCreated        Boolean            @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()

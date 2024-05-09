@@ -45,22 +45,28 @@ export class GroupService {
   }
 
   async findAll(query: ListGroupDto) {
-    const OR_CONDITIONS = [];
+    const AND_CONDITIONS = [];
     let conditions = {};
 
-    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
-
     if (query.name) {
-      OR_CONDITIONS.push({
+      AND_CONDITIONS.push({
         name: { contains: query.name, mode: 'insensitive' },
       });
-      conditions = { OR: OR_CONDITIONS };
+      conditions = { AND: AND_CONDITIONS };
+    }
+
+    if (query.hasOwnProperty('autoCreated')) {
+      AND_CONDITIONS.push({
+        autoCreated: query.autoCreated,
+      });
+      conditions = { AND: AND_CONDITIONS };
     }
 
     const select: Prisma.GroupSelect = {
       name: true,
       uuid: true,
       id: true,
+      autoCreated: true,
       beneficiariesGroup: {
         select: {
           beneficiary: {

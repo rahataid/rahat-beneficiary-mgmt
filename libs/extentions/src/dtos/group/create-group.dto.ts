@@ -20,6 +20,15 @@ export class CreateGroupDto {
   isSystem?: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    example: false,
+    description: 'Track if created by system or manaully',
+  })
+  @IsBoolean()
+  @IsOptional()
+  autoCreated?: boolean;
+
+  @ApiProperty({
     type: 'string',
     example: 'a1b2c3d4-1234-5678-1234-567812345678',
   })

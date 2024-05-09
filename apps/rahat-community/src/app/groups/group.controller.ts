@@ -1,31 +1,29 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
-  UseGuards,
-  Res,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { GroupService } from './group.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  CreateGroupDto,
+  ListGroupDto,
+  UpdateGroupDto,
+} from '@rahataid/community-tool-extensions';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 import {
   ACTIONS,
   AbilitiesGuard,
   CheckAbilities,
   JwtGuard,
 } from '@rumsan/user';
-import {
-  CreateGroupDto,
-  ListGroupDto,
-  UpdateGroupDto,
-} from '@rahataid/community-tool-extensions';
-import { Response } from 'express';
-import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import { GroupService } from './group.service';
 
 @Controller('group')
 @ApiTags('Group')

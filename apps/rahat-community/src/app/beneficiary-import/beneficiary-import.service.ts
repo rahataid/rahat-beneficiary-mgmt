@@ -46,9 +46,11 @@ export class BeneficiaryImportService {
     const defaultGroup = await this.groupService.upsertByName({
       name: 'default',
       isSystem: true,
+      autoCreated: true,
     });
     const importGroup = await this.groupService.upsertByName({
       name: `import_${formatDateAndTime(new Date())}`,
+      autoCreated: true,
     });
     return {
       defaultGroupUID: defaultGroup.uuid,
@@ -71,13 +73,18 @@ export class BeneficiaryImportService {
       return item;
     });
 
+    const appendCreatedBy = final_payload.map((p) => {
+      p.createdBy = source.createdBy;
+      return p;
+    });
+
     const { defaultGroupUID, importGroupUID } =
       (await this.createDefaultAndImportGroup()) as any;
 
     const { importField } = source;
     // Import by UUID
     if (importField === ImportField.UUID) {
-      for (let p of final_payload) {
+      for (let p of appendCreatedBy) {
         upsertCount++;
         const benef = await this.benefService.upsertByUUID({
           defaultGroupUID,
@@ -87,18 +94,7 @@ export class BeneficiaryImportService {
         if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
       }
     }
-    // Import by GOVT_ID_NUMBER
-    // if (importField === ImportField.GOVT_ID_NUMBER) {
-    //   for (let p of final_payload) {
-    //     upsertCount++;
-    //     const benef = await this.benefService.upsertByGovtID({
-    //       defaultGroupUID,
-    //       importGroupUID,
-    //       beneficiary: p,
-    //     });
-    //     if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
-    //   }
-    // }
+
     await this.sourceService.updateImportFlag(source.uuid, true);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 
@@ -125,21 +121,5 @@ export class BeneficiaryImportService {
         sourceUID: sourceUID,
       },
     });
-  }
-
-  findAll() {
-    return `This action returns all beneficiaryImport`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} beneficiaryImport`;
-  }
-
-  update(id: number) {
-    return `This action updates a #${id} beneficiaryImport`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} beneficiaryImport`;
   }
 }

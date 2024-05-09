@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class ListGroupDto {
   @ApiProperty({ example: 1 })
@@ -24,4 +25,12 @@ export class ListGroupDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ obj, key }) => {
+    return obj[key] === 'true' ? true : obj[key] === 'false' ? false : obj[key];
+  })
+  autoCreated?: boolean;
 }
