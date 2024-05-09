@@ -23,8 +23,6 @@ export class GroupService {
     private beneficarySourceService: BeneficiarySourceService,
   ) {}
   async create(dto: CreateGroupDto) {
-    const exist = await this.findOneByName(dto.name);
-    if (exist) throw new Error('Group alread exist!');
     return await this.prisma.group.create({
       data: dto,
     });
@@ -34,7 +32,7 @@ export class GroupService {
     return this.prisma.group.findUnique({ where: { name } });
   }
 
-  upsertByName(dto: CreateGroupDto) {
+  upsertByName(dto: any) {
     return this.prisma.group.upsert({
       where: {
         name: dto.name,
@@ -67,6 +65,9 @@ export class GroupService {
       uuid: true,
       id: true,
       autoCreated: true,
+      user: {
+        select: { name: true },
+      },
       beneficiariesGroup: {
         select: {
           beneficiary: {

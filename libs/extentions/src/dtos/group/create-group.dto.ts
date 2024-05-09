@@ -32,6 +32,5 @@ export class CreateGroupDto {
     type: 'string',
     example: 'a1b2c3d4-1234-5678-1234-567812345678',
   })
-  @IsOptional()
   createdBy?: string;
 }
