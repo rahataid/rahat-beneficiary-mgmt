@@ -8,10 +8,14 @@ export type TargetPost = {
 
 export type TargetList = {
   id: number;
-  benefUuid?: UUID;
-  targetUuid: UUID;
-  createdAt: Date;
   updatedAt: Date;
+  createdAt: Date;
+  uuid: UUID;
+  label: string;
+  createdBy: UUID;
+  user: {
+    name: string;
+  };
 };
 
 export type TargetResults = {

@@ -9,6 +9,7 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { TargetService } from './target.service';
 
@@ -23,6 +24,7 @@ import {
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ListTargetQueryDto,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
 
@@ -35,8 +37,8 @@ export class TargetController {
   @Get()
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findAll() {
-    return this.targetService.list();
+  findAll(@Query('') filters: ListTargetQueryDto) {
+    return this.targetService.list(filters);
   }
 
   @Post()
