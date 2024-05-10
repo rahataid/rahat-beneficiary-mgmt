@@ -19,7 +19,6 @@ import {
   AbilitiesGuard,
   CheckAbilities,
   JwtGuard,
-  SUBJECTS,
 } from '@rumsan/user';
 import {
   CreateTargetQueryDto,
@@ -27,6 +26,7 @@ import {
   ListTargetQueryDto,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
 @Controller('targets')
 @ApiTags('Targets')
@@ -35,7 +35,7 @@ export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
   @Get()
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query('') filters: ListTargetQueryDto) {
     return this.targetService.list(filters);
@@ -43,7 +43,7 @@ export class TargetController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateTargetQueryDto, @Req() req: any) {
     dto.createdBy = req?.user?.uuid || '';
@@ -52,28 +52,28 @@ export class TargetController {
 
   @Post('export/:targetUUID')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   exportBeneficiaries(@Param('targetUUID') targetUUID: string) {
     return this.targetService.exportTargetBeneficiaries(targetUUID);
   }
 
   @Post('search')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   search(@Body() data: CreateTargetQueryDto) {
     return this.targetService.searchTargetBeneficiaries(data);
   }
 
   @Post('targetResult')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   target(@Body() data: CreateTargetResultDto) {
     return this.targetService.saveTargetResult(data);
   }
 
   @Patch(':uuid/label')
-  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   updateTargetQueryLabel(
     @Param('uuid') uuid: string,
@@ -83,7 +83,7 @@ export class TargetController {
   }
 
   @Get(':target_uuid/result')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('target_uuid') target_uuid: string) {
     return this.targetService.findByTargetUUID(target_uuid);

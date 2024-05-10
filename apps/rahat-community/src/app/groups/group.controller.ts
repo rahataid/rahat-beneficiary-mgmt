@@ -33,44 +33,44 @@ export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
   @Post()
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
   create(@Body() dto: CreateGroupDto, @Req() req: any) {
     dto.createdBy = req?.user?.uuid || '';
     return this.groupService.create(dto);
   }
 
   @Post('download')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
   async downloadData(@Body('uuid') uuid: string) {
     return this.groupService.downloadData(uuid);
   }
 
   @Get()
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.GROUP })
   findAll(@Query() query: ListGroupDto) {
     return this.groupService.findAll(query);
   }
 
   @Get(':uuid')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.GROUP })
   findOne(@Param('uuid') uuid: string, @Query() query: ListGroupDto) {
     return this.groupService.findOne(uuid, query);
   }
 
   @Patch(':uuid')
-  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.GROUP })
   update(@Param('uuid') uuid: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupService.update(uuid, updateGroupDto);
   }
 
   @Delete(':uuid/purge')
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
   purgeGroup(@Param('uuid') uuid: string) {
     return this.groupService.purgeGroup(uuid);
   }
 
   @Delete(':uuid/:deleteBeneficiaryFlag')
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
   remove(
     @Param('uuid') uuid: string,
     @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,

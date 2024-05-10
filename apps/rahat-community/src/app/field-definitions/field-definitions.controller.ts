@@ -1,32 +1,32 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
-  UseGuards,
+  Patch,
+  Post,
   Query,
-  UseInterceptors,
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
   Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FieldDefinitionsService } from './field-definitions.service';
 
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rumsan/user';
-import { ACTIONS } from '@rumsan/user';
 import {
   CreateFieldDefinitionDto,
   UpdateFieldDefinitionDto,
   updateFieldStatusDto,
 } from '@rahataid/community-tool-extensions';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from '../utils/multer';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import {
+  ACTIONS,
+  AbilitiesGuard,
+  CheckAbilities,
+  JwtGuard,
+} from '@rumsan/user';
 
 @Controller('field-definitions')
 @ApiTags('Field Definitions')
@@ -37,7 +37,7 @@ export class FieldDefinitionsController {
 
   @CheckAbilities({
     actions: ACTIONS.CREATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.FIELD_DEFINITION,
   })
   @Post()
   create(@Body() dto: CreateFieldDefinitionDto, @Req() req: any) {
@@ -48,7 +48,7 @@ export class FieldDefinitionsController {
   @Post('upload')
   @CheckAbilities({
     actions: ACTIONS.CREATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.FIELD_DEFINITION,
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
@@ -62,19 +62,19 @@ export class FieldDefinitionsController {
     type: Boolean,
     required: false,
   })
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.FIELD_DEFINITION })
   @Get()
   findAll(@Query() query: any) {
     return this.fieldDefService.findAll(query);
   }
 
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.FIELD_DEFINITION })
   @Get('active')
   findActive() {
     return this.fieldDefService.listActive();
   }
 
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.FIELD_DEFINITION })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.fieldDefService.findOne(+id);
@@ -82,7 +82,7 @@ export class FieldDefinitionsController {
 
   @CheckAbilities({
     actions: ACTIONS.UPDATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.FIELD_DEFINITION,
   })
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateFieldDefinitionDto) {
@@ -91,7 +91,7 @@ export class FieldDefinitionsController {
 
   @CheckAbilities({
     actions: ACTIONS.DELETE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.FIELD_DEFINITION,
   })
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: updateFieldStatusDto) {
