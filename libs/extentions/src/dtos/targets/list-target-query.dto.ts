@@ -24,9 +24,4 @@ export class ListTargetQueryDto {
   @IsString()
   @IsOptional()
   label?: string;
-
-  @ApiPropertyOptional()
-  @IsBoolean()
-  @IsOptional()
-  hasLabel?: boolean;
 }

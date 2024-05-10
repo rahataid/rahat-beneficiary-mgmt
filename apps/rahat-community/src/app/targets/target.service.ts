@@ -219,12 +219,6 @@ export class TargetService {
     const AND_CONDITIONS = [];
     let conditions = {};
 
-    if (filters.hasLabel) {
-      AND_CONDITIONS.push({
-        label: { not: null },
-      });
-    }
-
     if (filters.label) {
       AND_CONDITIONS.push({
         label: { contains: filters.label, mode: 'insensitive' },
@@ -249,7 +243,7 @@ export class TargetService {
     return paginate(
       this.prismaService.targetQuery,
       {
-        where: { ...conditions },
+        where: { ...conditions, label: { not: null } },
         select,
       },
       {
