@@ -42,15 +42,17 @@ export class BeneficiaryImportService {
     return modifiedData;
   }
 
-  async createDefaultAndImportGroup() {
+  async createDefaultAndImportGroup(createdBy: string) {
     const defaultGroup = await this.groupService.upsertByName({
       name: 'default',
       isSystem: true,
       autoCreated: true,
+      createdBy,
     });
     const importGroup = await this.groupService.upsertByName({
       name: `import_${formatDateAndTime(new Date())}`,
       autoCreated: true,
+      createdBy,
     });
     return {
       defaultGroupUID: defaultGroup.uuid,
@@ -79,7 +81,7 @@ export class BeneficiaryImportService {
     });
 
     const { defaultGroupUID, importGroupUID } =
-      (await this.createDefaultAndImportGroup()) as any;
+      (await this.createDefaultAndImportGroup(source.createdBy)) as any;
 
     const { importField } = source;
     // Import by UUID
