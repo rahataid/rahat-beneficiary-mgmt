@@ -256,7 +256,7 @@ export class BeneficiariesService {
       const formattedDate = new Date(dto.birthDate).toISOString();
       dto.birthDate = formattedDate;
     }
-    if (extras) {
+    if (Object.keys(extras).length) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
       const nonMatching = validateAllowedFieldAndTypes(extras, fields);

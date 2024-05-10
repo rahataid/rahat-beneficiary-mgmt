@@ -113,18 +113,13 @@ export class FieldDefinitionsService {
   }
 
   update(id: number, dto: UpdateFieldDefinitionDto) {
+    const { fieldPopulate } = dto;
+    const populateData =
+      fieldPopulate && fieldPopulate.data ? { data: fieldPopulate.data } : null;
     const payload = {
       ...dto,
       name: convertToValidString(dto.name),
-      fieldPopulate:
-        dto?.fieldPopulate?.data?.length > 0
-          ? {
-              data: dto.fieldPopulate.data.map((item) => ({
-                label: item.label,
-                value: item.value,
-              })),
-            }
-          : [],
+      fieldPopulate: populateData,
     };
     return this.prisma.fieldDefinition.update({
       where: { id },
