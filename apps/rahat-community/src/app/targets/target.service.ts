@@ -218,16 +218,25 @@ export class TargetService {
   list(filters: ListTargetQueryDto) {
     const AND_CONDITIONS = [];
     let conditions = {};
+
+    if (filters.hasLabel) {
+      AND_CONDITIONS.push({
+        label: { not: null },
+      });
+    }
+
     if (filters.label) {
       AND_CONDITIONS.push({
         label: { contains: filters.label, mode: 'insensitive' },
       });
-      conditions = { AND: AND_CONDITIONS };
     }
+
+    conditions = { AND: AND_CONDITIONS };
 
     const select: Prisma.TargetQuerySelect = {
       uuid: true,
       label: true,
+      status: true,
       createdAt: true,
       createdBy: true,
       user: {

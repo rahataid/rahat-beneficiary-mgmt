@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ListTargetQueryDto {
   @ApiProperty({ example: 1 })
@@ -24,4 +24,9 @@ export class ListTargetQueryDto {
   @IsString()
   @IsOptional()
   label?: string;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  hasLabel?: boolean;
 }
