@@ -42,13 +42,8 @@ export class BeneficiariesService {
     return { scalarFields, extraFields };
   }
 
-  async addToGroups({ benefUID, defaultGroupUID, importGroupUID }) {
-    await this.upsertToDefaultGroup({ defaultGroupUID, benefUID });
-    await this.upsertToImportGroup({ importGroupUID, benefUID });
-  }
-
-  upsertToDefaultGroup({ defaultGroupUID, benefUID }) {
-    return this.prisma.beneficiaryGroup.upsert({
+  upsertToDefaultGroup({ tx, defaultGroupUID, benefUID }) {
+    return tx.beneficiaryGroup.upsert({
       where: {
         benefGroupIdentifier: {
           beneficiaryUID: benefUID,
@@ -66,8 +61,8 @@ export class BeneficiariesService {
     });
   }
 
-  upsertToImportGroup({ importGroupUID, benefUID }) {
-    return this.prisma.beneficiaryGroup.upsert({
+  upsertToImportGroup({ tx, importGroupUID, benefUID }) {
+    return tx.beneficiaryGroup.upsert({
       where: {
         benefGroupIdentifier: {
           beneficiaryUID: benefUID,
@@ -110,31 +105,67 @@ export class BeneficiariesService {
     // return res;
   }
 
-  async upsertByUUID({ defaultGroupUID, importGroupUID, beneficiary }) {
+  async addToGroups({ tx, benefUID, defaultGroupUID, importGroupUID }) {
+    await this.upsertToDefaultGroup({ tx, defaultGroupUID, benefUID });
+    await this.upsertToImportGroup({ tx, importGroupUID, benefUID });
+  }
+
+  async upsertByUUID({
+    sourceUID,
+    defaultGroupUID,
+    importGroupUID,
+    beneficiary,
+  }) {
     if (beneficiary.birthDate) {
       beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
     }
-    const exist = await this.findOne(beneficiary.uuid);
-    if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
+
     if (!beneficiary.walletAddress) {
       beneficiary.walletAddress = generateRandomWallet().address;
     }
-    const res = await this.prisma.beneficiary.upsert({
-      where: { uuid: beneficiary.uuid },
-      update: beneficiary,
-      create: beneficiary,
+    return this.prisma.$transaction(async (tx) => {
+      const exist = await this.findOne(beneficiary.uuid);
+      if (exist)
+        await this.addBeneficiaryToArchive(tx, exist, ArchiveType.UPDATED);
+
+      const res = await tx.beneficiary.upsert({
+        where: { uuid: beneficiary.uuid },
+        update: beneficiary,
+        create: beneficiary,
+      });
+
+      await this.addToGroups({
+        tx,
+        benefUID: res.uuid,
+        defaultGroupUID,
+        importGroupUID,
+      });
+
+      return this.addBenefToSource(res.uuid, sourceUID, tx);
     });
-    await this.addToGroups({
-      benefUID: res.uuid,
-      defaultGroupUID,
-      importGroupUID,
-    });
-    return res;
   }
 
-  async addBeneficiaryToArchive(beneficiary: any, flag: ArchiveType) {
+  async addBenefToSource(benefUID: string, sourceUID: string, tx: any) {
+    const rData = await tx.beneficiarySource.findUnique({
+      where: {
+        benefSourceIdentifier: {
+          beneficiaryUID: benefUID,
+          sourceUID: sourceUID,
+        },
+      },
+    });
+    if (rData) return;
+    return tx.beneficiarySource.create({
+      data: {
+        beneficiaryUID: benefUID,
+        sourceUID: sourceUID,
+      },
+    });
+  }
+
+  async addBeneficiaryToArchive(tx: any, beneficiary: any, flag: ArchiveType) {
     beneficiary.archiveType = flag;
-    return this.prisma.beneficiaryArchive.upsert({
+    return tx.beneficiaryArchive.upsert({
       where: { uuid: beneficiary.uuid },
       update: beneficiary,
       create: beneficiary,
