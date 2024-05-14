@@ -88,12 +88,13 @@ export class BeneficiaryImportService {
     if (importField === ImportField.UUID) {
       for (let p of appendCreatedBy) {
         upsertCount++;
-        const benef = await this.benefService.upsertByUUID({
+        await this.benefService.upsertByUUID({
+          sourceUID: source.uuid,
           defaultGroupUID,
           importGroupUID,
           beneficiary: p,
         });
-        if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
+        // if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
       }
     }
 
