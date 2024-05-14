@@ -132,7 +132,9 @@ function checkIfPopulateValuesMatch(
   extraFields: any,
 ) {
   const values = getPopulateFieldValues(fieldName, extraFields);
-  return values.includes(value.toString());
+  const v = value.toString().trim();
+  const isValid = values.includes(v);
+  return isValid;
 }
 
 function getPopulateFieldValues(fieldName: string, extraFields: any) {
