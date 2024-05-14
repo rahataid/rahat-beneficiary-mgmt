@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
-import { paginate } from '../utils/paginate';
 import {
   CreateGroupDto,
   ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { generateExcelData } from '../utils/export-to-excel';
-import { Response } from 'express';
-import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { ArchiveType } from '@rahataid/community-tool-sdk';
+import { PrismaService } from '@rumsan/prisma';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { generateExcelData } from '../utils/export-to-excel';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class GroupService {
@@ -88,6 +87,7 @@ export class GroupService {
       this.prisma.group,
       {
         where: { ...conditions },
+        orderBy: { createdAt: 'desc' },
         select,
       },
       {
