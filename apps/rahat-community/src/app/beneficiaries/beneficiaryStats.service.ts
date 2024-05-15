@@ -1,6 +1,7 @@
 import { StatsService } from '@rahataid/community-tool-stats';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
+import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class BeneficiaryStatService {
@@ -65,26 +66,26 @@ export class BeneficiaryStatService {
     }));
   }
 
-  async calculateCasteStats() {
+  async calculateExtrasStats(fieldName: string) {
     const data = await this.prisma.beneficiary.findMany({
       where: {
-        extras: { path: ['caste'], not: null },
+        extras: { path: [fieldName], not: null },
       },
       select: { extras: true },
     });
     if (!data) return [];
-    const casteCounts = {};
+    const myData = {};
     data.forEach((item: any) => {
-      const caste = item.extras?.caste || '';
-      if (casteCounts[caste]) {
-        casteCounts[caste] += 1;
+      const value = item.extras[fieldName];
+      if (myData[value]) {
+        myData[value] += 1;
       } else {
-        casteCounts[caste] = 1;
+        myData[value] = 1;
       }
     });
-    return Object.keys(casteCounts).map((caste) => ({
-      id: caste,
-      count: casteCounts[caste],
+    return Object.keys(myData).map((d) => ({
+      id: d,
+      count: myData[d],
     }));
   }
 
@@ -100,13 +101,15 @@ export class BeneficiaryStatService {
       phoneStatus,
       total,
       castStats,
+      bankNameStats,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
       this.calculateInternetStatusStats(),
       this.calculatePhoneStatusStats(),
       this.totalBeneficiaries(),
-      this.calculateCasteStats(),
+      this.calculateExtrasStats(REPORTING_FIELD.CASTE),
+      this.calculateExtrasStats(REPORTING_FIELD.BANK_NAME),
     ]);
 
     return {
@@ -116,6 +119,7 @@ export class BeneficiaryStatService {
       phoneStatus,
       total,
       castStats,
+      bankNameStats,
     };
   }
 
@@ -135,6 +139,7 @@ export class BeneficiaryStatService {
       phoneStatus,
       total,
       castStats,
+      bankNameStats,
     } = await this.calculateAllStats();
 
     await Promise.all([
@@ -168,8 +173,21 @@ export class BeneficiaryStatService {
         data: castStats,
         group: 'beneficiary',
       }),
+      this.statsService.save({
+        name: 'banke_name_stats',
+        data: bankNameStats,
+        group: 'beneficiary',
+      }),
     ]);
 
-    return { gender, bankedStatus, internetStatus, phoneStatus };
+    return {
+      gender,
+      bankedStatus,
+      internetStatus,
+      phoneStatus,
+      castStats,
+      bankNameStats,
+      total,
+    };
   }
 }

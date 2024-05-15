@@ -53,3 +53,8 @@ export const FIELD_DEF_TYPES = {
   CHECKBOX: 'CHECKBOX',
   DROPDOWN: 'DROPDOWN',
 };
+
+export const REPORTING_FIELD = {
+  CASTE: 'caste',
+  BANK_NAME: 'bank_name',
+};
