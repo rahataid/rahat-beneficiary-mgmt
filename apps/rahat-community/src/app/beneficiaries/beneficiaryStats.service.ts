@@ -65,19 +65,49 @@ export class BeneficiaryStatService {
     }));
   }
 
+  async calculateCasteStats() {
+    const data = await this.prisma.beneficiary.findMany({
+      where: {
+        extras: { path: ['caste'], not: null },
+      },
+      select: { extras: true },
+    });
+    if (!data) return [];
+    const casteCounts = {};
+    data.forEach((item: any) => {
+      const caste = item.extras?.caste || '';
+      if (casteCounts[caste]) {
+        casteCounts[caste] += 1;
+      } else {
+        casteCounts[caste] = 1;
+      }
+    });
+    return Object.keys(casteCounts).map((caste) => ({
+      id: caste,
+      count: casteCounts[caste],
+    }));
+  }
+
   async totalBeneficiaries() {
     return { count: await this.prisma.beneficiary.count() };
   }
 
   async calculateAllStats() {
-    const [gender, bankedStatus, internetStatus, phoneStatus, total] =
-      await Promise.all([
-        this.calculateGenderStats(),
-        this.calculateBankedStatusStats(),
-        this.calculateInternetStatusStats(),
-        this.calculatePhoneStatusStats(),
-        this.totalBeneficiaries(),
-      ]);
+    const [
+      gender,
+      bankedStatus,
+      internetStatus,
+      phoneStatus,
+      total,
+      castStats,
+    ] = await Promise.all([
+      this.calculateGenderStats(),
+      this.calculateBankedStatusStats(),
+      this.calculateInternetStatusStats(),
+      this.calculatePhoneStatusStats(),
+      this.totalBeneficiaries(),
+      this.calculateCasteStats(),
+    ]);
 
     return {
       gender,
@@ -85,6 +115,7 @@ export class BeneficiaryStatService {
       internetStatus,
       phoneStatus,
       total,
+      castStats,
     };
   }
 
@@ -97,8 +128,14 @@ export class BeneficiaryStatService {
   }
 
   async saveAllStats() {
-    const { gender, bankedStatus, internetStatus, phoneStatus, total } =
-      await this.calculateAllStats();
+    const {
+      gender,
+      bankedStatus,
+      internetStatus,
+      phoneStatus,
+      total,
+      castStats,
+    } = await this.calculateAllStats();
 
     await Promise.all([
       this.statsService.save({
@@ -124,6 +161,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'beneficiary_phoneStatus',
         data: phoneStatus,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'caste_stats',
+        data: castStats,
         group: 'beneficiary',
       }),
     ]);
