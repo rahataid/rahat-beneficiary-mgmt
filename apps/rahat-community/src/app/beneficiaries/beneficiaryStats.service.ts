@@ -102,6 +102,7 @@ export class BeneficiaryStatService {
       total,
       castStats,
       bankNameStats,
+      govtIdTypeStats,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -110,6 +111,7 @@ export class BeneficiaryStatService {
       this.totalBeneficiaries(),
       this.calculateExtrasStats(REPORTING_FIELD.CASTE),
       this.calculateExtrasStats(REPORTING_FIELD.BANK_NAME),
+      this.calculateExtrasStats(REPORTING_FIELD.HH_GOVT_ID_TYPE),
     ]);
 
     return {
@@ -120,6 +122,7 @@ export class BeneficiaryStatService {
       total,
       castStats,
       bankNameStats,
+      govtIdTypeStats,
     };
   }
 
@@ -140,6 +143,7 @@ export class BeneficiaryStatService {
       total,
       castStats,
       bankNameStats,
+      govtIdTypeStats,
     } = await this.calculateAllStats();
 
     await Promise.all([
@@ -174,8 +178,13 @@ export class BeneficiaryStatService {
         group: 'beneficiary',
       }),
       this.statsService.save({
-        name: 'banke_name_stats',
+        name: 'bank_name_stats',
         data: bankNameStats,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'govt_id_type_stats',
+        data: govtIdTypeStats,
         group: 'beneficiary',
       }),
     ]);
