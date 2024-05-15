@@ -88,4 +88,11 @@ export class TargetController {
   findOne(@Param('target_uuid') target_uuid: string) {
     return this.targetService.findByTargetUUID(target_uuid);
   }
+
+  @Post(':target_uuid/download')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  downloadPinnedBenificiary(@Param('target_uuid') target_uuid: string) {
+    return this.targetService.downloadPinnedBeneficiary(target_uuid);
+  }
 }

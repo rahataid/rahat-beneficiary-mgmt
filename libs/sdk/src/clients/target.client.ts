@@ -66,5 +66,20 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
       );
       return formatResponse<TargetResults>(response);
     },
+
+    downloadPinnedBeneficiary: async ({
+      target_uuid,
+      config,
+    }: {
+      target_uuid: string;
+      config?: AxiosRequestConfig;
+    }) => {
+      const response = await client.post(`/targets/${target_uuid}/download`, {
+        ...config,
+        responseType:
+          config?.responseType === 'arraybuffer' ? 'arraybuffer' : 'blob',
+      });
+      return response;
+    },
   };
 };

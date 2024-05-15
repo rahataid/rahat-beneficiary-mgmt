@@ -46,4 +46,12 @@ export type TargetClient = {
     targetUUID?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<TargetResults>>;
+
+  downloadPinnedBeneficiary: ({
+    target_uuid,
+    config,
+  }: {
+    target_uuid: string;
+    config: AxiosRequestConfig;
+  }) => Promise<any>;
 };

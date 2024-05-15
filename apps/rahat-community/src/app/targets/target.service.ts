@@ -29,6 +29,7 @@ import {
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
 import { Prisma } from '@prisma/client';
+import { generateExcelData } from '../utils/export-to-excel';
 
 @Injectable()
 export class TargetService {
@@ -251,5 +252,27 @@ export class TargetService {
         perPage: filters.perPage,
       },
     );
+  }
+
+  async downloadPinnedBeneficiary(targetUuid: string) {
+    console.log(targetUuid);
+    const getLabelName = await this.prismaService.targetQuery.findUnique({
+      where: { uuid: targetUuid },
+      select: {
+        label: true,
+      },
+    });
+
+    const pinnedBeneficiary = await this.prismaService.targetResult.findMany({
+      where: { targetUuid },
+      include: { beneficiary: true },
+    });
+
+    const formattedData = pinnedBeneficiary.map((item) => {
+      return { ...item.beneficiary, label: getLabelName.label };
+    });
+
+    const excelData = generateExcelData(formattedData);
+    return excelData;
   }
 }
