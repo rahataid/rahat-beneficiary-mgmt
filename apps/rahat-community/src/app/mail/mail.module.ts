@@ -19,6 +19,9 @@ const EMAIL_TEMPLATE_DIR = join(__dirname, './assets/email-templates');
             user: config.get('EMAIL_ADDRESS'),
             pass: config.get('EMAIL_PASSWORD'),
           },
+          tls: {
+            rejectUnauthorized: false,
+          },
         },
         defaults: {
           from: `"No Reply" <${config.get('EMAIL_ADDRESS')}>`,
