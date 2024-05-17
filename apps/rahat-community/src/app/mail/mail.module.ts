@@ -12,16 +12,16 @@ const EMAIL_TEMPLATE_DIR = join(__dirname, './assets/email-templates');
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          host: config.get('EMAIL_HOST'),
-          port: 587,
+          host: config.get('SMTP_HOST'),
+          port: config.get('SMTP_PORT'),
           secure: true,
           auth: {
-            user: config.get('EMAIL_ADDRESS'),
-            pass: config.get('EMAIL_PASSWORD'),
+            user: config.get('SMTP_USERNAME'),
+            pass: config.get('SMTP_PASSWORD'),
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get('EMAIL_ADDRESS')}>`,
+          from: `"No Reply" <${config.get('SMTP_USERNAME')}>`,
         },
         template: {
           dir: EMAIL_TEMPLATE_DIR,
