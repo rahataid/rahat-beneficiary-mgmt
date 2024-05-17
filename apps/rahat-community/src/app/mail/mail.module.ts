@@ -13,14 +13,11 @@ const EMAIL_TEMPLATE_DIR = join(__dirname, './assets/email-templates');
       useFactory: async (config: ConfigService) => ({
         transport: {
           host: config.get('EMAIL_HOST'),
-          port: config.get('EMAIL_PORT'),
+          port: 587,
           secure: true,
           auth: {
             user: config.get('EMAIL_ADDRESS'),
             pass: config.get('EMAIL_PASSWORD'),
-          },
-          tls: {
-            rejectUnauthorized: false,
           },
         },
         defaults: {
