@@ -8,7 +8,7 @@ import {
   TargetResults,
   TargetResult,
 } from '../targets';
-import { PaginatedResult } from '@rumsan/sdk/types';
+import { PaginatedResult, Pagination } from '@rumsan/sdk/types';
 import { Beneficiary } from '../beneficiary';
 
 export type TargetClient = {
@@ -18,6 +18,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<TargetResults>>;
 
   list: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PaginatedResult<TargetList>>>;
 
@@ -37,7 +38,7 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<TargetResults>>;
 
   patchLabel: (
-    { id, label }: { id?: number; label?: string },
+    { uuid, payload }: { uuid: string; payload: any },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PatchResult>>;
 
@@ -45,4 +46,12 @@ export type TargetClient = {
     targetUUID?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<TargetResults>>;
+
+  downloadPinnedBeneficiary: ({
+    target_uuid,
+    config,
+  }: {
+    target_uuid: string;
+    config: AxiosRequestConfig;
+  }) => Promise<any>;
 };

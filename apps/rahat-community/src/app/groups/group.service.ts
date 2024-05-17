@@ -1,30 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@rumsan/prisma';
 import { Prisma } from '@prisma/client';
-import { paginate } from '../utils/paginate';
 import {
   CreateGroupDto,
   ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { generateExcelData } from '../utils/export-to-excel';
-import { Response } from 'express';
-import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { ArchiveType } from '@rahataid/community-tool-sdk';
+import { PrismaService } from '@rumsan/prisma';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
+import { generateExcelData } from '../utils/export-to-excel';
+import { paginate } from '../utils/paginate';
 
 @Injectable()
 export class GroupService {
   constructor(
     private prisma: PrismaService,
-    private beneficaryGroup: BeneficiaryGroupService,
+    private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
     private beneficarySourceService: BeneficiarySourceService,
   ) {}
   async create(dto: CreateGroupDto) {
-    const exist = await this.findOneByName(dto.name);
-    if (exist) throw new Error('Group alread exist!');
     return await this.prisma.group.create({
       data: dto,
     });
@@ -34,7 +31,7 @@ export class GroupService {
     return this.prisma.group.findUnique({ where: { name } });
   }
 
-  upsertByName(dto: CreateGroupDto) {
+  upsertByName(dto: any) {
     return this.prisma.group.upsert({
       where: {
         name: dto.name,
@@ -45,22 +42,31 @@ export class GroupService {
   }
 
   async findAll(query: ListGroupDto) {
-    const OR_CONDITIONS = [];
+    const AND_CONDITIONS = [];
     let conditions = {};
 
-    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
-
     if (query.name) {
-      OR_CONDITIONS.push({
+      AND_CONDITIONS.push({
         name: { contains: query.name, mode: 'insensitive' },
       });
-      conditions = { OR: OR_CONDITIONS };
+      conditions = { AND: AND_CONDITIONS };
+    }
+
+    if (query.hasOwnProperty('autoCreated')) {
+      AND_CONDITIONS.push({
+        autoCreated: query.autoCreated,
+      });
+      conditions = { AND: AND_CONDITIONS };
     }
 
     const select: Prisma.GroupSelect = {
       name: true,
       uuid: true,
       id: true,
+      autoCreated: true,
+      user: {
+        select: { name: true },
+      },
       beneficiariesGroup: {
         select: {
           beneficiary: {
@@ -81,6 +87,7 @@ export class GroupService {
       this.prisma.group,
       {
         where: { ...conditions },
+        orderBy: { createdAt: 'desc' },
         select,
       },
       {
@@ -90,21 +97,42 @@ export class GroupService {
     );
   }
 
-  findOne(uuid: string) {
-    return this.prisma.group.findUnique({
-      where: {
-        uuid,
-      },
+  async findOne(uuid: string, query?: ListGroupDto) {
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
       select: {
+        name: true,
         beneficiariesGroup: {
-          include: {
+          select: {
             beneficiary: true,
           },
         },
-        name: true,
-        isSystem: true,
       },
     });
+    if (query && query.page && query.perPage) {
+      const startIndex = (query.page - 1) * query.perPage;
+      const endIndex = query.page * query.perPage;
+      const paginatedBeneficiaries = group.beneficiariesGroup.slice(
+        startIndex,
+        endIndex,
+      );
+      const total = group.beneficiariesGroup.length;
+      const lastPage = Math.ceil(total / query.perPage);
+
+      const meta = {
+        total,
+        lastPage,
+        currentPage: query.page,
+        perPage: query.perPage,
+      };
+
+      return {
+        ...group,
+        beneficiariesGroup: paginatedBeneficiaries,
+        meta,
+      };
+    }
+    return group;
   }
 
   findUnique(uuid: string) {
@@ -143,7 +171,7 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of group.beneficiariesGroup) {
           // Delete from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBeneficiaryFromGroup(
+          await this.beneficaryGroupService.removeBeneficiaryFromGroup(
             item.beneficiaryUID,
             group.uuid,
           );
@@ -160,17 +188,29 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
-  downloadData(data: any[], res: Response) {
-    const excelBuffer = generateExcelData(data);
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  async downloadData(uuid: string) {
+    const getGrouppedBeneficiary = await this.findOne(uuid);
+    const groupName = getGrouppedBeneficiary.name;
+
+    const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
+      (item) => {
+        return { ...item.beneficiary, groupName };
+      },
     );
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename=beneficiaries.xlsx',
-    );
-    return res.send(excelBuffer);
+
+    const excelData = generateExcelData(formattedData);
+
+    // res.setHeader(
+    //   'Content-Type',
+    //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // );
+    // res.setHeader(
+    //   'Content-Disposition',
+    //   'attachment; filename=beneficiaries.xlsx',
+    // );
+    // return res.send(excelBuffer);
+
+    return excelData;
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {
@@ -199,7 +239,7 @@ export class GroupService {
       await this.prisma.$transaction(async (prisma) => {
         for (const item of group.beneficiariesGroup) {
           // Delete benef from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroup.removeBenefFromMultipleGroups(
+          await this.beneficaryGroupService.removeBenefFromMultipleGroups(
             item.beneficiaryUID,
           );
 

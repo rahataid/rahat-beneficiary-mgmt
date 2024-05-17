@@ -29,6 +29,7 @@ export class AppController {
   }
 
   @Get('settings/kobotool')
+  @ApiBearerAuth('JWT')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   filterSettingByType() {
     return this.appService.findKobotoolSettings();

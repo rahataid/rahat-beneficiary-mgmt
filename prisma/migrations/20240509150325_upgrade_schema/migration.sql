@@ -23,7 +23,7 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER', 'UNKNOWN');
 CREATE TYPE "AuthType" AS ENUM ('EMAIL', 'PHONE', 'WALLET');
 
 -- CreateEnum
-CREATE TYPE "FieldType" AS ENUM ('CHECKBOX', 'DROPDOWN', 'NUMBER', 'PASSWORD', 'RADIO', 'TEXT', 'TEXTAREA');
+CREATE TYPE "FieldType" AS ENUM ('CHECKBOX', 'DROPDOWN', 'NUMBER', 'PASSWORD', 'RADIO', 'TEXT', 'TEXTAREA', 'DATE');
 
 -- CreateEnum
 CREATE TYPE "Service" AS ENUM ('EMAIL', 'PHONE', 'WALLET', 'GOOGLE', 'APPLE', 'FACEBOOK', 'TWITTER', 'GITHUB', 'LINKEDIN');
@@ -58,7 +58,8 @@ CREATE TABLE "tbl_archive_beneficiaries" (
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
-    "archiveType" "ArchiveType" NOT NULL DEFAULT 'DELETED'
+    "archiveType" "ArchiveType" NOT NULL DEFAULT 'DELETED',
+    "createdBy" TEXT
 );
 
 -- CreateTable
@@ -84,6 +85,7 @@ CREATE TABLE "tbl_beneficiaries" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
     "extras" JSONB,
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_beneficiaries_pkey" PRIMARY KEY ("id")
 );
@@ -99,6 +101,7 @@ CREATE TABLE "tbl_sources" (
     "fieldMapping" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_sources_pkey" PRIMARY KEY ("id")
 );
@@ -126,6 +129,7 @@ CREATE TABLE "tbl_field_definitions" (
     "isTargeting" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_field_definitions_pkey" PRIMARY KEY ("id")
 );
@@ -136,8 +140,10 @@ CREATE TABLE "tbl_groups" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "isSystem" BOOLEAN NOT NULL DEFAULT false,
+    "autoCreated" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_groups_pkey" PRIMARY KEY ("id")
 );
@@ -158,11 +164,11 @@ CREATE TABLE "tbl_beneficiary_groups" (
 CREATE TABLE "tbl_logs" (
     "id" SERIAL NOT NULL,
     "uuid" UUID NOT NULL,
-    "userUUID" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "data" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_logs_pkey" PRIMARY KEY ("id")
 );
@@ -176,6 +182,7 @@ CREATE TABLE "tbl_target_queries" (
     "status" "TargetQueryStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "createdBy" TEXT,
 
     CONSTRAINT "tbl_target_queries_pkey" PRIMARY KEY ("id")
 );
@@ -395,10 +402,22 @@ CREATE UNIQUE INDEX "tbl_settings_name_key" ON "tbl_settings"("name");
 CREATE UNIQUE INDEX "tbl_stats_name_key" ON "tbl_stats"("name");
 
 -- AddForeignKey
+ALTER TABLE "tbl_beneficiaries" ADD CONSTRAINT "tbl_beneficiaries_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_sources" ADD CONSTRAINT "tbl_sources_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_sourceUID_fkey" FOREIGN KEY ("sourceUID") REFERENCES "tbl_sources"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_beneficiary_sources" ADD CONSTRAINT "tbl_beneficiary_sources_beneficiaryUID_fkey" FOREIGN KEY ("beneficiaryUID") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_field_definitions" ADD CONSTRAINT "tbl_field_definitions_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_groups" ADD CONSTRAINT "tbl_groups_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_beneficiaryUID_fkey" FOREIGN KEY ("beneficiaryUID") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -407,7 +426,10 @@ ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_bene
 ALTER TABLE "tbl_beneficiary_groups" ADD CONSTRAINT "tbl_beneficiary_groups_groupUID_fkey" FOREIGN KEY ("groupUID") REFERENCES "tbl_groups"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tbl_logs" ADD CONSTRAINT "tbl_logs_userUUID_fkey" FOREIGN KEY ("userUUID") REFERENCES "tbl_users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tbl_logs" ADD CONSTRAINT "tbl_logs_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_target_queries" ADD CONSTRAINT "tbl_target_queries_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "tbl_users"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tbl_target_results" ADD CONSTRAINT "tbl_target_results_benefUuid_fkey" FOREIGN KEY ("benefUuid") REFERENCES "tbl_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;

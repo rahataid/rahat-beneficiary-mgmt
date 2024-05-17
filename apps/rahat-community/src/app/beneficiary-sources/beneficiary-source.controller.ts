@@ -36,7 +36,7 @@ export class BeneficiarySourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.CREATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.SOURCE,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiarySourceDto) {
@@ -47,7 +47,7 @@ export class BeneficiarySourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.READ,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.SOURCE,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(query: any) {
@@ -58,7 +58,7 @@ export class BeneficiarySourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.READ,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.SOURCE,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('id') id: string) {
@@ -69,7 +69,7 @@ export class BeneficiarySourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.UPDATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.SOURCE,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(@Param('id') id: number, @Body() dto: UpdateBeneficiarySourceDto) {
@@ -80,7 +80,7 @@ export class BeneficiarySourceController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.DELETE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.SOURCE,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)

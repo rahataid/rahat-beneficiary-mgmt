@@ -15,9 +15,12 @@ import {
   QUEUE,
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
-import { validateSchemaFields } from '../beneficiary-import/helpers';
+import {
+  formatEnumFieldValues,
+  validateSchemaFields,
+} from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { parseIsoDateToString } from '../utils';
+import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums } from '@rahataid/community-tool-sdk';
 
@@ -29,15 +32,51 @@ export class SourceService {
     private readonly fdService: FieldDefinitionsService,
   ) {}
 
-  formatEnumFieldValues(item: any) {
-    if (item.gender) item.gender = item.gender.toUpperCase();
-    if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
-    if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
-    if (item.internetStatus)
-      item.internetStatus = item.internetStatus.toUpperCase();
-    return item;
+  async fetchExistingBeneficiaries() {
+    const res = await this.prisma.beneficiary.findMany({
+      select: {
+        phone: true,
+        govtIDNumber: true,
+      },
+    });
+    return res;
   }
 
+  async checkDuplicateBeneficiary(payload: any) {
+    const existing = await this.fetchExistingBeneficiaries();
+    return this.compareDuplicateBeneficiary(payload, existing);
+  }
+
+  async compareDuplicateBeneficiary(payload: any, existingData: any) {
+    let result = [];
+    for (let p of payload) {
+      if (p.phone) {
+        const found = existingData.find(
+          (f) =>
+            allowOnlyAlphabetAndNumbers(f.phone) ===
+            allowOnlyAlphabetAndNumbers(p.phone),
+        );
+        if (found) p.isDuplicate = true;
+      }
+      if (p.govtIDNumber) {
+        const found = existingData.find(
+          (f) =>
+            allowOnlyAlphabetAndNumbers(f.govtIDNumber) ===
+            allowOnlyAlphabetAndNumbers(p.govtIDNumber),
+        );
+        if (found) p.isDuplicate = true;
+      }
+      result.push(p);
+    }
+    return result;
+  }
+
+  // 1. Validate required fields
+  // 2. Fetch data from tbl_beneficiary with govtIDNumber and phone number
+  // 3. Sanitize phone and govtIDNumber as alphanumeric
+  // 4. Merge data with tbl_beneficiary and payload data
+  // 5. Compare payload data with merged data
+  // 6. Return payload data with isDuplicate flag
   async create(dto: CreateSourceDto) {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
@@ -45,14 +84,15 @@ export class SourceService {
 
     let payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
-      const formatted = this.formatEnumFieldValues(d);
+      if (d.phone) d.phone = d.phone.toString();
+      const formatted = formatEnumFieldValues(d);
       return {
         ...formatted,
         uuid: uuid(),
       };
     });
     const extraFields = await this.listExtraFields();
-    const hasUUID = payloadWithUUID.hasOwnProperty(EXTERNAL_UUID_FIELD);
+    const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasUUID) {
       payloadWithUUID = data.map((d: any) => {
         return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
@@ -102,35 +142,15 @@ export class SourceService {
     });
   }
 
-  async getDuplicateCountByGovtIDNumber(payload: []) {
-    // let count = 0;
-    // for (let p of payload) {
-    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-    //   if (keyExist) {
-    //     const res = await this.prisma.beneficiary.findUnique({
-    //       where: { govtIDNumber: p['govtIDNumber'] },
-    //     });
-    //     if (res) count++;
-    //   }
-    // }
-    // return count;
-  }
-
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
-    let result = [] as any;
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
       hasUUID,
     );
 
-    // result = await this.checkDuplicateByGovtIDNumber(processedData);
+    const duplicates = await this.checkDuplicateBeneficiary(processedData);
 
-    result = await this.checkDuplicateByExternalUUID(
-      processedData,
-      EXTERNAL_UUID_FIELD,
-    );
-    const duplicates = result.filter((f) => f.isDuplicate);
     const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };
       if (item.birthDate) {
@@ -138,11 +158,10 @@ export class SourceService {
       }
       return item;
     });
-    const finalResult = result.filter((f) => !f.exportOnly);
     return {
       invalidFields: allValidationErrors,
-      result: finalResult,
-      duplicates: dateParsedDuplicates,
+      result: dateParsedDuplicates,
+      hasUUID,
     };
   }
 
@@ -160,25 +179,6 @@ export class SourceService {
     return { message: 'Source created and added to queue' };
   }
 
-  async checkDuplicateByGovtIDNumber(data: any) {
-    // const result = [];
-    // for (let p of data) {
-    //   p.isDuplicate = false;
-    //   const keyExist = Object.hasOwnProperty.call(p, 'govtIDNumber');
-    //   if (keyExist && p['govtIDNumber']) {
-    //     const res = await this.prisma.beneficiary.findUnique({
-    //       where: { govtIDNumber: p['govtIDNumber'].toString() },
-    //     });
-    //     if (res) {
-    //       p.isDuplicate = true;
-    //       result.push({ ...res, isDuplicate: true, exportOnly: true });
-    //     }
-    //   }
-    //   result.push(p);
-    // }
-    // return result;
-  }
-
   async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
     const result = [];
     for (let p of data) {
@@ -187,19 +187,11 @@ export class SourceService {
       if (keyExist && p[external_uuid]) {
         const rahat_uuid = p[external_uuid];
         const isValid = isUuid(rahat_uuid);
-        if (!isValid) throw new Error('Data contains invalid rahat UUID!');
+        if (!isValid) throw new Error('Data contains invalid UUID!');
         const res = await this.prisma.beneficiary.findUnique({
           where: { uuid: rahat_uuid },
         });
-        if (res) {
-          p.isDuplicate = true;
-          result.push({
-            ...res,
-            uuid: rahat_uuid,
-            isDuplicate: true,
-            exportOnly: true,
-          });
-        }
+        if (res) p.isDuplicate = true;
       }
       result.push(p);
     }

@@ -13,6 +13,7 @@ export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
   GOVT_ID_NUMBER: 'govtIDNumber',
+  PHONE: 'phone',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -56,6 +57,7 @@ export const validateSchemaFields = async (
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
     BENEFICIARY_REQ_FIELDS.GOVT_ID_NUMBER,
+    BENEFICIARY_REQ_FIELDS.PHONE,
   ];
   // if (customUniqueField) requiredFields.push(customUniqueField);
   if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
@@ -130,7 +132,9 @@ function checkIfPopulateValuesMatch(
   extraFields: any,
 ) {
   const values = getPopulateFieldValues(fieldName, extraFields);
-  return values.includes(value.toString());
+  const v = value.toString().trim();
+  const isValid = values.includes(v);
+  return isValid;
 }
 
 function getPopulateFieldValues(fieldName: string, extraFields: any) {
@@ -170,13 +174,14 @@ const validatePrimaryFields = async (
         primaryErrors.push({
           uuid: item.uuid,
           fieldName: f,
-          value: null,
+          value: '',
           isNull: true,
           message: 'Required field is missing',
         });
       }
     }
   }
+
   const processedData = addEmptyFieldsToPayload(payload, emptyFields);
   return { primaryErrors, processedData };
 };
@@ -185,7 +190,7 @@ const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
     emptyFields.forEach((field) => {
-      newObj[field] = null; //
+      newObj[field] = newObj[field] || ''; //
     });
     return newObj;
   });
@@ -339,3 +344,12 @@ function isValidDateFormat(dateString: string) {
   // If all validations pass, return true
   return true;
 }
+
+export const formatEnumFieldValues = (item: any) => {
+  if (item.gender) item.gender = item.gender.toUpperCase();
+  if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
+  if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
+  if (item.internetStatus)
+    item.internetStatus = item.internetStatus.toUpperCase();
+  return item;
+};

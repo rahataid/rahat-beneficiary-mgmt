@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { DB_MODELS } from '../../constants';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
-import { SourceService } from '../sources/source.service';
-import { fetchSchemaFields, injectCustomID } from './helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
-import { GroupService } from '../groups/group.service';
 import { PrismaService } from '@rumsan/prisma';
+import { DB_MODELS } from '../../constants';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { GroupService } from '../groups/group.service';
+import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
+import { fetchSchemaFields } from './helpers';
 
 const { ImportField } = Enums;
 
 @Injectable()
 export class BeneficiaryImportService {
   constructor(
-    private benefSourceService: BeneficiarySourceService,
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
     private eventEmitter: EventEmitter2,
@@ -44,13 +42,17 @@ export class BeneficiaryImportService {
     return modifiedData;
   }
 
-  async createDefaultAndImportGroup() {
+  async createDefaultAndImportGroup(createdBy: string) {
     const defaultGroup = await this.groupService.upsertByName({
       name: 'default',
       isSystem: true,
+      autoCreated: true,
+      createdBy,
     });
     const importGroup = await this.groupService.upsertByName({
       name: `import_${formatDateAndTime(new Date())}`,
+      autoCreated: true,
+      createdBy,
     });
     return {
       defaultGroupUID: defaultGroup.uuid,
@@ -73,34 +75,29 @@ export class BeneficiaryImportService {
       return item;
     });
 
+    const appendCreatedBy = final_payload.map((p) => {
+      p.createdBy = source.createdBy;
+      return p;
+    });
+
     const { defaultGroupUID, importGroupUID } =
-      (await this.createDefaultAndImportGroup()) as any;
+      (await this.createDefaultAndImportGroup(source.createdBy)) as any;
 
     const { importField } = source;
     // Import by UUID
     if (importField === ImportField.UUID) {
-      for (let p of final_payload) {
+      for (let p of appendCreatedBy) {
         upsertCount++;
-        const benef = await this.benefService.upsertByUUID({
+        await this.benefService.upsertByUUID({
+          sourceUID: source.uuid,
           defaultGroupUID,
           importGroupUID,
           beneficiary: p,
         });
-        if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
+        // if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
       }
     }
-    // Import by GOVT_ID_NUMBER
-    // if (importField === ImportField.GOVT_ID_NUMBER) {
-    //   for (let p of final_payload) {
-    //     upsertCount++;
-    //     const benef = await this.benefService.upsertByGovtID({
-    //       defaultGroupUID,
-    //       importGroupUID,
-    //       beneficiary: p,
-    //     });
-    //     if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
-    //   }
-    // }
+
     await this.sourceService.updateImportFlag(source.uuid, true);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 
@@ -127,21 +124,5 @@ export class BeneficiaryImportService {
         sourceUID: sourceUID,
       },
     });
-  }
-
-  findAll() {
-    return `This action returns all beneficiaryImport`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} beneficiaryImport`;
-  }
-
-  update(id: number) {
-    return `This action updates a #${id} beneficiaryImport`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} beneficiaryImport`;
   }
 }
