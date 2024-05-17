@@ -25,16 +25,6 @@ export type GroupResponse = {
   updatedAt: Date;
 };
 
-type BeneficiariesGroup = {
-  id: number;
-  uuid: string;
-  beneficiaryId: number;
-  groupId: number;
-  createdAt: Date;
-  updatedAt: Date;
-  beneficiary: Beneficiary;
-};
-
 export type GroupBeneficiaryQuery = {
   page: number;
   perPage: number;
@@ -51,4 +41,17 @@ export type ListGroupBeneficiary = {
   ];
 };
 
-export type GroupResponseById = BeneficiariesGroup[];
+export type GroupResponseById = {
+  id: number;
+  uuid: string;
+  beneficiaryId: number;
+  groupId: number;
+  createdAt: Date;
+  updatedAt: Date;
+  beneficiary: Beneficiary;
+};
+
+export type GroupPurge = {
+  beneficiaryUuid: string[];
+  groupUuid: string;
+};
