@@ -38,6 +38,8 @@ import {
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
+const MAX_FILE_SIZE = 10000000000;
+
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
 @ApiBearerAuth('JWT')
@@ -63,8 +65,9 @@ export class BeneficiariesController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
-  async create(@Body() dto: CreateBeneficiaryDto) {
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
+  async create(@Body() dto: CreateBeneficiaryDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.beneficiariesService.create(dto);
   }
 
@@ -76,13 +79,13 @@ export class BeneficiariesController {
   }
 
   @Post('upload')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadAsset(
     @UploadedFile(
       new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 10000000000 })],
+        validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
       }),
     )
     file: //@ts-ignore
@@ -93,37 +96,36 @@ export class BeneficiariesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findAll(@Query('') filters: ListBeneficiaryDto) {
     return this.beneficiariesService.findAll(filters);
   }
 
-  @Get(':name')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
-  findStatsByName(@Param('name') name: string) {
-    return this.benStatsService.getStatsByName(name);
-  }
   @Get(':uuid')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findOne(@Param('uuid') uuid: string) {
+    console.log(uuid);
     return this.beneficiariesService.findOne(uuid);
   }
 
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
-  update(
-    @Param('uuid') uuid: string,
-    @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
-  ) {
-    return this.beneficiariesService.update(uuid, updateBeneficiaryDto);
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.BENEFICIARY })
+  update(@Param('uuid') uuid: string, @Body() dto: UpdateBeneficiaryDto) {
+    return this.beneficiariesService.update(uuid, dto);
   }
 
   @Delete(':uuid')
-  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.BENEFICIARY })
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string, @Req() req: any) {
     const userUUID = req?.user?.uuid;
     return this.beneficiariesService.remove(uuid, userUUID);
+  }
+
+  @Get(':name')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
+  findStatsByName(@Param('name') name: string) {
+    return this.benStatsService.getStatsByName(name);
   }
 }

@@ -35,4 +35,20 @@ type BeneficiariesGroup = {
   beneficiary: Beneficiary;
 };
 
+export type GroupBeneficiaryQuery = {
+  page: number;
+  perPage: number;
+};
+
+export type ListGroupBeneficiary = {
+  name: string;
+  uuid: string;
+  id: number;
+  beneficiariesGroup: [
+    {
+      beneficiary: Beneficiary;
+    },
+  ];
+};
+
 export type GroupResponseById = BeneficiariesGroup[];

@@ -14,24 +14,25 @@ import { ExcelParser } from '../utils/excel.parser';
 export class FieldDefinitionsService {
   constructor(private prisma: PrismaService) {}
 
-  bulkUpload(file: Express.Multer.File) {
+  bulkUpload(file: Express.Multer.File, req: any) {
     const data = ExcelParser(file.buffer) as CreateFieldDefinitionDto[];
     if (!data.length) throw new Error('No data found in the file!');
-    return this.createBulk(data);
+    return this.createBulk(data, req);
   }
-  async createBulk(data: CreateFieldDefinitionDto[]) {
+  async createBulk(data: CreateFieldDefinitionDto[], req: any) {
     let uploadedCount = 0;
     for (let d of data) {
-      await this.upsertByName(d);
+      await this.upsertByName(d, req);
       uploadedCount++;
     }
     return { message: `${uploadedCount} fields uploaded successfully!` };
   }
 
-  upsertByName(data: CreateFieldDefinitionDto) {
+  upsertByName(data: CreateFieldDefinitionDto, req: any) {
+    data.createdBy = req?.user?.uuid || '';
     const { name, fieldType, ...rest } = data;
     const parsedName = convertToValidString(name);
-    const payload = { name: parsedName, fieldType };
+    const payload = { name: parsedName, fieldType, ...rest };
     return this.prisma.fieldDefinition.upsert({
       where: { name: parsedName },
       update: payload,
@@ -112,18 +113,13 @@ export class FieldDefinitionsService {
   }
 
   update(id: number, dto: UpdateFieldDefinitionDto) {
+    const { fieldPopulate } = dto;
+    const populateData =
+      fieldPopulate && fieldPopulate.data ? { data: fieldPopulate.data } : null;
     const payload = {
       ...dto,
       name: convertToValidString(dto.name),
-      fieldPopulate:
-        dto?.fieldPopulate?.data?.length > 0
-          ? {
-              data: dto.fieldPopulate.data.map((item) => ({
-                label: item.label,
-                value: item.value,
-              })),
-            }
-          : [],
+      fieldPopulate: populateData,
     };
     return this.prisma.fieldDefinition.update({
       where: { id },

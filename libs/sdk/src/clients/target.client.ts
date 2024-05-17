@@ -9,7 +9,7 @@ import {
   TargetResult,
   TargetResults,
 } from '../targets';
-import { PaginatedResult } from '@rumsan/sdk/types';
+import { PaginatedResult, Pagination } from '@rumsan/sdk/types';
 import { Beneficiary } from '../beneficiary';
 
 export const getTargetClient = (client: AxiosInstance): TargetClient => {
@@ -19,8 +19,11 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
       return formatResponse<TargetResults>(response);
     },
 
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/targets', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/targets', {
+        params: data,
+        ...config,
+      });
       return formatResponse<PaginatedResult<TargetList>>(response);
     },
 
@@ -46,12 +49,12 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     patchLabel: async (
-      { id, label }: { id?: number; label?: string },
+      { uuid, payload }: { uuid: string; payload: any },
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.patch(
-        `/targets/${id}/label`,
-        label,
+        `/targets/${uuid}/label`,
+        payload,
         config,
       );
       return formatResponse<PatchResult>(response);
@@ -62,6 +65,21 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
         config,
       );
       return formatResponse<TargetResults>(response);
+    },
+
+    downloadPinnedBeneficiary: async ({
+      target_uuid,
+      config,
+    }: {
+      target_uuid: string;
+      config?: AxiosRequestConfig;
+    }) => {
+      const response = await client.post(`/targets/${target_uuid}/download`, {
+        ...config,
+        responseType:
+          config?.responseType === 'arraybuffer' ? 'arraybuffer' : 'blob',
+      });
+      return response;
     },
   };
 };

@@ -1,8 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
 
-export class ListGroupDto {
+export class ListTargetQueryDto {
   @ApiProperty({ example: 1 })
   @IsString()
   @IsOptional()
@@ -21,16 +20,8 @@ export class ListGroupDto {
   @IsNumber()
   perPage!: number;
 
-  @ApiPropertyOptional({ example: 'Tayaba' })
+  @ApiPropertyOptional({ example: 'My Beneficiary' })
   @IsString()
   @IsOptional()
-  name?: string;
-
-  @ApiPropertyOptional({ example: true })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ obj, key }) => {
-    return obj[key] === 'true' ? true : obj[key] === 'false' ? false : obj[key];
-  })
-  autoCreated?: boolean;
+  label?: string;
 }

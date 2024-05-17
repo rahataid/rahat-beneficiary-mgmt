@@ -8,6 +8,8 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { TargetService } from './target.service';
 
@@ -17,13 +19,14 @@ import {
   AbilitiesGuard,
   CheckAbilities,
   JwtGuard,
-  SUBJECTS,
 } from '@rumsan/user';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ListTargetQueryDto,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
+import { SUBJECTS } from '@rahataid/community-tool-sdk';
 
 @Controller('targets')
 @ApiTags('Targets')
@@ -32,56 +35,64 @@ export class TargetController {
   constructor(private readonly targetService: TargetService) {}
 
   @Get()
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findAll() {
-    return this.targetService.list();
+  findAll(@Query('') filters: ListTargetQueryDto) {
+    return this.targetService.list(filters);
   }
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  create(@Body() dto: CreateTargetQueryDto) {
+  create(@Body() dto: CreateTargetQueryDto, @Req() req: any) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.targetService.create(dto);
   }
 
   @Post('export/:targetUUID')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   exportBeneficiaries(@Param('targetUUID') targetUUID: string) {
     return this.targetService.exportTargetBeneficiaries(targetUUID);
   }
 
   @Post('search')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   search(@Body() data: CreateTargetQueryDto) {
     return this.targetService.searchTargetBeneficiaries(data);
   }
 
   @Post('targetResult')
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   target(@Body() data: CreateTargetResultDto) {
     return this.targetService.saveTargetResult(data);
   }
 
-  @Patch(':id/label')
-  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.ALL })
+  @Patch(':uuid/label')
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   updateTargetQueryLabel(
-    @Param('id') id: number,
+    @Param('uuid') uuid: string,
     @Body() dto: updateTargetQueryLabelDTO,
   ) {
-    return this.targetService.updateTargetQueryLabel(id, dto);
+    return this.targetService.updateTargetQueryLabel(uuid, dto);
   }
 
   @Get(':target_uuid/result')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('target_uuid') target_uuid: string) {
     return this.targetService.findByTargetUUID(target_uuid);
+  }
+
+  @Post(':target_uuid/download')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  downloadPinnedBenificiary(@Param('target_uuid') target_uuid: string) {
+    return this.targetService.downloadPinnedBeneficiary(target_uuid);
   }
 }

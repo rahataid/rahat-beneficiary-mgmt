@@ -24,9 +24,12 @@ import { calculateNumberOfDays } from '../utils';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ListTargetQueryDto,
   TargetQueryStatusEnum,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
+import { Prisma } from '@prisma/client';
+import { generateExcelData } from '../utils/export-to-excel';
 
 @Injectable()
 export class TargetService {
@@ -46,7 +49,6 @@ export class TargetService {
 
   async saveTargetResult(data: CreateTargetResultDto) {
     const { filterOptions, targetUuid } = data;
-    let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
     const getFilterData = filterOptions[0]?.data;
@@ -67,15 +69,15 @@ export class TargetService {
     const filteredData = filterExtraFieldValues(benefData.rows, extra);
 
     // 4.Merge result i.e. final_result UNION filteredDta
-    final_result = createFinalResult(final_result, filteredData);
+    // final_result = createFinalResult(final_result, filteredData);
 
     // 5. Save final result in the TargetResult && Update Status to COMPLETED
-    await this.createManySearchResult(final_result, targetUuid);
+    await this.createManySearchResult(filteredData, targetUuid);
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
     return {
-      message: `${final_result.length} Target result saved successfully`,
+      message: `${filteredData.length} Target result saved successfully`,
     };
   }
 
@@ -100,6 +102,7 @@ export class TargetService {
       // 4.Merge result i.e. final_result UNION filteredDta
       final_result = createFinalResult(final_result, filteredData);
     }
+
     return final_result;
   }
 
@@ -110,12 +113,10 @@ export class TargetService {
     });
   }
 
-  updateTargetQueryLabel(id: number, dto: updateTargetQueryLabelDTO) {
+  updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
     return this.prismaService.targetQuery.update({
-      where: { id: +id },
-      data: {
-        label: dto.label,
-      },
+      where: { uuid },
+      data: dto,
     });
   }
 
@@ -215,7 +216,63 @@ export class TargetService {
     return this.prismaService.targetResult.findUnique({ where: { id } });
   }
 
-  list() {
-    return paginate(this.prismaService.targetResult, { where: {} });
+  list(filters: ListTargetQueryDto) {
+    const AND_CONDITIONS = [];
+    let conditions = {};
+
+    if (filters.label) {
+      AND_CONDITIONS.push({
+        label: { contains: filters.label, mode: 'insensitive' },
+      });
+    }
+
+    conditions = { AND: AND_CONDITIONS };
+
+    const select: Prisma.TargetQuerySelect = {
+      uuid: true,
+      label: true,
+      status: true,
+      createdAt: true,
+      createdBy: true,
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    };
+
+    return paginate(
+      this.prismaService.targetQuery,
+      {
+        where: { ...conditions, label: { not: null } },
+        select,
+      },
+      {
+        page: filters.page,
+        perPage: filters.perPage,
+      },
+    );
+  }
+
+  async downloadPinnedBeneficiary(targetUuid: string) {
+    console.log(targetUuid);
+    const getLabelName = await this.prismaService.targetQuery.findUnique({
+      where: { uuid: targetUuid },
+      select: {
+        label: true,
+      },
+    });
+
+    const pinnedBeneficiary = await this.prismaService.targetResult.findMany({
+      where: { targetUuid },
+      include: { beneficiary: true },
+    });
+
+    const formattedData = pinnedBeneficiary.map((item) => {
+      return { ...item.beneficiary, label: getLabelName.label };
+    });
+
+    const excelData = generateExcelData(formattedData);
+    return excelData;
   }
 }

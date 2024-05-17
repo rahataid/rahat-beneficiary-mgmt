@@ -37,7 +37,7 @@ export class BeneficiaryGroupController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.CREATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.GROUP,
   })
   // @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateBeneficiaryGroupDto) {
@@ -48,7 +48,7 @@ export class BeneficiaryGroupController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.READ,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.GROUP,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findAll(@Query('') filters: any) {
@@ -59,7 +59,7 @@ export class BeneficiaryGroupController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.READ,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.GROUP,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   findOne(@Param('uuid') uuid: string) {
@@ -70,7 +70,7 @@ export class BeneficiaryGroupController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.UPDATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.GROUP,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   update(
@@ -83,7 +83,7 @@ export class BeneficiaryGroupController {
   @Delete(':uuid')
   @CheckAbilities({
     actions: ACTIONS.DELETE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.GROUP,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
   @HttpCode(HttpStatus.OK)

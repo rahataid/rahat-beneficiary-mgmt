@@ -29,7 +29,7 @@ export class BeneficiaryImportController {
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({
     actions: ACTIONS.CREATE,
-    subject: SUBJECTS.ALL,
+    subject: SUBJECTS.BENEFICIARY,
   })
   importBySourceUUID(@Param('source_uuid') uuid: string) {
     return this.beneficiaryImportService.importBySourceUUID(uuid);
