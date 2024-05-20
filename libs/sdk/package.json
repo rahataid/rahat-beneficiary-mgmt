@@ -1,6 +1,6 @@
 {
   "name": "@rahataid/community-tool-sdk",
-  "version": "0.0.20",
+  "version": "0.0.23",
   "dependencies": {
     "tslib": "^2.3.0"
   },
