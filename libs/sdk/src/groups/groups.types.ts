@@ -55,3 +55,8 @@ export type GroupPurge = {
   beneficiaryUuid: string[];
   groupUuid: string;
 };
+
+export type GroupMessage = {
+  message: string;
+  flag: string;
+};
