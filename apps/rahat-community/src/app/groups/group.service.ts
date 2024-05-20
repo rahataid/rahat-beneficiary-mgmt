@@ -325,4 +325,31 @@ export class GroupService {
 
     return 'Group purged successfully!';
   }
+
+  async deleteGroup(groupUuid: string) {
+    const groupList = await this.prisma.group.findUnique({
+      where: {
+        uuid: groupUuid,
+      },
+      select: {
+        _count: true,
+      },
+    });
+    if (groupList._count.beneficiariesGroup === 0) {
+      await this.prisma.group.delete({
+        where: {
+          uuid: groupUuid,
+        },
+      });
+      return {
+        message: 'Group deleted successfully!',
+        flag: 'true',
+      };
+    } else {
+      return {
+        message: 'Group cannot be deleted!',
+        flag: 'false',
+      };
+    }
+  }
 }
