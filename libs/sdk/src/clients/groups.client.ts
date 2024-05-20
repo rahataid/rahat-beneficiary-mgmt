@@ -6,6 +6,8 @@ import {
   GroupResponse,
   ListGroup,
   GroupBeneficiaryQuery,
+  GroupPurge,
+  GroupMessage,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -42,8 +44,8 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       return formatResponse<GroupResponse>(response);
     },
 
-    purgeGroup: async (uuid: string, config?: AxiosRequestConfig) => {
-      const response = await client.delete(`/group/${uuid}/purge`, config);
+    purgeGroup: async (data?: GroupPurge, config?: AxiosRequestConfig) => {
+      const response = await client.delete(`/group/purge`, { data, ...config });
       return formatResponse<GroupResponse>(response);
     },
 
@@ -75,6 +77,10 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
           config?.responseType === 'arraybuffer' ? 'arraybuffer' : 'blob',
       });
       return response;
+    },
+    deleteGroup: async (uuid?: string, config?: AxiosRequestConfig) => {
+      const response = await client.delete(`/group/${uuid}`, config);
+      return formatResponse<GroupMessage>(response);
     },
   };
 };

@@ -1,22 +1,21 @@
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
 
-  const filteredArray = main_query_result.filter((item) => {
-    for (const key in extras) {
-      if (
-        item.extras &&
-        Object.prototype.hasOwnProperty.call(item.extras, key)
-      ) {
-        const filterValues = extras[key].split(',');
-        const itemValue = item.extras[key];
-        if (filterValues.includes(itemValue)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  });
-  return filteredArray;
+  const filteredArray = () => {
+    return main_query_result.filter((item) => {
+      return Object.keys(extras).every((key) => {
+        const queryValues = extras[key]
+          .split(',')
+          .map((value) => value.trim())
+          .filter((value) => value !== '');
+        if (queryValues.length === 0) return true; // Don't filter if all query values are empty
+        return queryValues.some((value) => item.extras[key] === value);
+      });
+    });
+  };
+
+  const result = filteredArray();
+  return result;
 };
 
 export const createSearchQuery = (filters: any) => {

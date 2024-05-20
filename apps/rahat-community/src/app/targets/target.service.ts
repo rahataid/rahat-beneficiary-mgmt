@@ -120,13 +120,6 @@ export class TargetService {
     });
   }
 
-  async DeleteTargetQuery(queryUID: string) {
-    const found = await this.findTargetQueryById(queryUID);
-    const data = await this.findTargetResultByQueryUID(queryUID);
-    if (found && !data.length)
-      return this.prismaService.targetQuery.delete({ where: { id: found.id } });
-  }
-
   async findTargetQueryById(queryUID: string) {
     return this.prismaService.targetQuery.findUnique({
       where: { uuid: queryUID },
@@ -177,13 +170,13 @@ export class TargetService {
 
   async cleanTargetQueryAndResults() {
     let count = 0;
-    const data = await this.findCompletedAndNoLabelTargetQuery();
-    if (!data.length) return;
-    for (let d of data) {
-      const targetResults = await this.findTargetResultByQueryUID(d.uuid);
-      count = await this.compareDateAndDelete(targetResults, d.uuid);
+    const targetQueries = await this.findCompletedAndNoLabelTargetQuery();
+    if (!targetQueries.length) return;
+    for (let q of targetQueries) {
+      const targetResults = await this.findTargetResultByQueryUID(q.uuid);
+      count = await this.compareDateAndDelete(targetResults, q.uuid);
     }
-    console.log(`${count} Target Results Deleted!`);
+    console.log(`${count} Target results deleted!`);
   }
 
   async compareDateAndDelete(targetResult: any, targetQueryUID: string) {
@@ -200,16 +193,25 @@ export class TargetService {
     return deletedCount;
   }
 
-  findTargetResultByQueryUID(targetUID: string) {
-    return this.prismaService.targetResult.findMany({
-      where: { targetUuid: targetUID },
-    });
-  }
-
   async deleteTargetResult(id: number) {
     const found = await this.findTargetResultById(id);
     if (found)
       await this.prismaService.targetResult.delete({ where: { id: +id } });
+  }
+
+  async DeleteTargetQuery(queryUID: string) {
+    const found = await this.findTargetQueryById(queryUID);
+    const targetResult = await this.findTargetResultByQueryUID(queryUID);
+    if (found && !targetResult.length)
+      return this.prismaService.targetQuery.delete({
+        where: { uuid: queryUID },
+      });
+  }
+
+  findTargetResultByQueryUID(targetUID: string) {
+    return this.prismaService.targetResult.findMany({
+      where: { targetUuid: targetUID },
+    });
   }
 
   findTargetResultById(id: number) {

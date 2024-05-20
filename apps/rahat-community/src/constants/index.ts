@@ -38,7 +38,7 @@ export const EVENTS = {
 };
 
 export const APP = {
-  DAYS_TO_DELETE_BENEF_TARGET: 5,
+  DAYS_TO_DELETE_BENEF_TARGET: 1,
 };
 
 export const APP_SETTINGS = {
