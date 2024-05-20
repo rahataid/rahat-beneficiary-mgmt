@@ -7,6 +7,7 @@ import {
   ListGroup,
   GroupBeneficiaryQuery,
   GroupPurge,
+  GroupMessage,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -76,6 +77,10 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
           config?.responseType === 'arraybuffer' ? 'arraybuffer' : 'blob',
       });
       return response;
+    },
+    deleteGroup: async (uuid?: string, config?: AxiosRequestConfig) => {
+      const response = await client.delete(`/group/${uuid}`, config);
+      return formatResponse<GroupMessage>(response);
     },
   };
 };

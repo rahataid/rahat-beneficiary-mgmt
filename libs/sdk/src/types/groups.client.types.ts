@@ -2,6 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import {
   GroupBeneficiaryQuery,
   GroupInput,
+  GroupMessage,
   GroupPurge,
   GroupResponse,
   GroupResponseById,
@@ -49,4 +50,9 @@ export type GroupClient = {
     uuid: string;
     config: AxiosRequestConfig;
   }) => Promise<any>;
+
+  deleteGroup: (
+    uuid?: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<GroupMessage>>;
 };
