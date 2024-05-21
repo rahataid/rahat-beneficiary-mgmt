@@ -110,7 +110,8 @@ const validateSecondaryFields = async (
 function validateValueByType({ value, type, fieldName, extraFields }) {
   switch (type.toUpperCase()) {
     case FIELD_DEF_TYPES.NUMBER:
-      return !isNaN(parseInt(value)) && isFinite(parseInt(value));
+      let val = value ? value : 0;
+      return !isNaN(parseInt(val)) && isFinite(parseInt(val));
     case FIELD_DEF_TYPES.TEXT:
       return typeof value === 'string' || typeof value === 'number';
     case FIELD_DEF_TYPES.DROPDOWN:
