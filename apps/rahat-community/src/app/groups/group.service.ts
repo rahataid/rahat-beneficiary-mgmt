@@ -332,24 +332,25 @@ export class GroupService {
         uuid: groupUuid,
       },
       select: {
-        _count: true,
+        isSystem: true,
+        _count: {
+          select: {
+            beneficiariesGroup: true,
+          },
+        },
       },
     });
-    if (groupList._count.beneficiariesGroup === 0) {
-      await this.prisma.group.delete({
-        where: {
-          uuid: groupUuid,
-        },
-      });
-      return {
-        message: 'Group deleted successfully!',
-        flag: 'true',
-      };
-    } else {
-      return {
-        message: 'Group cannot be deleted!',
-        flag: 'false',
-      };
-    }
+
+    if (!groupList) throw new Error('Group not found!');
+    if (groupList.isSystem) throw new Error('System group cannot be deleted!');
+    if (groupList._count.beneficiariesGroup > 0)
+      throw new Error('Cannot delete group with active beneficiaries!');
+
+    await this.prisma.group.delete({
+      where: {
+        uuid: groupUuid,
+      },
+    });
+    return 'Group deleted successfully!';
   }
 }
