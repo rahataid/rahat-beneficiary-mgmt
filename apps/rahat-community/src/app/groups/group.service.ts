@@ -275,8 +275,6 @@ export class GroupService {
   async purgeGroup(groupUuid: string, beneficiaryUuid: string[]) {
     const group = await this.findUnique(groupUuid);
     if (!group) throw new Error('Group not found');
-    if (group.isSystem) throw new Error('System group cannot be purged!');
-
     group.uuid &&
       (await this.prisma.$transaction(async (prisma) => {
         for (const item of beneficiaryUuid) {
