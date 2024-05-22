@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CreateGroupDto,
   ListGroupDto,
+  PurgeGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
@@ -63,10 +64,10 @@ export class GroupController {
     return this.groupService.update(uuid, updateGroupDto);
   }
 
-  @Delete(':uuid/purge')
+  @Delete('purge')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
-  purgeGroup(@Param('uuid') uuid: string) {
-    return this.groupService.purgeGroup(uuid);
+  purgeGroup(@Body() dto: PurgeGroupDto) {
+    return this.groupService.purgeGroup(dto.groupUuid, dto.beneficiaryUuid);
   }
 
   @Delete(':uuid/:deleteBeneficiaryFlag')
@@ -76,5 +77,11 @@ export class GroupController {
     @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,
   ) {
     return this.groupService.remove(uuid, deleteBeneficiaryFlag);
+  }
+
+  @Delete(':uuid')
+  @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
+  deleteGroup(@Param('uuid') uuid: string) {
+    return this.groupService.deleteGroup(uuid);
   }
 }
