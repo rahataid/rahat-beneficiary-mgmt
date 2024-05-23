@@ -303,9 +303,9 @@ export class BeneficiariesService {
       },
       data: dto,
     });
-
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
 
+    console.log('benefData', beneficiaryData);
     return beneficiaryData;
   }
 
@@ -318,7 +318,7 @@ export class BeneficiariesService {
       where: {
         uuid,
       },
-      select: {
+      include: {
         beneficiariesGroup: {
           select: {
             beneficiaryUID: true,
@@ -328,9 +328,20 @@ export class BeneficiariesService {
       },
     });
 
+    console.log(benef);
     if (!benef) throw new Error('Beneficiary not found!');
     // 1. Archive the beneficiary
-    const rData = await this.update(uuid, { archived: true });
+    console.log(userUUID);
+
+    const rData = await this.prisma.beneficiary.update({
+      where: {
+        uuid,
+      },
+      data: {
+        archived: true,
+      },
+    });
+
     const logData: any = {
       createdBy: userUUID,
       action: BeneficiaryEvents.BENEFICIARY_ARCHIVED,
@@ -353,8 +364,9 @@ export class BeneficiariesService {
 
     // 3. Create log
     await this.createLog(logData);
+
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
-    return rData;
+    return 'Removed Succesfullty';
   }
 
   async deletePermanently(uuid: string) {
