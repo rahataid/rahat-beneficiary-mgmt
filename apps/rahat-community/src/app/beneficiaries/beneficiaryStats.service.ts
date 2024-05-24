@@ -75,6 +75,7 @@ export class BeneficiaryStatService {
     });
     if (!data) return [];
     const myData = {};
+    // Calculate count for each value
     data.forEach((item: any) => {
       const value = item.extras[fieldName];
       if (myData[value]) {
@@ -104,6 +105,7 @@ export class BeneficiaryStatService {
       bankNameStats,
       govtIdTypeStats,
       educationStats,
+      vulnerabilityCategory,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -114,6 +116,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.BANK_NAME),
       this.calculateExtrasStats(REPORTING_FIELD.HH_GOVT_ID_TYPE),
       this.calculateExtrasStats(REPORTING_FIELD.HH_EDUCATION),
+      this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
     ]);
 
     return {
@@ -126,6 +129,7 @@ export class BeneficiaryStatService {
       bankNameStats,
       govtIdTypeStats,
       educationStats,
+      vulnerabilityCategory,
     };
   }
 
@@ -148,6 +152,7 @@ export class BeneficiaryStatService {
       bankNameStats,
       govtIdTypeStats,
       educationStats,
+      vulnerabilityCategory,
     } = await this.calculateAllStats();
 
     await Promise.all([
@@ -194,6 +199,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'education_stats',
         data: educationStats,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'vulnerability_category_stats',
+        data: vulnerabilityCategory,
         group: 'beneficiary',
       }),
     ]);
