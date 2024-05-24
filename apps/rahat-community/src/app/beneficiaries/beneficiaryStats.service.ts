@@ -94,6 +94,21 @@ export class BeneficiaryStatService {
     return { count: await this.prisma.beneficiary.count() };
   }
 
+  async calculateTotalWithGender() {
+    let total = 0;
+    const data = await this.prisma.beneficiary.findMany({
+      select: { extras: true },
+    });
+    if (!data.length) return total;
+    for (let item of data) {
+      const d = item.extras;
+      if (d && d['no_of_male']) total += +d['no_of_male'];
+      if (d && d['no_of_female']) total += +d['no_of_female'];
+      if (d && d['others']) total += +d['others'];
+    }
+    return total;
+  }
+
   async calculateAllStats() {
     const [
       gender,
@@ -106,6 +121,7 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      totalWithGender,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -117,6 +133,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.HH_GOVT_ID_TYPE),
       this.calculateExtrasStats(REPORTING_FIELD.HH_EDUCATION),
       this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
+      this.calculateTotalWithGender(),
     ]);
 
     return {
@@ -130,6 +147,7 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      totalWithGender,
     };
   }
 
@@ -153,12 +171,18 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      totalWithGender,
     } = await this.calculateAllStats();
 
     await Promise.all([
       this.statsService.save({
         name: 'beneficiary_total',
         data: total,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'total_with_gender',
+        data: { count: totalWithGender },
         group: 'beneficiary',
       }),
       this.statsService.save({
