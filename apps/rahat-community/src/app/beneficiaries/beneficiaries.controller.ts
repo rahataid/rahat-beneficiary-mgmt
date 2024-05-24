@@ -120,6 +120,7 @@ export class BeneficiariesController {
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string, @Req() req: any) {
     const userUUID = req?.user?.uuid;
+    console.log(uuid);
     return this.beneficiariesService.remove(uuid, userUUID);
   }
 
