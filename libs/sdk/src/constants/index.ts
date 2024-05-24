@@ -59,4 +59,18 @@ export const REPORTING_FIELD = {
   BANK_NAME: 'bank_name',
   HH_GOVT_ID_TYPE: 'household_head_government_id_type',
   HH_EDUCATION: 'household_head_education_qualification',
+  VULNERABILITY_CATEGORY: 'if_yes_which_category',
 };
+
+export const VALID_AGE_GROUP_KEYS = [
+  'female_below_the_age_of_5_years',
+  'male_below_the_age_of_5_years',
+  '5_18__female',
+  '5_18__male',
+  '1949_female',
+  '1949_male',
+  '5065_female',
+  '5065_male',
+  '65_above_female',
+  '65_above_male',
+];
