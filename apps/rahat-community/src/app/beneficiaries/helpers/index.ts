@@ -48,3 +48,19 @@ export const createSearchQuery = (filters: any) => {
   }
   return conditions;
 };
+
+export const mapSentenceCountFromArray = (data: string[]) => {
+  const countMap = {} as any;
+  data.forEach((sentence) => {
+    if (countMap[sentence]) {
+      countMap[sentence]++;
+    } else {
+      countMap[sentence] = 1;
+    }
+  });
+
+  return Object.keys(countMap).map((sentence) => ({
+    id: sentence,
+    count: countMap[sentence],
+  }));
+};

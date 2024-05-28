@@ -5,6 +5,7 @@ import {
   REPORTING_FIELD,
   VALID_AGE_GROUP_KEYS,
 } from '@rahataid/community-tool-sdk';
+import { mapSentenceCountFromArray } from './helpers';
 
 @Injectable()
 export class BeneficiaryStatService {
@@ -137,6 +138,19 @@ export class BeneficiaryStatService {
     return finalResult;
   }
 
+  async calculateSSAStats() {
+    let ssa_data = [];
+    const data = await this.findBeneficiaryExtras();
+    if (!data.length) return [];
+    for (let d of data) {
+      const { extras } = d as any;
+      if (extras.types_of_ssa_to_be_received)
+        ssa_data.push(extras.types_of_ssa_to_be_received);
+    }
+    const mapped = mapSentenceCountFromArray(ssa_data);
+    return mapped.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
+  }
+
   async calculateAllStats() {
     const [
       gender,
@@ -151,6 +165,7 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       totalWithGender,
       totalByAgegroup,
+      ssaStats,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -164,6 +179,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
       this.calculateTotalWithGender(),
       this.calculateTotalByAgegroup(),
+      this.calculateSSAStats(),
     ]);
 
     return {
@@ -179,6 +195,7 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       totalWithGender,
       totalByAgegroup,
+      ssaStats,
     };
   }
 
@@ -204,9 +221,15 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       totalWithGender,
       totalByAgegroup,
+      ssaStats,
     } = await this.calculateAllStats();
 
     await Promise.all([
+      this.statsService.save({
+        name: 'ssa_recieved_stats',
+        data: ssaStats,
+        group: 'beneficiary',
+      }),
       this.statsService.save({
         name: 'beneficiary_total',
         data: total,
