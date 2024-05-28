@@ -125,7 +125,7 @@ export class BeneficiaryStatService {
           if (!acc[key]) {
             acc[key] = 0;
           }
-          acc[key] += value;
+          acc[key] += +value;
         }
       }
       return acc;
