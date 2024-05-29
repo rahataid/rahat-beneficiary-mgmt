@@ -149,7 +149,7 @@ export class BeneficiaryStatService {
         ssa_data.push(extras.types_of_ssa_to_be_received);
     }
     const mapped = mapSentenceCountFromArray(ssa_data);
-    return mapped.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
+    return mapped.filter((f) => f.id.toUpperCase() !== 'NO');
   }
 
   async calculateBankStats() {
@@ -246,7 +246,7 @@ export class BeneficiaryStatService {
 
     await Promise.all([
       this.statsService.save({
-        name: 'ssa_recieved_stats',
+        name: 'ssa_not_received_stats',
         data: ssaStats,
         group: 'beneficiary',
       }),
