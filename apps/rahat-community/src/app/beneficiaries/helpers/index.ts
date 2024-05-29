@@ -1,3 +1,5 @@
+import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
 
@@ -63,4 +65,28 @@ export const mapSentenceCountFromArray = (data: string[]) => {
     id: sentence,
     count: countMap[sentence],
   }));
+};
+
+export const bankedUnbankedMapping = (data: any[]) => {
+  let myData = {};
+  for (let d of data) {
+    const { extras } = d as any;
+    if (
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT].toUpperCase() === 'YES'
+    ) {
+      if (myData['Banked']) {
+        myData['Banked'] += 1;
+      } else myData['Banked'] = 1;
+    }
+    if (
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT].toUpperCase() === 'NO'
+    ) {
+      if (myData['UnBanked']) {
+        myData['UnBanked'] += 1;
+      } else myData['UnBanked'] = 1;
+    }
+  }
+  return myData;
 };

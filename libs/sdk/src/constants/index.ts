@@ -61,6 +61,8 @@ export const REPORTING_FIELD = {
   HH_EDUCATION: 'household_head_education_qualification',
   VULNERABILITY_CATEGORY: 'if_yes_which_category',
   TYPE_OF_PHONE_SET: 'type_of_phone_set',
+  FAMILY_MEMBER_BANK_ACCOUNT:
+    'is_there_any_family_member_who_has_an_active_bank_account',
 };
 
 export const VALID_AGE_GROUP_KEYS = [

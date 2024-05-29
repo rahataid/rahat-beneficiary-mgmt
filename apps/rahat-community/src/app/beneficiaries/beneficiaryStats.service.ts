@@ -5,7 +5,7 @@ import {
   REPORTING_FIELD,
   VALID_AGE_GROUP_KEYS,
 } from '@rahataid/community-tool-sdk';
-import { mapSentenceCountFromArray } from './helpers';
+import { bankedUnbankedMapping, mapSentenceCountFromArray } from './helpers';
 
 @Injectable()
 export class BeneficiaryStatService {
@@ -152,6 +152,17 @@ export class BeneficiaryStatService {
     return mapped.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
   }
 
+  async calculateBankStats() {
+    const data = await this.findBeneficiaryExtras();
+    if (!data.length) return [];
+    const myData = bankedUnbankedMapping(data);
+    const result = Object.keys(myData).map((d) => ({
+      id: d,
+      count: myData[d],
+    }));
+    return result;
+  }
+
   async calculateAllStats() {
     const [
       gender,
@@ -165,6 +176,7 @@ export class BeneficiaryStatService {
       educationStats,
       vulnerabilityCategory,
       phoneTypeStats,
+      bankStatus,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -180,6 +192,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.HH_EDUCATION),
       this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
       this.calculateExtrasStats(REPORTING_FIELD.TYPE_OF_PHONE_SET),
+      this.calculateBankStats(),
       this.calculateTotalWithGender(),
       this.calculateTotalByAgegroup(),
       this.calculateSSAStats(),
@@ -197,6 +210,7 @@ export class BeneficiaryStatService {
       educationStats,
       vulnerabilityCategory,
       phoneTypeStats,
+      bankStatus,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -224,6 +238,7 @@ export class BeneficiaryStatService {
       educationStats,
       vulnerabilityCategory,
       phoneTypeStats,
+      bankStatus,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -293,6 +308,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'phone_type_stats',
         data: phoneTypeStats,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'beneficiary_bank_stats',
+        data: bankStatus,
         group: 'beneficiary',
       }),
       this.statsService.save({
