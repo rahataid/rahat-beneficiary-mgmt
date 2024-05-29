@@ -1,4 +1,5 @@
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+const PHONE_NUMBER_PATTERN = '99900';
 
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
@@ -86,6 +87,27 @@ export const bankedUnbankedMapping = (data: any[]) => {
       if (myData['UnBanked']) {
         myData['UnBanked'] += 1;
       } else myData['UnBanked'] = 1;
+    }
+  }
+  return myData;
+};
+
+export const phoneUnphonedMapping = (data: any[]) => {
+  let myData = {};
+  for (let d of data) {
+    const hasTrippleNine = d.phone.startsWith(PHONE_NUMBER_PATTERN);
+    if (hasTrippleNine) {
+      if (myData['Unphoned']) {
+        myData['Unphoned'] += 1;
+      } else {
+        myData['Unphoned'] = 1;
+      }
+    } else {
+      if (myData['Phoned']) {
+        myData['Phoned'] += 1;
+      } else {
+        myData['Phoned'] = 1;
+      }
     }
   }
   return myData;

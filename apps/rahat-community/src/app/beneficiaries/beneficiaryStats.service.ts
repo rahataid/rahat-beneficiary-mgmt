@@ -5,7 +5,13 @@ import {
   REPORTING_FIELD,
   VALID_AGE_GROUP_KEYS,
 } from '@rahataid/community-tool-sdk';
-import { bankedUnbankedMapping, mapSentenceCountFromArray } from './helpers';
+import {
+  bankedUnbankedMapping,
+  mapSentenceCountFromArray,
+  phoneUnphonedMapping,
+} from './helpers';
+
+const PHONE_NUMBER_PATTERN = '99900';
 
 @Injectable()
 export class BeneficiaryStatService {
@@ -163,12 +169,23 @@ export class BeneficiaryStatService {
     return result;
   }
 
+  async calculatePhoneStats() {
+    const data = await this.prisma.beneficiary.findMany({
+      select: { phone: true },
+    });
+    if (!data.length) return [];
+    let myData = phoneUnphonedMapping(data);
+    return Object.keys(myData).map((d) => ({
+      id: d,
+      count: myData[d],
+    }));
+  }
+
   async calculateAllStats() {
     const [
       gender,
       bankedStatus,
       internetStatus,
-      phoneStatus,
       total,
       castStats,
       bankNameStats,
@@ -177,6 +194,7 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       phoneTypeStats,
       bankStatus,
+      phoneStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -184,7 +202,6 @@ export class BeneficiaryStatService {
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
       this.calculateInternetStatusStats(),
-      this.calculatePhoneStatusStats(),
       this.totalBeneficiaries(),
       this.calculateExtrasStats(REPORTING_FIELD.CASTE),
       this.calculateExtrasStats(REPORTING_FIELD.BANK_NAME),
@@ -193,6 +210,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
       this.calculateExtrasStats(REPORTING_FIELD.TYPE_OF_PHONE_SET),
       this.calculateBankStats(),
+      this.calculatePhoneStats(),
       this.calculateTotalWithGender(),
       this.calculateTotalByAgegroup(),
       this.calculateSSAStats(),
@@ -202,7 +220,6 @@ export class BeneficiaryStatService {
       gender,
       bankedStatus,
       internetStatus,
-      phoneStatus,
       total,
       castStats,
       bankNameStats,
@@ -211,6 +228,7 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       phoneTypeStats,
       bankStatus,
+      phoneStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -230,7 +248,6 @@ export class BeneficiaryStatService {
       gender,
       bankedStatus,
       internetStatus,
-      phoneStatus,
       total,
       castStats,
       bankNameStats,
@@ -239,6 +256,7 @@ export class BeneficiaryStatService {
       vulnerabilityCategory,
       phoneTypeStats,
       bankStatus,
+      phoneStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -273,11 +291,6 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'beneficiary_internetStatus',
         data: internetStatus,
-        group: 'beneficiary',
-      }),
-      this.statsService.save({
-        name: 'beneficiary_phoneStatus',
-        data: phoneStatus,
         group: 'beneficiary',
       }),
       this.statsService.save({
@@ -316,6 +329,11 @@ export class BeneficiaryStatService {
         group: 'beneficiary',
       }),
       this.statsService.save({
+        name: 'beneficiary_phone_stats',
+        data: phoneStats,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
         name: 'total_by_agegroup',
         data: totalByAgegroup,
         group: 'beneficiary',
@@ -326,10 +344,18 @@ export class BeneficiaryStatService {
       gender,
       bankedStatus,
       internetStatus,
-      phoneStatus,
+      total,
       castStats,
       bankNameStats,
-      total,
+      govtIdTypeStats,
+      educationStats,
+      vulnerabilityCategory,
+      phoneTypeStats,
+      bankStatus,
+      phoneStats,
+      totalWithGender,
+      totalByAgegroup,
+      ssaStats,
     };
   }
 }
