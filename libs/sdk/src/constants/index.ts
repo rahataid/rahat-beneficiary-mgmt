@@ -60,6 +60,7 @@ export const REPORTING_FIELD = {
   HH_GOVT_ID_TYPE: 'household_head_government_id_type',
   HH_EDUCATION: 'household_head_education_qualification',
   VULNERABILITY_CATEGORY: 'if_yes_which_category',
+  TYPE_OF_PHONE_SET: 'type_of_phone_set',
 };
 
 export const VALID_AGE_GROUP_KEYS = [

@@ -88,10 +88,11 @@ export class BeneficiaryStatService {
         myData[value] = 1;
       }
     });
-    return Object.keys(myData).map((d) => ({
+    const result = Object.keys(myData).map((d) => ({
       id: d,
       count: myData[d],
     }));
+    return result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
   }
 
   async totalBeneficiaries() {
@@ -163,6 +164,7 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      phoneTypeStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -177,6 +179,7 @@ export class BeneficiaryStatService {
       this.calculateExtrasStats(REPORTING_FIELD.HH_GOVT_ID_TYPE),
       this.calculateExtrasStats(REPORTING_FIELD.HH_EDUCATION),
       this.calculateExtrasStats(REPORTING_FIELD.VULNERABILITY_CATEGORY),
+      this.calculateExtrasStats(REPORTING_FIELD.TYPE_OF_PHONE_SET),
       this.calculateTotalWithGender(),
       this.calculateTotalByAgegroup(),
       this.calculateSSAStats(),
@@ -193,6 +196,7 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      phoneTypeStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -219,6 +223,7 @@ export class BeneficiaryStatService {
       govtIdTypeStats,
       educationStats,
       vulnerabilityCategory,
+      phoneTypeStats,
       totalWithGender,
       totalByAgegroup,
       ssaStats,
@@ -283,6 +288,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'vulnerability_category_stats',
         data: vulnerabilityCategory,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'phone_type_stats',
+        data: phoneTypeStats,
         group: 'beneficiary',
       }),
       this.statsService.save({
