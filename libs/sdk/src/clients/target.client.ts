@@ -28,13 +28,13 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     listByTargetUuid: async (
-      target_uuid: string,
+      { target_uuid, query }: { target_uuid: string; query?: Pagination },
       config?: AxiosRequestConfig,
     ) => {
-      const response = await client.get(
-        `/targets/${target_uuid}/result`,
-        config,
-      );
+      const response = await client.get(`/targets/${target_uuid}/result`, {
+        params: query,
+        ...config,
+      });
       return formatResponse<PaginatedResult<Result>>(response);
     },
 
