@@ -11,7 +11,17 @@ import {
   phoneUnphonedMapping,
 } from './helpers';
 
-const PHONE_NUMBER_PATTERN = '99900';
+const {
+  NO_OF_MALE,
+  NO_OF_FEMALE,
+  OTHERS,
+  TYPES_OF_SSA_TO_BE_RECEIVED,
+  TYPE_OF_SSA_1,
+  TYPE_OF_SSA_2,
+  TYPE_OF_SSA_3,
+  HOW_MANY_LACTATING,
+  HOW_MANY_PREGNANT,
+} = REPORTING_FIELD;
 
 @Injectable()
 export class BeneficiaryStatService {
@@ -117,9 +127,9 @@ export class BeneficiaryStatService {
     if (!data.length) return total;
     for (let item of data) {
       const d = item.extras;
-      if (d && d['no_of_male']) total += +d['no_of_male'];
-      if (d && d['no_of_female']) total += +d['no_of_female'];
-      if (d && d['others']) total += +d['others'];
+      if (d && d[NO_OF_MALE]) total += +d[NO_OF_MALE];
+      if (d && d[NO_OF_FEMALE]) total += +d[NO_OF_FEMALE];
+      if (d && d[OTHERS]) total += +d[OTHERS];
     }
     return total;
   }
@@ -151,8 +161,8 @@ export class BeneficiaryStatService {
     if (!data.length) return [];
     for (let d of data) {
       const { extras } = d as any;
-      if (extras.types_of_ssa_to_be_received)
-        ssa_data.push(extras.types_of_ssa_to_be_received);
+      if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+        ssa_data.push(extras[TYPES_OF_SSA_TO_BE_RECEIVED]);
     }
     const mapped = mapSentenceCountFromArray(ssa_data);
     return mapped.filter((f) => f.id.toUpperCase() !== 'NO');
@@ -181,6 +191,25 @@ export class BeneficiaryStatService {
     }));
   }
 
+  async calculateTotalVulnerableHouseHold() {
+    let countData = 0;
+    let nonCountData = [];
+    const data = await this.findBeneficiaryExtras();
+    if (!data.length) return [];
+    for (let d of data) {
+      const { extras } = d;
+      if (extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+      if (extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+      if (extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+      if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+        nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
+      if (extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
+      if (extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
+    }
+
+    return nonCountData.length + countData;
+  }
+
   async calculateAllStats() {
     const [
       gender,
@@ -198,6 +227,7 @@ export class BeneficiaryStatService {
       totalWithGender,
       totalByAgegroup,
       ssaStats,
+      totalVulnerableHousehold,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -214,6 +244,7 @@ export class BeneficiaryStatService {
       this.calculateTotalWithGender(),
       this.calculateTotalByAgegroup(),
       this.calculateSSAStats(),
+      this.calculateTotalVulnerableHouseHold(),
     ]);
 
     return {
@@ -232,6 +263,7 @@ export class BeneficiaryStatService {
       totalWithGender,
       totalByAgegroup,
       ssaStats,
+      totalVulnerableHousehold,
     };
   }
 
@@ -260,6 +292,7 @@ export class BeneficiaryStatService {
       totalWithGender,
       totalByAgegroup,
       ssaStats,
+      totalVulnerableHousehold,
     } = await this.calculateAllStats();
 
     await Promise.all([
@@ -276,6 +309,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'total_with_gender',
         data: { count: totalWithGender },
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'total_vulnerable_household',
+        data: { count: totalVulnerableHousehold },
         group: 'beneficiary',
       }),
       this.statsService.save({

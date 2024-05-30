@@ -63,6 +63,15 @@ export const REPORTING_FIELD = {
   TYPE_OF_PHONE_SET: 'type_of_phone_set',
   FAMILY_MEMBER_BANK_ACCOUNT:
     'is_there_any_family_member_who_has_an_active_bank_account',
+  NO_OF_MALE: 'no_of_male',
+  NO_OF_FEMALE: 'no_of_female',
+  OTHERS: 'others',
+  TYPES_OF_SSA_TO_BE_RECEIVED: 'types_of_ssa_to_be_received',
+  HOW_MANY_LACTATING: 'if_yes_how_many_lactating',
+  HOW_MANY_PREGNANT: 'if_yes_how_many_pregnant',
+  TYPE_OF_SSA_1: 'type_of_ssa_1',
+  TYPE_OF_SSA_2: 'type_of_ssa_2',
+  TYPE_OF_SSA_3: 'type_of_ssa_3',
 };
 
 export const VALID_AGE_GROUP_KEYS = [
