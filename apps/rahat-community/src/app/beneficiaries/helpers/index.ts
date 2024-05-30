@@ -1,4 +1,13 @@
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+
+const {
+  TYPE_OF_SSA_1,
+  TYPE_OF_SSA_2,
+  TYPE_OF_SSA_3,
+  HOW_MANY_LACTATING,
+  HOW_MANY_PREGNANT,
+} = REPORTING_FIELD;
+
 const PHONE_NUMBER_PATTERN = '99900';
 
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
@@ -108,6 +117,43 @@ export const phoneUnphonedMapping = (data: any[]) => {
       } else {
         myData['Phoned'] = 1;
       }
+    }
+  }
+  return myData;
+};
+
+export const mapVulnerabilityStatusCount = (data: any[]) => {
+  let myData = {};
+  for (let d of data) {
+    const { extras } = d;
+    if (extras[HOW_MANY_LACTATING]) {
+      if (myData['Lactating']) {
+        myData['Lactating'] += +extras[HOW_MANY_LACTATING];
+      } else myData['Lactating'] = +extras[HOW_MANY_LACTATING];
+    }
+    if (extras[HOW_MANY_PREGNANT]) {
+      if (myData['Pregnant']) {
+        myData['Pregnant'] += +extras[HOW_MANY_PREGNANT];
+      } else myData['Pregnant'] = +extras[HOW_MANY_PREGNANT];
+    }
+
+    if (extras[TYPE_OF_SSA_1]) {
+      const label = extras[TYPE_OF_SSA_1];
+      if (myData[label]) {
+        myData[label] += 1;
+      } else myData[label] = 1;
+    }
+    if (extras[TYPE_OF_SSA_2]) {
+      const label = extras[TYPE_OF_SSA_2];
+      if (myData[label]) {
+        myData[label] += 1;
+      } else myData[label] = 1;
+    }
+    if (extras[TYPE_OF_SSA_3]) {
+      const label = extras[TYPE_OF_SSA_3];
+      if (myData[label]) {
+        myData[label] += 1;
+      } else myData[label] = 1;
     }
   }
   return myData;

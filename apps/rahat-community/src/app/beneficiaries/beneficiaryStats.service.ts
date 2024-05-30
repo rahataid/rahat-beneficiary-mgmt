@@ -8,6 +8,7 @@ import {
 import {
   bankedUnbankedMapping,
   mapSentenceCountFromArray,
+  mapVulnerabilityStatusCount,
   phoneUnphonedMapping,
 } from './helpers';
 
@@ -210,6 +211,16 @@ export class BeneficiaryStatService {
     return nonCountData.length + countData;
   }
 
+  async calculateVulnerabilityStatus() {
+    const data = await this.findBeneficiaryExtras();
+    if (!data.length) return [];
+    let myData = mapVulnerabilityStatusCount(data);
+    return Object.keys(myData).map((d) => ({
+      id: d,
+      count: myData[d],
+    }));
+  }
+
   async calculateAllStats() {
     const [
       gender,
@@ -228,6 +239,7 @@ export class BeneficiaryStatService {
       totalByAgegroup,
       ssaStats,
       totalVulnerableHousehold,
+      vulnerabilityStatus,
     ] = await Promise.all([
       this.calculateGenderStats(),
       this.calculateBankedStatusStats(),
@@ -245,6 +257,7 @@ export class BeneficiaryStatService {
       this.calculateTotalByAgegroup(),
       this.calculateSSAStats(),
       this.calculateTotalVulnerableHouseHold(),
+      this.calculateVulnerabilityStatus(),
     ]);
 
     return {
@@ -264,6 +277,7 @@ export class BeneficiaryStatService {
       totalByAgegroup,
       ssaStats,
       totalVulnerableHousehold,
+      vulnerabilityStatus,
     };
   }
 
@@ -293,6 +307,7 @@ export class BeneficiaryStatService {
       totalByAgegroup,
       ssaStats,
       totalVulnerableHousehold,
+      vulnerabilityStatus,
     } = await this.calculateAllStats();
 
     await Promise.all([
@@ -374,6 +389,11 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'total_by_agegroup',
         data: totalByAgegroup,
+        group: 'beneficiary',
+      }),
+      this.statsService.save({
+        name: 'vulnerabiilty_status',
+        data: vulnerabilityStatus,
         group: 'beneficiary',
       }),
     ]);
