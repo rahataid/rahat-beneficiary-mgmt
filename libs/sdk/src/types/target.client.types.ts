@@ -23,7 +23,8 @@ export type TargetClient = {
   ) => Promise<FormattedResponse<PaginatedResult<TargetList>>>;
 
   listByTargetUuid: (
-    target_uuid: string,
+    { target_uuid, query }: { target_uuid: string; query?: Pagination },
+
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<PaginatedResult<Result>>>;
 

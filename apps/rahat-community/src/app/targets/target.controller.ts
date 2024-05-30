@@ -24,6 +24,7 @@ import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
   ListTargetQueryDto,
+  ListTargetUIDDto,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
@@ -85,8 +86,11 @@ export class TargetController {
   @Get(':target_uuid/result')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findOne(@Param('target_uuid') target_uuid: string) {
-    return this.targetService.findByTargetUUID(target_uuid);
+  findOne(
+    @Param('target_uuid') target_uuid: string,
+    @Query() query?: ListTargetUIDDto,
+  ) {
+    return this.targetService.findByTargetUUID(target_uuid, query);
   }
 
   @Post(':target_uuid/download')
