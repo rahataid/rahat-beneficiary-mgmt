@@ -79,6 +79,7 @@ export const mapSentenceCountFromArray = (data: string[]) => {
 
 export const bankedUnbankedMapping = (data: any[]) => {
   let myData = {};
+
   for (let d of data) {
     const { extras } = d as any;
     if (

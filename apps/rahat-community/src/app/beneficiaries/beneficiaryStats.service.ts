@@ -123,16 +123,31 @@ export class BeneficiaryStatService {
   }
 
   async calculateTotalWithGender() {
-    let total = 0;
+    let myData = {};
     const data = await this.findBeneficiaryExtras();
-    if (!data.length) return total;
+    if (!data.length) return [];
     for (let item of data) {
       const d = item.extras;
-      if (d && d[NO_OF_MALE]) total += +d[NO_OF_MALE];
-      if (d && d[NO_OF_FEMALE]) total += +d[NO_OF_FEMALE];
-      if (d && d[OTHERS]) total += +d[OTHERS];
+      if (d && d[NO_OF_MALE]) {
+        if (myData[NO_OF_FEMALE]) {
+          myData[NO_OF_FEMALE] += 1;
+        } else myData[NO_OF_FEMALE] = 1;
+      }
+      if (d && d[NO_OF_MALE]) {
+        if (myData[NO_OF_MALE]) {
+          myData[NO_OF_MALE] += 1;
+        } else myData[NO_OF_MALE] = 1;
+      }
+      if (d && d[OTHERS]) {
+        if (myData[OTHERS]) {
+          myData[OTHERS] += 1;
+        } else myData[OTHERS] = 1;
+      }
     }
-    return total;
+    return Object.keys(myData).map((d) => ({
+      id: d,
+      count: myData[d],
+    }));
   }
 
   async calculateTotalByAgegroup() {
@@ -323,7 +338,7 @@ export class BeneficiaryStatService {
       }),
       this.statsService.save({
         name: 'total_with_gender',
-        data: { count: totalWithGender },
+        data: totalWithGender,
         group: 'beneficiary',
       }),
       this.statsService.save({
