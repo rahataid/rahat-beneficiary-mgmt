@@ -3,7 +3,6 @@ import {
   REPORTING_FIELD,
   VALID_AGE_GROUP_KEYS,
 } from '@rahataid/community-tool-sdk';
-import { count } from 'console';
 
 const {
   TYPE_OF_SSA_1,

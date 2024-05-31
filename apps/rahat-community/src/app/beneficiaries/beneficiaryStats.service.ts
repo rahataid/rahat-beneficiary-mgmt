@@ -239,7 +239,6 @@ export class BeneficiaryStatService {
   async calculateAllStats() {
     const [
       gender,
-      bankedStatus,
       internetStatus,
       total,
       castStats,
@@ -257,7 +256,6 @@ export class BeneficiaryStatService {
       vulnerabilityStatus,
     ] = await Promise.all([
       this.calculateGenderStats(),
-      this.calculateBankedStatusStats(),
       this.calculateInternetStatusStats(),
       this.totalBeneficiaries(),
       this.calculateExtrasStats(REPORTING_FIELD.CASTE),
@@ -277,7 +275,6 @@ export class BeneficiaryStatService {
 
     return {
       gender,
-      bankedStatus,
       internetStatus,
       total,
       castStats,
@@ -307,7 +304,6 @@ export class BeneficiaryStatService {
   async saveAllStats() {
     const {
       gender,
-      bankedStatus,
       internetStatus,
       total,
       castStats,
@@ -349,11 +345,6 @@ export class BeneficiaryStatService {
       this.statsService.save({
         name: 'beneficiary_gender',
         data: gender,
-        group: 'beneficiary',
-      }),
-      this.statsService.save({
-        name: 'beneficiary_bankedStatus',
-        data: bankedStatus,
         group: 'beneficiary',
       }),
       this.statsService.save({
@@ -415,7 +406,6 @@ export class BeneficiaryStatService {
 
     return {
       gender,
-      bankedStatus,
       internetStatus,
       total,
       castStats,
