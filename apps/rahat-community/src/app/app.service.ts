@@ -9,6 +9,7 @@ import {
   calculateBankStats,
   calculateExtraFieldStats,
   calculateHHGenderStats,
+  calculateMapStats,
   calculatePhoneStats,
   calculateQualifiedSSA,
   calculateTotalBenef,
@@ -28,6 +29,7 @@ export class AppService {
 
   async calculateStats(beneficiaries: any[]) {
     const [
+      map_stats,
       total_benef,
       total_with_gender,
       total_by_agegroup,
@@ -44,6 +46,7 @@ export class AppService {
       ssa_not_received_stats,
       hh_gender_stats,
     ] = await Promise.all([
+      calculateMapStats(beneficiaries),
       calculateTotalBenef(beneficiaries),
       calculateTotalWithGender(beneficiaries),
       calculateTotalWithAgeGroup(beneficiaries),
@@ -86,6 +89,7 @@ export class AppService {
     ]);
 
     return [
+      map_stats,
       total_benef,
       total_with_gender,
       total_by_agegroup,

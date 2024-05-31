@@ -371,3 +371,18 @@ export const calculateHHGenderStats = (beneficiaries: any[]) => {
     data,
   };
 };
+
+export const calculateMapStats = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  const data = beneficiaries.map((b) => {
+    return {
+      name: `${b.firstName} ${b.lastName}`,
+      latitude: b.latitude || null,
+      longitude: b.longitude || null,
+    };
+  });
+  return {
+    name: 'BENEFICIARY_MAP_STATS',
+    data,
+  };
+};
