@@ -3,10 +3,23 @@ import { PrismaService } from '@rumsan/prisma';
 import axios from 'axios';
 import { KOBO_URL } from '../constants';
 import { SettingsService } from '@rumsan/settings';
+import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
+import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 
 @Injectable()
 export class AppService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private benefService: BeneficiariesService,
+  ) {}
+
+  async getStats(query: FilterBeneficiaryByLocationDto) {
+    // 1. Fetch benef by query
+    const benef = await this.benefService.findByPalikaAndWard(query);
+    // 2. Calculate stats
+    // 3. Return stats
+    return benef;
+  }
 
   async getData() {
     // const d = await this.prisma.;
