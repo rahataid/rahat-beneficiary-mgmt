@@ -1,4 +1,8 @@
-import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+import {
+  Gender,
+  REPORTING_FIELD,
+  VALID_AGE_GROUP_KEYS,
+} from '@rahataid/community-tool-sdk';
 
 const {
   TYPE_OF_SSA_1,
@@ -6,6 +10,10 @@ const {
   TYPE_OF_SSA_3,
   HOW_MANY_LACTATING,
   HOW_MANY_PREGNANT,
+  NO_OF_FEMALE,
+  NO_OF_MALE,
+  OTHERS,
+  TYPES_OF_SSA_TO_BE_RECEIVED,
 } = REPORTING_FIELD;
 
 const PHONE_NUMBER_PATTERN = '99900';
@@ -163,4 +171,223 @@ export const mapVulnerabilityStatusCount = (data: any[]) => {
     }
   }
   return myData;
+};
+
+//====================Location based reporting (V2)===================
+
+// Total Household
+export const calculateTotalBenef = (beneficiaries: any[]) => {
+  const data = { id: 'total', count: beneficiaries.length };
+  return {
+    name: 'BENEFICIARY_TOTAL',
+    data: data,
+  };
+};
+
+export const calculateTotalWithGender = (beneficiaries: any[]) => {
+  let myData = {};
+  if (!beneficiaries.length) return [];
+  for (let item of beneficiaries) {
+    const d = item.extras;
+    if (d && d[NO_OF_MALE]) {
+      if (myData[NO_OF_FEMALE]) {
+        myData[NO_OF_FEMALE] += 1;
+      } else myData[NO_OF_FEMALE] = 1;
+    }
+    if (d && d[NO_OF_MALE]) {
+      if (myData[NO_OF_MALE]) {
+        myData[NO_OF_MALE] += 1;
+      } else myData[NO_OF_MALE] = 1;
+    }
+    if (d && d[OTHERS]) {
+      if (myData[OTHERS]) {
+        myData[OTHERS] += 1;
+      } else myData[OTHERS] = 1;
+    }
+  }
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'TOTAL_WITH_GENDER',
+    data,
+  };
+};
+
+export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  const result = beneficiaries.reduce((acc, obj) => {
+    for (const [key, value] of Object.entries(obj.extras)) {
+      if (VALID_AGE_GROUP_KEYS.includes(key)) {
+        if (!acc[key]) {
+          acc[key] = 0;
+        }
+        acc[key] += +value;
+      }
+    }
+    return acc;
+  }, {});
+
+  const data = Object.entries(result).map(([key, value]) => {
+    return { id: key, count: value };
+  });
+  return {
+    name: 'TOTAL_BY_AGEGROUP',
+    data,
+  };
+};
+
+export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  let myData = mapVulnerabilityStatusCount(beneficiaries);
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'VULNERABIILTY_STATUS',
+    data,
+  };
+};
+
+export const totalVulnerableHH = (beneficiaries: any[]) => {
+  let countData = 0;
+  let nonCountData = [];
+  if (!beneficiaries.length) return [];
+  for (let d of beneficiaries) {
+    const { extras } = d;
+    if (extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+    if (extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+    if (extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+      nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
+    if (extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
+    if (extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
+  }
+
+  return {
+    name: 'TOTAL_VULNERABLE_HOUSEHOLD',
+    data: { count: nonCountData.length + countData },
+  };
+};
+
+export const calculateExtraFieldStats = (
+  beneficiaries: any[],
+  fieldName: string,
+  reportName: string,
+) => {
+  if (!beneficiaries) return [];
+  const myData = {};
+  beneficiaries.forEach((item: any) => {
+    if (item.extras[fieldName]) {
+      const value = item.extras[fieldName];
+      if (myData[value]) {
+        myData[value] += 1;
+      } else {
+        myData[value] = 1;
+      }
+    }
+  });
+  const result = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  const data = result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
+  return {
+    name: reportName,
+    data,
+  };
+};
+
+export const calculatePhoneStats = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  let myData = phoneUnphonedMapping(beneficiaries);
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'BENEFICIARY_PHONE_STATS',
+    data,
+  };
+};
+
+export const calculateBankStats = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  const myData = bankedUnbankedMapping(beneficiaries);
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'BENEFICIARY_BANK_STATS',
+    data,
+  };
+};
+
+export const calculateQualifiedSSA = (beneficiaries: any[]) => {
+  let ssa_data = [];
+  if (!beneficiaries.length) return [];
+  for (let d of beneficiaries) {
+    const { extras } = d as any;
+    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+      ssa_data.push(extras[TYPES_OF_SSA_TO_BE_RECEIVED]);
+  }
+  const mapped = mapSentenceCountFromArray(ssa_data);
+  const data = mapped.filter((f) => f.id.toUpperCase() !== 'NO');
+  return {
+    name: 'SSA_NOT_RECEIVED_STATS',
+    data,
+  };
+};
+
+export const calculateHHGenderStats = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  let myData = {};
+  for (let b of beneficiaries) {
+    if (b.gender === Gender.MALE) {
+      if (myData[Gender.MALE]) {
+        myData[Gender.MALE] += 1;
+      } else myData[Gender.MALE] = 1;
+    }
+    if (b.gender === Gender.FEMALE) {
+      if (myData[Gender.FEMALE]) {
+        myData[Gender.FEMALE] += 1;
+      } else myData[Gender.FEMALE] = 1;
+    }
+    if (b.gender === Gender.OTHER) {
+      if (myData[Gender.OTHER]) {
+        myData[Gender.OTHER] += 1;
+      } else myData[Gender.OTHER] = 1;
+    }
+    if (b.gender === Gender.UKNOWN) {
+      if (myData[Gender.UKNOWN]) {
+        myData[Gender.UKNOWN] += 1;
+      } else myData[Gender.UKNOWN] = 1;
+    }
+  }
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'BENEFICIARY_GENDER',
+    data,
+  };
+};
+
+export const calculateMapStats = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  const data = beneficiaries.map((b) => {
+    return {
+      name: `${b.firstName} ${b.lastName}`,
+      latitude: b.latitude || null,
+      longitude: b.longitude || null,
+    };
+  });
+  return {
+    name: 'BENEFICIARY_MAP_STATS',
+    data,
+  };
 };
