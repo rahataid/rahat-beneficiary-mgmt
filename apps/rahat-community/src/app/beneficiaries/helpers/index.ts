@@ -1,4 +1,7 @@
-import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+import {
+  REPORTING_FIELD,
+  VALID_AGE_GROUP_KEYS,
+} from '@rahataid/community-tool-sdk';
 
 const {
   TYPE_OF_SSA_1,
@@ -6,6 +9,9 @@ const {
   TYPE_OF_SSA_3,
   HOW_MANY_LACTATING,
   HOW_MANY_PREGNANT,
+  NO_OF_FEMALE,
+  NO_OF_MALE,
+  OTHERS,
 } = REPORTING_FIELD;
 
 const PHONE_NUMBER_PATTERN = '99900';
@@ -158,4 +164,81 @@ export const mapVulnerabilityStatusCount = (data: any[]) => {
     }
   }
   return myData;
+};
+
+//====================Location based reporting (V2)===================
+
+export const calculateTotalBenef = (beneficiaries: any[]) => {
+  const data = { id: 'total', count: beneficiaries.length };
+  return {
+    name: 'BENEFICIARY_TOTAL',
+    data: data,
+  };
+};
+
+export const calculateTotalWithGender = (beneficiaries: any[]) => {
+  let myData = {};
+  if (!beneficiaries.length) return [];
+  for (let item of beneficiaries) {
+    const d = item.extras;
+    if (d && d[NO_OF_MALE]) {
+      if (myData[NO_OF_FEMALE]) {
+        myData[NO_OF_FEMALE] += 1;
+      } else myData[NO_OF_FEMALE] = 1;
+    }
+    if (d && d[NO_OF_MALE]) {
+      if (myData[NO_OF_MALE]) {
+        myData[NO_OF_MALE] += 1;
+      } else myData[NO_OF_MALE] = 1;
+    }
+    if (d && d[OTHERS]) {
+      if (myData[OTHERS]) {
+        myData[OTHERS] += 1;
+      } else myData[OTHERS] = 1;
+    }
+  }
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'TOTAL_WITH_GENDER',
+    data,
+  };
+};
+
+export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  const result = beneficiaries.reduce((acc, obj) => {
+    for (const [key, value] of Object.entries(obj.extras)) {
+      if (VALID_AGE_GROUP_KEYS.includes(key)) {
+        if (!acc[key]) {
+          acc[key] = 0;
+        }
+        acc[key] += +value;
+      }
+    }
+    return acc;
+  }, {});
+
+  const data = Object.entries(result).map(([key, value]) => {
+    return { id: key, count: value };
+  });
+  return {
+    name: 'TOTAL_BY_AGEGROUP',
+    data,
+  };
+};
+
+export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
+  if (!beneficiaries.length) return [];
+  let myData = mapVulnerabilityStatusCount(beneficiaries);
+  const data = Object.keys(myData).map((d) => ({
+    id: d,
+    count: myData[d],
+  }));
+  return {
+    name: 'VULNERABIILTY_STATUS',
+    data,
+  };
 };

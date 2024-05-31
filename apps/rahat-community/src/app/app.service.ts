@@ -5,6 +5,12 @@ import { KOBO_URL } from '../constants';
 import { SettingsService } from '@rumsan/settings';
 import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
 import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
+import {
+  calculateTotalBenef,
+  calculateTotalWithAgeGroup,
+  calculateTotalWithGender,
+  calculateVulnerabilityStatus,
+} from './beneficiaries/helpers';
 
 @Injectable()
 export class AppService {
@@ -13,12 +19,30 @@ export class AppService {
     private benefService: BeneficiariesService,
   ) {}
 
+  async calculateStats(beneficiaries: any[]) {
+    const [
+      total_benef,
+      total_with_gender,
+      total_by_agegroup,
+      vulnerabiilty_status,
+    ] = await Promise.all([
+      calculateTotalBenef(beneficiaries),
+      calculateTotalWithGender(beneficiaries),
+      calculateTotalWithAgeGroup(beneficiaries),
+      calculateVulnerabilityStatus(beneficiaries),
+    ]);
+
+    return [
+      total_benef,
+      total_with_gender,
+      total_by_agegroup,
+      vulnerabiilty_status,
+    ];
+  }
+
   async getStats(query: FilterBeneficiaryByLocationDto) {
-    // 1. Fetch benef by query
     const benef = await this.benefService.findByPalikaAndWard(query);
-    // 2. Calculate stats
-    // 3. Return stats
-    return benef;
+    return this.calculateStats(benef);
   }
 
   async getData() {
