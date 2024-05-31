@@ -82,9 +82,12 @@ export const bankedUnbankedMapping = (data: any[]) => {
 
   for (let d of data) {
     const { extras } = d as any;
+
     if (
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
-      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT].toUpperCase() === 'YES'
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
+        .toUpperCase()
+        .trim() === 'YES'
     ) {
       if (myData['Banked']) {
         myData['Banked'] += 1;
@@ -92,7 +95,9 @@ export const bankedUnbankedMapping = (data: any[]) => {
     }
     if (
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
-      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT].toUpperCase() === 'NO'
+      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
+        .toUpperCase()
+        .trim() === 'NO'
     ) {
       if (myData['UnBanked']) {
         myData['UnBanked'] += 1;
