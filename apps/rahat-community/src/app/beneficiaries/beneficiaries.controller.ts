@@ -101,6 +101,12 @@ export class BeneficiariesController {
     return this.beneficiariesService.findAll(filters);
   }
 
+  @Get('location')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
+  findAllLocation() {
+    return this.beneficiariesService.findAllLocation();
+  }
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findOne(@Param('uuid') uuid: string) {
