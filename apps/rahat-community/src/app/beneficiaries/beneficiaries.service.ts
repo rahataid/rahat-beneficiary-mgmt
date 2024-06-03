@@ -438,4 +438,19 @@ export class BeneficiariesService {
 
     return data;
   }
+
+  async findAllLocation() {
+    return await this.prisma.beneficiary.findMany({
+      where: {
+        location: {
+          not: null,
+        },
+      },
+
+      select: {
+        location: true,
+      },
+      distinct: ['location'],
+    });
+  }
 }
