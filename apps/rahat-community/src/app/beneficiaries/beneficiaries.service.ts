@@ -60,7 +60,7 @@ export class BeneficiariesService {
   async filterByWardNo(data: any[], ward_no: string) {
     let final_result = [];
     for (let d of data) {
-      if (d.extras && d.extras['ward_no'] && d.extras['ward_no'] === ward_no) {
+      if (d.extras && d.extras['ward_no'] && d.extras['ward_no'] == ward_no) {
         final_result.push(d);
       }
     }
@@ -68,7 +68,7 @@ export class BeneficiariesService {
   }
 
   async findByPalikaAndWard(query: FilterBeneficiaryByLocationDto) {
-    const { location, ward_no } = query;
+    const { location = null, ward_no } = query;
     const data = await this.findByLocation(location);
     if (!data.length) return [];
     if (ward_no) return this.filterByWardNo(data, ward_no);
@@ -346,7 +346,6 @@ export class BeneficiariesService {
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
 
-    console.log('benefData', beneficiaryData);
     return beneficiaryData;
   }
 
