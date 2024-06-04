@@ -24,6 +24,7 @@ import { calculateNumberOfDays } from '../utils';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ExportTargetBeneficiaryDto,
   ListTargetQueryDto,
   ListTargetUIDDto,
   TargetQueryStatusEnum,
@@ -31,6 +32,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { Prisma } from '@prisma/client';
 import { generateExcelData } from '../utils/export-to-excel';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class TargetService {
@@ -136,18 +138,35 @@ export class TargetService {
     });
   }
 
+  findOneByUUID(uuid: UUID) {
+    console.log({ uuid });
+    return this.prismaService.targetQuery.findUnique({
+      where: { uuid },
+    });
+  }
+
   // ==========TargetResult Schema Operations==========
-  async exportTargetBeneficiaries(targetUUID: string) {
+  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const { targetUUID } = dto;
+    const target = await this.findOneByUUID(targetUUID);
+    if (!target || !target.label) throw new Error('Target not found');
     const rows = await this.prismaService.targetResult.findMany({
       where: { targetUuid: targetUUID },
       include: { beneficiary: true },
     });
     if (!rows.length) throw new Error('No beneficiaries found for this target');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    const buffer = Buffer.from(JSON.stringify(beneficiaries));
     // Send to rahat server
-    const appUrl = process.env.RAHAT_APP_URL;
-    await exportBulkBeneficiary(appUrl, buffer);
+    const baseURL = process.env.RAHAT_APP_URL;
+    const payload = {
+      groupName: target.label,
+      targetUUID: targetUUID,
+      beneficiaries,
+    };
+    const buffer = Buffer.from(JSON.stringify(payload));
+    // Add to queue
+    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
+    await exportBulkBeneficiary(apiUrl, buffer);
     return {
       success: true,
       message: `Exported ${beneficiaries.length} beneficiaries`,

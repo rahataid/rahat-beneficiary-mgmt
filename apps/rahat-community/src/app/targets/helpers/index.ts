@@ -27,17 +27,17 @@ export const createFinalResult = (final_result: any, filteredData: any) => {
 };
 
 export const exportBulkBeneficiary = async (
-  appUrl: string,
-  bufferData: Buffer,
+  apiUrl: string,
+  buffer: any,
 ): Promise<any> => {
-  if (!appUrl) throw new Error('App URL is required');
-  const apiEndpoint = `${appUrl}/v1/beneficiaries/upload-json`;
+  if (!apiUrl) throw new Error('API endpoint is required');
+
   const axiosConfig = {
     method: 'post',
-    url: apiEndpoint,
-    data: bufferData,
+    url: apiUrl,
+    data: buffer,
     headers: {
-      'Content-Type': 'application/octet-stream', // Set content type to octet-stream for buffer data
+      'Content-Type': 'application/octet-stream',
     },
   };
 
