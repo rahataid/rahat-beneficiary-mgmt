@@ -7,6 +7,7 @@ import {
   TargetPost,
   TargetResults,
   TargetResult,
+  ExportTargeBeneficiary,
 } from '../targets';
 import { PaginatedResult, Pagination } from '@rumsan/sdk/types';
 import { Beneficiary } from '../beneficiary';
@@ -16,6 +17,11 @@ export type TargetClient = {
     data?: TargetPost,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<TargetResults>>;
+
+  exportTargetBeneficiary: (
+    data?: ExportTargeBeneficiary,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
 
   list: (
     data?: Pagination,

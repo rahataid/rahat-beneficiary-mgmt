@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { TargetClient } from '../types';
 import {
+  ExportTargeBeneficiary,
   PatchResult,
   Result,
   TargetList,
@@ -16,6 +17,14 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
   return {
     create: async (data?: TargetPost, config?: AxiosRequestConfig) => {
       const response = await client.post('/targets', data, config);
+      return formatResponse<TargetResults>(response);
+    },
+
+    exportTargetBeneficiary: async (
+      data?: ExportTargeBeneficiary,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.post('/targets/export', data, config);
       return formatResponse<TargetResults>(response);
     },
 

@@ -2,6 +2,10 @@ import { UUID } from 'crypto';
 import { Beneficiary } from '../beneficiary';
 import { TargetQueryStatus } from '../enums';
 
+export type ExportTargeBeneficiary = {
+  targetUUID: UUID;
+};
+
 export type TargetPost = {
   filterOptions?: any;
 };
