@@ -58,7 +58,6 @@ export class TargetController {
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   exportBeneficiaries(@Body() dto: ExportTargetBeneficiaryDto) {
-    console.log('DTO', dto);
     return this.targetService.exportTargetBeneficiaries(dto);
   }
 

@@ -38,6 +38,7 @@ import { UUID } from 'crypto';
 export class TargetService {
   constructor(
     @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
+    @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
   ) {}
@@ -139,7 +140,6 @@ export class TargetService {
   }
 
   findOneByUUID(uuid: UUID) {
-    console.log({ uuid });
     return this.prismaService.targetQuery.findUnique({
       where: { uuid },
     });
@@ -156,20 +156,19 @@ export class TargetService {
     });
     if (!rows.length) throw new Error('No beneficiaries found for this target');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    // Send to rahat server
     const baseURL = process.env.RAHAT_APP_URL;
+    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
     const payload = {
       groupName: target.label,
       targetUUID: targetUUID,
       beneficiaries,
+      apiUrl,
     };
-    const buffer = Buffer.from(JSON.stringify(payload));
     // Add to queue
-    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
-    await exportBulkBeneficiary(apiUrl, buffer);
+    this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
     return {
       success: true,
-      message: `Exported ${beneficiaries.length} beneficiaries`,
+      message: `${beneficiaries.length} beneficiaries added to queue for export`,
     };
   }
 

@@ -18,7 +18,7 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
 @Module({
   imports: [
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
-    BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
+    BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
   ],
   providers: [
     ListenerService,
