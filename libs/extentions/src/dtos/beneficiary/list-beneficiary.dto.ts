@@ -40,4 +40,14 @@ export class ListBeneficiaryDto {
   @IsString()
   @IsOptional()
   nickName?: string;
+
+  @ApiPropertyOptional({ example: 'Phil' })
+  @IsString()
+  @IsOptional()
+  govtIDNumber?: string;
+
+  @ApiPropertyOptional({ example: 'Phil' })
+  @IsString()
+  @IsOptional()
+  phone?: string;
 }

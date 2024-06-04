@@ -291,6 +291,20 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
+    if (filters.govtIDNumber) {
+      OR_CONDITIONS.push({
+        govtIDNumber: { contains: filters.govtIDNumber, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
+    if (filters.phone) {
+      OR_CONDITIONS.push({
+        phone: { contains: filters.phone, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
     return paginate(
       this.prisma.beneficiary,
       { where: { ...conditions, archived: false } },
