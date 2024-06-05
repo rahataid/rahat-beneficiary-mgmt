@@ -149,7 +149,7 @@ export class TargetService {
   async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
     const { targetUUID } = dto;
     const target = await this.findOneByUUID(targetUUID);
-    if (!target || !target.label) throw new Error('Target not found');
+    if (!target) throw new Error('Target not found');
     const rows = await this.prismaService.targetResult.findMany({
       where: { targetUuid: targetUUID },
       include: { beneficiary: true },
