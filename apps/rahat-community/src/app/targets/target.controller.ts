@@ -23,10 +23,13 @@ import {
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ExportTargetBeneficiaryDto,
   ListTargetQueryDto,
+  ListTargetUIDDto,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import { UUID } from 'crypto';
 
 @Controller('targets')
 @ApiTags('Targets')
@@ -50,12 +53,12 @@ export class TargetController {
     return this.targetService.create(dto);
   }
 
-  @Post('export/:targetUUID')
+  @Post('export')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  exportBeneficiaries(@Param('targetUUID') targetUUID: string) {
-    return this.targetService.exportTargetBeneficiaries(targetUUID);
+  exportBeneficiaries(@Body() dto: ExportTargetBeneficiaryDto) {
+    return this.targetService.exportTargetBeneficiaries(dto);
   }
 
   @Post('search')
@@ -85,8 +88,11 @@ export class TargetController {
   @Get(':target_uuid/result')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findOne(@Param('target_uuid') target_uuid: string) {
-    return this.targetService.findByTargetUUID(target_uuid);
+  findOne(
+    @Param('target_uuid') target_uuid: string,
+    @Query() query?: ListTargetUIDDto,
+  ) {
+    return this.targetService.findByTargetUUID(target_uuid, query);
   }
 
   @Post(':target_uuid/download')

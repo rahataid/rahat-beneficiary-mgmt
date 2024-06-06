@@ -83,3 +83,7 @@ export type Stats = {
   data: any;
   group: string;
 };
+
+export type DistinctLocation = {
+  location: string;
+};

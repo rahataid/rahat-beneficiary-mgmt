@@ -3,6 +3,7 @@ import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
+  DistinctLocation,
   ImportBeneficiary,
   Stats,
   UpdateBeneficiary,
@@ -54,4 +55,8 @@ export type BeneficiaryClient = {
   getBeneficiaryStats: (
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Stats[]>>;
+
+  listDistinctLocations: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<DistinctLocation[]>>;
 };

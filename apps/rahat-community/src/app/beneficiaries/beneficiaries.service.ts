@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import {
   BulkInsertDto,
   CreateBeneficiaryDto,
+  FilterBeneficiaryByLocationDto,
   ListBeneficiaryDto,
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
@@ -24,6 +25,8 @@ import { DB_MODELS } from '../../constants';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
+import { query } from 'express';
+import { equals } from 'class-validator';
 
 @Injectable()
 export class BeneficiariesService {
@@ -33,6 +36,44 @@ export class BeneficiariesService {
     private eventEmitter: EventEmitter2,
     private beneficiaryGroupService: BeneficiaryGroupService,
   ) {}
+
+  async findByLocation(location: string) {
+    let query = {};
+    if (location)
+      query = { location: { equals: location, mode: 'insensitive' } };
+    return this.prisma.beneficiary.findMany({
+      where: query,
+      select: {
+        firstName: true,
+        lastName: true,
+        phone: true,
+        gender: true,
+        location: true,
+        latitude: true,
+        longitude: true,
+        internetStatus: true,
+        extras: true,
+      },
+    });
+  }
+
+  async filterByWardNo(data: any[], ward_no: string) {
+    let final_result = [];
+    for (let d of data) {
+      if (d.extras && d.extras['ward_no'] && d.extras['ward_no'] == ward_no) {
+        final_result.push(d);
+      }
+    }
+    return final_result;
+  }
+
+  async findByPalikaAndWard(query: FilterBeneficiaryByLocationDto) {
+    const { location = null, ward_no } = query;
+    const data = await this.findByLocation(location);
+    if (!data.length) return [];
+    if (ward_no) return this.filterByWardNo(data, ward_no);
+    return data;
+  }
 
   async fetchDBFields() {
     const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
@@ -250,6 +291,20 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
+    if (filters.govtIDNumber) {
+      OR_CONDITIONS.push({
+        govtIDNumber: { contains: filters.govtIDNumber, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
+    if (filters.phone) {
+      OR_CONDITIONS.push({
+        phone: { contains: filters.phone, mode: 'insensitive' },
+      });
+      conditions = { OR: OR_CONDITIONS };
+    }
+
     return paginate(
       this.prisma.beneficiary,
       { where: { ...conditions, archived: false } },
@@ -305,7 +360,6 @@ export class BeneficiariesService {
     });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
 
-    console.log('benefData', beneficiaryData);
     return beneficiaryData;
   }
 
@@ -396,5 +450,20 @@ export class BeneficiariesService {
     };
 
     return data;
+  }
+
+  async findAllLocation() {
+    return await this.prisma.beneficiary.findMany({
+      where: {
+        location: {
+          not: null,
+        },
+      },
+
+      select: {
+        location: true,
+      },
+      distinct: ['location'],
+    });
   }
 }

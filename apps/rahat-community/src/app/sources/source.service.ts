@@ -27,7 +27,7 @@ import { Enums } from '@rahataid/community-tool-sdk';
 @Injectable()
 export class SourceService {
   constructor(
-    @InjectQueue(QUEUE.BENEFICIARY.IMPORT) private queueClient: Queue,
+    @InjectQueue(QUEUE.BENEFICIARY) private queueClient: Queue,
     private prisma: PrismaService,
     private readonly fdService: FieldDefinitionsService,
   ) {}

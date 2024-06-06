@@ -24,17 +24,21 @@ import { calculateNumberOfDays } from '../utils';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
+  ExportTargetBeneficiaryDto,
   ListTargetQueryDto,
+  ListTargetUIDDto,
   TargetQueryStatusEnum,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
 import { Prisma } from '@prisma/client';
 import { generateExcelData } from '../utils/export-to-excel';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class TargetService {
   constructor(
     @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
+    @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
   ) {}
@@ -135,18 +139,36 @@ export class TargetService {
     });
   }
 
+  findOneByUUID(uuid: UUID) {
+    return this.prismaService.targetQuery.findUnique({
+      where: { uuid },
+    });
+  }
+
   // ==========TargetResult Schema Operations==========
-  async exportTargetBeneficiaries(targetUUID: string) {
-    const { rows } = await this.findByTargetUUID(targetUUID);
+  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const { targetUUID } = dto;
+    const target = await this.findOneByUUID(targetUUID);
+    if (!target) throw new Error('Target not found');
+    const rows = await this.prismaService.targetResult.findMany({
+      where: { targetUuid: targetUUID },
+      include: { beneficiary: true },
+    });
     if (!rows.length) throw new Error('No beneficiaries found for this target');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    const buffer = Buffer.from(JSON.stringify(beneficiaries));
-    // Send to rahat server
-    const appUrl = process.env.RAHAT_APP_URL;
-    await exportBulkBeneficiary(appUrl, buffer);
+    const baseURL = process.env.RAHAT_APP_URL;
+    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
+    const payload = {
+      groupName: target.label,
+      targetUUID: targetUUID,
+      beneficiaries,
+      apiUrl,
+    };
+    // Add to queue
+    this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
     return {
       success: true,
-      message: `Exported ${beneficiaries.length} beneficiaries`,
+      message: `${beneficiaries.length} beneficiaries added to queue for export`,
     };
   }
 
@@ -161,11 +183,28 @@ export class TargetService {
     }
   }
 
-  findByTargetUUID(targetUuid: string) {
-    return paginate(this.prismaService.targetResult, {
-      where: { targetUuid: targetUuid },
-      include: { beneficiary: true },
-    });
+  findByTargetUUID(targetUuid: string, query?: ListTargetUIDDto) {
+    // return paginate(this.prismaService.targetResult, {
+    //   where: { targetUuid: targetUuid },
+    //   include: { beneficiary: true },
+    // });
+
+    const include: Prisma.TargetResultInclude = {
+      beneficiary: true,
+    };
+
+    console.log(query);
+    const conditions = { targetUuid: targetUuid };
+
+    return paginate(
+      this.prismaService.targetResult,
+      { where: { ...conditions }, include },
+
+      {
+        page: +query?.page,
+        perPage: +query?.perPage,
+      },
+    );
   }
 
   async cleanTargetQueryAndResults() {

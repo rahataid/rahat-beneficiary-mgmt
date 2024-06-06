@@ -3,6 +3,7 @@ import { formatResponse } from '@rumsan/sdk/utils';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
+  DistinctLocation,
   ImportBeneficiary,
   Stats,
   UpdateBeneficiary,
@@ -72,6 +73,11 @@ export const getBeneficiaryClient = (
     getBeneficiaryStats: async (config?: AxiosRequestConfig) => {
       const response = await client.get('/beneficiaries/stats', config);
       return formatResponse<Stats[]>(response);
+    },
+
+    listDistinctLocations: async (config?: AxiosRequestConfig) => {
+      const response = await client.get('/beneficiaries/location', config);
+      return formatResponse<DistinctLocation[]>(response);
     },
   };
 };
