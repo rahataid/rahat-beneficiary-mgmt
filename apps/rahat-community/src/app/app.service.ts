@@ -89,9 +89,6 @@ export class AppService {
       calculateHHGenderStats(beneficiaries),
     ]);
 
-    console.log("MapStats=>", map_stats);
-    console.log("totalBeenf=>",total_benef);
-    console.log("total_with_gender=>",total_with_gender);
     console.log("total_by_agegroup=>",total_by_agegroup);
     console.log("vulnerabiilty_status=>",vulnerabiilty_status);
     console.log("total_vulnerable_hh=>",total_vulnerable_hh);

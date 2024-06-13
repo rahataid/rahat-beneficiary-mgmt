@@ -194,7 +194,6 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
   let myData = {};
   if (!beneficiaries.length) return [];
   for (let item of beneficiaries) {
-    console.log("ITEM=>",item);
     const d = item?.extras ?? null;
     if (d && d[NO_OF_MALE]) {
       if (myData[NO_OF_FEMALE]) {
@@ -226,8 +225,8 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
 export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const result = beneficiaries.reduce((acc, obj) => {
-    for (const [key, value] of Object.entries(obj.extras)) {
-      if (VALID_AGE_GROUP_KEYS.includes(key)) {
+    for (const [key, value] of Object.entries(obj?.extras)) {
+      if (key && VALID_AGE_GROUP_KEYS.includes(key)) {
         if (!acc[key]) {
           acc[key] = 0;
         }
@@ -240,6 +239,7 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   const data = Object.entries(result).map(([key, value]) => {
     return { id: key, count: value };
   });
+  console.log("TOTAL_BY_AGEGROUP=>",data)
   return {
     name: 'TOTAL_BY_AGEGROUP',
     data,
@@ -253,6 +253,7 @@ export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
     id: d,
     count: myData[d],
   }));
+  console.log("VULNERABIILTY_STATUS=>",data)
   return {
     name: 'VULNERABIILTY_STATUS',
     data,
@@ -265,13 +266,13 @@ export const totalVulnerableHH = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
     const { extras } = d;
-    if (extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
-    if (extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
-    if (extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
-    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+    if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+    if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
       nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
-    if (extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
-    if (extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
+    if (extras && extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
+    if (extras && extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
   }
 
   return {
@@ -288,7 +289,7 @@ export const calculateExtraFieldStats = (
   if (!beneficiaries) return [];
   const myData = {};
   beneficiaries.forEach((item: any) => {
-    if (item.extras[fieldName]) {
+    if (item.extras && item.extras[fieldName]) {
       const value = item.extras[fieldName];
       if (myData[value]) {
         myData[value] += 1;
@@ -302,6 +303,8 @@ export const calculateExtraFieldStats = (
     count: myData[d],
   }));
   const data = result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
+  console.log(reportName,data)
+
   return {
     name: reportName,
     data,
