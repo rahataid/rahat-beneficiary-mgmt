@@ -320,11 +320,11 @@ export const calculatePhoneStats = (beneficiaries: any[]) => {
 // TODO: Fix banked/unbanked
 export const calculateBankStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
-  const myData = bankedUnbankedMapping(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  // const myData = bankedUnbankedMapping(beneficiaries);
+  // const data = Object.keys(myData).map((d) => ({
+  //   id: d,
+  //   count: myData[d],
+  // }));
   return {
     name: 'BENEFICIARY_BANK_STATS',
     data:[],
