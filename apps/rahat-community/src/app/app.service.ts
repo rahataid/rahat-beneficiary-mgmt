@@ -19,6 +19,7 @@ import {
   totalVulnerableHH,
 } from './beneficiaries/helpers';
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
+import { stat } from 'fs';
 
 @Injectable()
 export class AppService {
@@ -110,7 +111,10 @@ export class AppService {
 
   async getStats(query: FilterBeneficiaryByLocationDto) {
     const benef = await this.benefService.findByPalikaAndWard(query);
-    return this.calculateStats(benef);
+    console.log("BENEF=>",benef);
+    const stats = await this.calculateStats(benef);
+    console.log("Stats=>",stats);
+    return stats;
   }
 
   async getData() {
