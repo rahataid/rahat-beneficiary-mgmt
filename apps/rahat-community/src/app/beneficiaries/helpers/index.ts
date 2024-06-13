@@ -194,7 +194,7 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
   let myData = {};
   if (!beneficiaries.length) return [];
   for (let item of beneficiaries) {
-    const d = item.extras;
+    const d = item?.extras || null;
     if (d && d[NO_OF_MALE]) {
       if (myData[NO_OF_FEMALE]) {
         myData[NO_OF_FEMALE] += 1;
@@ -211,6 +211,7 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
       } else myData[OTHERS] = 1;
     }
   }
+  console.log("TotalGender_MyData=>",myData)
   const data = Object.keys(myData).map((d) => ({
     id: d,
     count: myData[d],
