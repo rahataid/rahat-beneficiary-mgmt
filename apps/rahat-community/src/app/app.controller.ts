@@ -23,7 +23,7 @@ export class AppController {
     return this.appService.getData();
   }
 
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @Get('stats')
   getStats(@Query('') query: FilterBeneficiaryByLocationDto) {
     return this.appService.getStats(query);
