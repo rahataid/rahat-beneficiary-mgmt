@@ -317,7 +317,6 @@ export const calculatePhoneStats = (beneficiaries: any[]) => {
   };
 };
 
-// TODO: Fix banked/unbanked
 export const calculateBankStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   // const myData = bankedUnbankedMapping(beneficiaries);
