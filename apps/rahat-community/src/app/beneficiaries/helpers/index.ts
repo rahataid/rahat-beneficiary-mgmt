@@ -210,7 +210,6 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
       } else myData[OTHERS] = 1;
     }
   }
-  console.log("TotalGender_MyData=>",myData)
   const data = createMyData(myData);
   return {
     name: 'TOTAL_WITH_GENDER',
@@ -235,12 +234,9 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
     return acc;
   }, {});
 
-  console.log("Result=>",result);
-
   const data = Object.entries(result).map(([key, value]) => {
     return { id: key, count: value };
   });
-  console.log("TOTAL_BY_AGEGROUP=>",data)
   return {
     name: 'TOTAL_BY_AGEGROUP',
     data,
@@ -258,7 +254,6 @@ export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   let myData = mapVulnerabilityStatusCount(beneficiaries);
   const data = createMyData(myData);
-  console.log("VULNERABIILTY_STATUS=>",data)
   return {
     name: 'VULNERABIILTY_STATUS',
     data,
@@ -305,8 +300,6 @@ export const calculateExtraFieldStats = (
   });
   const result = createMyData(myData);
   const data = result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
-  console.log(reportName,data)
-
   return {
     name: reportName,
     data,
