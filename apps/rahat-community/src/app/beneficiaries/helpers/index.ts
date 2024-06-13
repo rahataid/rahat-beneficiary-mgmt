@@ -97,6 +97,7 @@ export const bankedUnbankedMapping = (data: any[]) => {
 
     if (
       extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+      typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'YES'
@@ -107,6 +108,7 @@ export const bankedUnbankedMapping = (data: any[]) => {
     }
     if ( extras && 
       extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+      typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'NO'

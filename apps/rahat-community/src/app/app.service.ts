@@ -110,10 +110,15 @@ export class AppService {
   }
 
   async getStats(query: FilterBeneficiaryByLocationDto) {
-    const benef = await this.benefService.findByPalikaAndWard(query);
-    const stats = await this.calculateStats(benef);
-    console.log("Stats=>",stats);
-    return stats;
+    try {
+      const benef = await this.benefService.findByPalikaAndWard(query);
+      console.log("total benef==>", benef.length);
+      const stats = await this.calculateStats(benef);
+      console.log("Stats=>",stats);
+      return stats;
+    } catch(err){
+      console.log("StatErr==>",err);
+    }
   }
 
   async getData() {
