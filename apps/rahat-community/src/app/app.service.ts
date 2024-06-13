@@ -89,6 +89,23 @@ export class AppService {
       calculateHHGenderStats(beneficiaries),
     ]);
 
+    console.log("MapStats=>", map_stats);
+    console.log("totalBeenf=>",total_benef);
+    console.log("total_with_gender=>",total_with_gender);
+    console.log("total_by_agegroup=>",total_by_agegroup);
+    console.log("vulnerabiilty_status=>",vulnerabiilty_status);
+    console.log("total_vulnerable_hh=>",total_vulnerable_hh);
+    console.log("caste_stats=>",caste_stats);
+    console.log("govt_id_type_stats=>",govt_id_type_stats);
+    console.log("bank_name_stats=>",bank_name_stats);
+    console.log("hh_education_stats=>",hh_education_stats);
+    console.log("vulnerability_category_stats=>",vulnerability_category_stats);
+    console.log("phone_set_stats=>",phone_set_stats);
+    console.log("phone_stats=>",phone_stats);
+    console.log("bank_stats=>",bank_stats);
+    console.log("ssa_not_received_stats=>",ssa_not_received_stats);
+    console.log("hh_gender_stats=>",hh_gender_stats);
+
     return [
       map_stats,
       total_benef,
