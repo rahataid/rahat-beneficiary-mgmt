@@ -111,7 +111,6 @@ export class AppService {
 
   async getStats(query: FilterBeneficiaryByLocationDto) {
     const benef = await this.benefService.findByPalikaAndWard(query);
-    console.log("BENEF=>",benef);
     const stats = await this.calculateStats(benef);
     console.log("Stats=>",stats);
     return stats;

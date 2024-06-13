@@ -85,6 +85,10 @@ export const mapSentenceCountFromArray = (data: string[]) => {
   }));
 };
 
+const hasKey = (myObj: any,key:string) => {
+  return myObj.hasOwnProperty(key)
+}
+
 export const bankedUnbankedMapping = (data: any[]) => {
   let myData = {};
 
@@ -92,7 +96,7 @@ export const bankedUnbankedMapping = (data: any[]) => {
     const { extras } = d as any;
 
     if (
-      extras && extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'YES'
@@ -102,7 +106,7 @@ export const bankedUnbankedMapping = (data: any[]) => {
       } else myData['Banked'] = 1;
     }
     if ( extras && 
-      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'NO'
