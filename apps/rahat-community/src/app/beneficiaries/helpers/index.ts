@@ -93,8 +93,7 @@ export const bankedUnbankedMapping = (data: any[]) => {
   let myData = {};
 
   for (let d of data) {
-    const { extras } = d as any;
-
+    const extras = d?.extras ?? null;
     if (
       extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
       typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
@@ -145,31 +144,31 @@ export const phoneUnphonedMapping = (data: any[]) => {
 export const mapVulnerabilityStatusCount = (data: any[]) => {
   let myData = {};
   for (let d of data) {
-    const { extras } = d;
-    if (extras[HOW_MANY_LACTATING]) {
+    const extras = d?.extras ?? null;
+    if (extras && extras[HOW_MANY_LACTATING]) {
       if (myData['Lactating']) {
         myData['Lactating'] += +extras[HOW_MANY_LACTATING];
       } else myData['Lactating'] = +extras[HOW_MANY_LACTATING];
     }
-    if (extras[HOW_MANY_PREGNANT]) {
+    if (extras && extras[HOW_MANY_PREGNANT]) {
       if (myData['Pregnant']) {
         myData['Pregnant'] += +extras[HOW_MANY_PREGNANT];
       } else myData['Pregnant'] = +extras[HOW_MANY_PREGNANT];
     }
 
-    if (extras[TYPE_OF_SSA_1]) {
+    if (extras && extras[TYPE_OF_SSA_1]) {
       const label = extras[TYPE_OF_SSA_1];
       if (myData[label]) {
         myData[label] += 1;
       } else myData[label] = 1;
     }
-    if (extras[TYPE_OF_SSA_2]) {
+    if (extras && extras[TYPE_OF_SSA_2]) {
       const label = extras[TYPE_OF_SSA_2];
       if (myData[label]) {
         myData[label] += 1;
       } else myData[label] = 1;
     }
-    if (extras[TYPE_OF_SSA_3]) {
+    if (extras && extras[TYPE_OF_SSA_3]) {
       const label = extras[TYPE_OF_SSA_3];
       if (myData[label]) {
         myData[label] += 1;
@@ -212,10 +211,7 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
     }
   }
   console.log("TotalGender_MyData=>",myData)
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'TOTAL_WITH_GENDER',
     data,
@@ -225,7 +221,10 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
 export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const result = beneficiaries.reduce((acc, obj) => {
-    for (const [key, value] of Object.entries(obj?.extras)) {
+    const extras = obj?.extras ?? null;
+    console.log("Extras=>",extras);
+    if(!extras) return {};
+    for (const [key, value] of Object.entries(extras)) {
       if (key && VALID_AGE_GROUP_KEYS.includes(key)) {
         if (!acc[key]) {
           acc[key] = 0;
@@ -235,6 +234,8 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
     }
     return acc;
   }, {});
+
+  console.log("Result=>",result);
 
   const data = Object.entries(result).map(([key, value]) => {
     return { id: key, count: value };
@@ -246,13 +247,17 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   };
 };
 
+const createMyData = (myData:any) => {
+  return Object.keys(myData).map((d) => ({
+    id: d || 'Title',
+    count: myData[d] || 0,
+  }));
+};
+
 export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   let myData = mapVulnerabilityStatusCount(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   console.log("VULNERABIILTY_STATUS=>",data)
   return {
     name: 'VULNERABIILTY_STATUS',
@@ -298,10 +303,7 @@ export const calculateExtraFieldStats = (
       }
     }
   });
-  const result = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const result = createMyData(myData);
   const data = result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
   console.log(reportName,data)
 
@@ -314,10 +316,7 @@ export const calculateExtraFieldStats = (
 export const calculatePhoneStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   let myData = phoneUnphonedMapping(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_PHONE_STATS',
     data,
@@ -326,14 +325,11 @@ export const calculatePhoneStats = (beneficiaries: any[]) => {
 
 export const calculateBankStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
-  // const myData = bankedUnbankedMapping(beneficiaries);
-  // const data = Object.keys(myData).map((d) => ({
-  //   id: d,
-  //   count: myData[d],
-  // }));
+  const myData = bankedUnbankedMapping(beneficiaries);
+  const data = createMyData(myData)
   return {
     name: 'BENEFICIARY_BANK_STATS',
-    data:[],
+    data:data,
   };
 };
 
@@ -341,8 +337,8 @@ export const calculateQualifiedSSA = (beneficiaries: any[]) => {
   let ssa_data = [];
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
-    const { extras } = d as any;
-    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    const extras = d?.extras ?? null;
+    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
       ssa_data.push(extras[TYPES_OF_SSA_TO_BE_RECEIVED]);
   }
   const mapped = mapSentenceCountFromArray(ssa_data);
@@ -378,10 +374,7 @@ export const calculateHHGenderStats = (beneficiaries: any[]) => {
       } else myData[Gender.UKNOWN] = 1;
     }
   }
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData)
   return {
     name: 'BENEFICIARY_GENDER',
     data,
