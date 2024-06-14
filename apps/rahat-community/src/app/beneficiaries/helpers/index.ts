@@ -221,7 +221,6 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const result = beneficiaries.reduce((acc, obj) => {
     const extras = obj?.extras ?? null;
-    console.log("Extras=>",extras);
     if(!extras) return {};
     for (const [key, value] of Object.entries(extras)) {
       if (key && VALID_AGE_GROUP_KEYS.includes(key)) {

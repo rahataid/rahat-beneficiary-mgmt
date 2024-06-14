@@ -193,7 +193,6 @@ export class TargetService {
       beneficiary: true,
     };
 
-    console.log(query);
     const conditions = { targetUuid: targetUuid };
 
     return paginate(
@@ -296,7 +295,6 @@ export class TargetService {
   }
 
   async downloadPinnedBeneficiary(targetUuid: string) {
-    console.log(targetUuid);
     const getLabelName = await this.prismaService.targetQuery.findUnique({
       where: { uuid: targetUuid },
       select: {

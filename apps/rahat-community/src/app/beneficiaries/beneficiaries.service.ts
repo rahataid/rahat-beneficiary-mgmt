@@ -382,11 +382,8 @@ export class BeneficiariesService {
       },
     });
 
-    console.log(benef);
     if (!benef) throw new Error('Beneficiary not found!');
     // 1. Archive the beneficiary
-    console.log(userUUID);
-
     const rData = await this.prisma.beneficiary.update({
       where: {
         uuid,
