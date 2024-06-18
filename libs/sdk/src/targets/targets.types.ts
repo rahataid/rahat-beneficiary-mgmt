@@ -4,6 +4,7 @@ import { TargetQueryStatus } from '../enums';
 
 export type ExportTargeBeneficiary = {
   targetUUID: UUID;
+  appURL: string;
 };
 
 export type TargetPost = {
