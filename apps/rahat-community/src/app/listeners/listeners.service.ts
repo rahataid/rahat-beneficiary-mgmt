@@ -55,6 +55,6 @@ export class ListenerService {
   @OnEvent(BeneficiaryEvents.BENEFICIARY_REMOVED)
   async onBeneficiaryChanged() {
     console.log('listener called');
-    await this.benStats.saveAllStats();
+    // await this.benStats.saveAllStats();
   }
 }

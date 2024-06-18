@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BeneficiaryEvents, Enums } from '@rahataid/community-tool-sdk';
+import { BeneficiaryEvents, Enums, GroupOrigins } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { DB_MODELS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
@@ -47,11 +47,13 @@ export class BeneficiaryImportService {
       name: 'default',
       isSystem: true,
       autoCreated: true,
+      origins:[GroupOrigins.IMPORT],
       createdBy,
     });
     const importGroup = await this.groupService.upsertByName({
       name: `import_${formatDateAndTime(new Date())}`,
       autoCreated: true,
+      origins:[GroupOrigins.IMPORT],
       createdBy,
     });
     return {
