@@ -7,12 +7,25 @@ import { PrismaService } from '@rumsan/prisma';
 import { RSError } from '@rumsan/core';
 import { paginate } from '../utils/paginate';
 import { Prisma } from '@prisma/client';
+import { UUID } from 'crypto';
+import { GroupOrigins } from '@rahataid/community-tool-sdk';
 
-// Fix the DTOs/Types and Service functions
 @Injectable()
 export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
+
+  hasOrigins(arr: any) {
+    return arr.includes(GroupOrigins.IMPORT && GroupOrigins.TARGETING);
+  }
+
+  // TODO: Cleanup this function
   async create(dto: CreateBeneficiaryGroupDto) {
+    const currentGroup = await this.findGroupByUUID(dto.groupUID);
+    if (currentGroup?.origins?.length) {
+      const exist = this.hasOrigins(currentGroup.origins);
+      if (exist)
+        throw new Error('Assigning beneficiary to this group is not allowed!');
+    }
     const groupBenefData = await this.prisma.$transaction(async (prisma) => {
       const resultArray = [];
       const errors = [];
@@ -69,6 +82,18 @@ export class BeneficiaryGroupService {
       return finalResult;
     });
     return groupBenefData;
+  }
+
+  async findGroupByUUID(uuid: UUID) {
+    return this.prisma.group.findUnique({
+      where: {
+        uuid: uuid,
+      },
+      select: {
+        name: true,
+        origins: true,
+      },
+    });
   }
 
   async findAll(filters: any) {

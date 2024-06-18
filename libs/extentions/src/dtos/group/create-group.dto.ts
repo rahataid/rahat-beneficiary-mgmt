@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GroupOrigins } from '@rahataid/community-tool-sdk';
-import { IsBoolean, IsString, IsOptional, IsArray } from 'class-validator';
+import {
+  IsBoolean,
+  IsString,
+  IsOptional,
+  IsArray,
+  IsEmpty,
+} from 'class-validator';
 
 export class CreateGroupDto {
   @ApiProperty({
@@ -40,5 +46,6 @@ export class CreateGroupDto {
     example: [GroupOrigins.TARGETING],
   })
   @IsArray()
+  @IsOptional()
   origins?: string[];
 }
