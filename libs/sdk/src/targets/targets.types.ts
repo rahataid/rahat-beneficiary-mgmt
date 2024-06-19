@@ -3,7 +3,7 @@ import { Beneficiary } from '../beneficiary';
 import { TargetQueryStatus } from '../enums';
 
 export type ExportTargeBeneficiary = {
-  targetUUID: UUID;
+  groupUUID: UUID;
   appURL: string;
 };
 

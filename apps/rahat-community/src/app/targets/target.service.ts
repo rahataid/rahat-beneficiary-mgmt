@@ -167,30 +167,32 @@ export class TargetService {
     });
   }
 
-  // ==========TargetResult Schema Operations==========
-  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
-    const { targetUUID, appURL } = dto;
-    const target = await this.findOneByUUID(targetUUID);
-    if (!target) throw new Error('Target not found');
-    const rows = await this.prismaService.targetResult.findMany({
-      where: { targetUuid: targetUUID },
+  findBenefByGroup(uuid: string) {
+    return this.prismaService.beneficiaryGroup.findMany({
+      where: { groupUID: uuid },
       include: { beneficiary: true },
     });
-    if (!rows.length) throw new Error('No beneficiaries found for this target');
+  }
+
+  // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
+  // ==========TargetResult Schema Operations==========
+  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const { groupUUID, appURL } = dto;
+    const group = await this.groupService.findUnique(groupUUID);
+    if (!group) throw new Error('Group not found');
+    const rows = await this.findBenefByGroup(group.uuid);
+    if (!rows.length) throw new Error('No beneficiaries found for this group');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    // const baseURL = process.env.RAHAT_APP_URL;
-    // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
     const payload = {
-      groupName: target.label,
-      targetUUID: targetUUID,
+      groupName: group.name,
       beneficiaries,
-      apiUrl: appURL,
+      appUrl: appURL,
     };
     // Add to queue
     this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
     return {
       success: true,
-      message: `${beneficiaries.length} beneficiaries added to queue for export`,
+      message: `${beneficiaries.length} beneficiaries added to the queue for export`,
     };
   }
 

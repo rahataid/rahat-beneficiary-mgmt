@@ -16,9 +16,9 @@ export class BeneficiaryProcessor {
   @Process(JOBS.BENEFICIARY.EXPORT)
   async exportBeneficiary(job: Job<any>) {
     const { data } = job;
-    const { apiUrl, ...rest } = data;
+    const { appUrl, ...rest } = data;
     const buffer = Buffer.from(JSON.stringify(rest));
-    return exportBulkBeneficiary(apiUrl, buffer);
+    return exportBulkBeneficiary(appUrl, buffer);
   }
 
   @OnQueueCompleted()

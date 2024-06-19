@@ -29,14 +29,14 @@ export class CreateTargetQueryDto {
 export class ExportTargetBeneficiaryDto {
   @ApiProperty({
     type: 'uuid',
-    example: 'a1b2c3d4-1234-5678-1234-567812345678',
+    example: '4837585a-d0e8-43c3-9382-ad29495a60d2',
   })
   @IsUUID()
-  targetUUID!: UUID;
+  groupUUID!: UUID;
 
   @ApiProperty({
     type: 'string',
-    example: 'https://rumsan.com/',
+    example: 'https://api.rumsan.com/',
   })
   @IsString()
   appURL!: string;
