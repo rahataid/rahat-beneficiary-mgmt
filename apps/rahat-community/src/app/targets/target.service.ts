@@ -147,7 +147,7 @@ export class TargetService {
 
   // ==========TargetResult Schema Operations==========
   async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
-    const { targetUUID } = dto;
+    const { targetUUID, appURL } = dto;
     const target = await this.findOneByUUID(targetUUID);
     if (!target) throw new Error('Target not found');
     const rows = await this.prismaService.targetResult.findMany({
@@ -156,13 +156,13 @@ export class TargetService {
     });
     if (!rows.length) throw new Error('No beneficiaries found for this target');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    const baseURL = process.env.RAHAT_APP_URL;
-    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
+    // const baseURL = process.env.RAHAT_APP_URL;
+    // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
     const payload = {
       groupName: target.label,
       targetUUID: targetUUID,
       beneficiaries,
-      apiUrl,
+      apiUrl: appURL,
     };
     // Add to queue
     this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);

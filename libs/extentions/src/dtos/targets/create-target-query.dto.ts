@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 import { UUID } from 'crypto';
 
 export enum TargetQueryStatusEnum {
@@ -33,4 +33,11 @@ export class ExportTargetBeneficiaryDto {
   })
   @IsUUID()
   targetUUID!: UUID;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'https://rumsan.com/',
+  })
+  @IsString()
+  appURL!: string;
 }
