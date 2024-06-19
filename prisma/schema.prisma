@@ -123,6 +123,9 @@ model FieldDefinition {
   fieldPopulate Json? // { data: "john doe" } Or { data: [{id:1, label:'Green'}] }
   isActive      Boolean   @default(true)
   isTargeting   Boolean   @default(false)
+  isSystem      Boolean   @default(false)
+  variations    String[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime? @updatedAt()
   createdBy     String?
@@ -138,6 +141,7 @@ model Group {
   beneficiariesGroup BeneficiaryGroup[]
   isSystem           Boolean            @default(false)
   autoCreated        Boolean            @default(false)
+  origins            String[]   // Targeting/Import
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
