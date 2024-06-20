@@ -14,7 +14,8 @@
     "dev": "npx nx serve rahat-community",
     "serve:frontend": "npx nx serve frontend",
     "test": "npx nx test rahat-community-e2e:e2e",
-    "prisma:generate": "npx prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "setup-data": "ts-node prisma/setup.ts"
   },
   "husky": {
     "hooks": {
