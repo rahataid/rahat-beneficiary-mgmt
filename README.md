@@ -1561,7 +1561,7 @@ success: true
 
 ```
 
-- #### target Search
+- #### targets Result
 
 ```http
   Post /targets/targetResult
