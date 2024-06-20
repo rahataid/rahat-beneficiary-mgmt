@@ -13,7 +13,7 @@ export const SYSTEM_DB_FIELDS = [
   {
     name: 'householdHeadName',
     fieldType: FieldType.TEXT,
-    isSystem: false,
+    isSystem: true,
   },
   {
     name: 'firstName',
