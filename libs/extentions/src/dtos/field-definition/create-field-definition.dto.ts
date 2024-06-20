@@ -52,4 +52,11 @@ export class CreateFieldDefinitionDto {
   })
   @IsOptional()
   createdBy?: string;
+
+  @ApiProperty({
+    type: 'array',
+    example: ['varation1', 'variation2'],
+  })
+  @IsOptional()
+  variations?: string[];
 }
