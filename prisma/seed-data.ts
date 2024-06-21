@@ -14,6 +14,7 @@ export const SYSTEM_DB_FIELDS = [
     name: 'householdHeadName',
     fieldType: FieldType.TEXT,
     isSystem: true,
+    variations: ['Household Head Name'],
   },
   {
     name: 'firstName',
@@ -29,6 +30,7 @@ export const SYSTEM_DB_FIELDS = [
     name: 'gender',
     fieldType: FieldType.DROPDOWN,
     isSystem: true,
+    variations: ['Household Head Gender'],
   },
   {
     name: 'birthDate',
@@ -44,6 +46,7 @@ export const SYSTEM_DB_FIELDS = [
     name: 'phone',
     fieldType: FieldType.TEXT,
     isSystem: true,
+    variations: ['Household Head Phone Number'],
   },
   {
     name: 'email',
@@ -59,16 +62,19 @@ export const SYSTEM_DB_FIELDS = [
     name: 'latitude',
     fieldType: FieldType.NUMBER,
     isSystem: true,
+    variations: ['_GPS_latitude'],
   },
   {
     name: 'longitude',
     fieldType: FieldType.NUMBER,
     isSystem: true,
+    variations: ['_GPS_longitude'],
   },
   {
     name: 'govtIDNumber',
     fieldType: FieldType.TEXT,
     isSystem: true,
+    variations: ['Government ID Number'],
   },
   {
     name: 'phoneStatus',
