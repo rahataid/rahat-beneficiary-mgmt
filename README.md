@@ -1,6 +1,6 @@
 # Community-tool
 
-The Community Tool is designed to facilitate efficient management of beneficiary data, ensuring accuracy, reliability, and secure handling of non-PII (Personally Identifiable Information) data. It enables targeting beneficiaries based on geographical, social, economic, and physical indicators.
+The Community Tool is designed to facilitate efficient management of beneficiary data, ensuring accuracy, reliability, and security. It provides targeting, grouping, and reporting capabilities for beneficiaries based on geographical, social, economic, and physical indicators.
 
 ## Environment Variables
 
@@ -37,7 +37,7 @@ REDIS_PORT= FILL_WITH_YOUR_REDIS_PORT
 REDIS_PASSWORD=FILL_WITH_YOUR_REDIS_PASSSWORD
 ```
 
-Nest run in docker, change host to database container name
+Postgres database config
 
 ```
 DB_HOST=FILL_WITH_YOUR_DB_HOST
