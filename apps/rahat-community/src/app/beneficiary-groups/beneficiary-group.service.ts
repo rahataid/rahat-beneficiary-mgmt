@@ -183,4 +183,18 @@ export class BeneficiaryGroupService {
       },
     });
   }
+
+  upsertBeneficiaryGroup(beneficiary: string, group: string) {
+    const payload = {
+      beneficiaryUID: beneficiary,
+      groupUID: group,
+    };
+    return this.prisma.beneficiaryGroup.upsert({
+      where: {
+        benefGroupIdentifier: payload,
+      },
+      update: payload,
+      create: payload,
+    });
+  }
 }
