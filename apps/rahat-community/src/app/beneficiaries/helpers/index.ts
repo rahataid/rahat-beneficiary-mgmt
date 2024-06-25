@@ -18,6 +18,11 @@ const {
 
 const PHONE_NUMBER_PATTERN = '99900';
 
+const LABEL_MAPPING = {
+  no_of_female: 'Female',
+  no_of_male: 'Male',
+};
+
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
 
@@ -85,9 +90,9 @@ export const mapSentenceCountFromArray = (data: string[]) => {
   }));
 };
 
-const hasKey = (myObj: any,key:string) => {
-  return myObj.hasOwnProperty(key)
-}
+const hasKey = (myObj: any, key: string) => {
+  return myObj.hasOwnProperty(key);
+};
 
 export const bankedUnbankedMapping = (data: any[]) => {
   let myData = {};
@@ -95,7 +100,8 @@ export const bankedUnbankedMapping = (data: any[]) => {
   for (let d of data) {
     const extras = d?.extras ?? null;
     if (
-      extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+      extras &&
+      hasKey(extras, REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
       typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
@@ -105,8 +111,10 @@ export const bankedUnbankedMapping = (data: any[]) => {
         myData['Banked'] += 1;
       } else myData['Banked'] = 1;
     }
-    if ( extras && 
-      extras && hasKey(extras,REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+    if (
+      extras &&
+      extras &&
+      hasKey(extras, REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
       typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
@@ -210,18 +218,32 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
       } else myData[OTHERS] = 1;
     }
   }
-  const data = createMyData(myData);
+  const sanitized = updateLabels(myData, LABEL_MAPPING);
+  const data = createMyData(sanitized);
   return {
     name: 'TOTAL_WITH_GENDER',
     data,
   };
 };
 
+function updateLabels(obj: any, mapping: any) {
+  // Iterate through the keys in the mapping
+  Object.keys(mapping).forEach((key) => {
+    // Check if the key exists in the object
+    if (obj.hasOwnProperty(key)) {
+      // Update the key with its corresponding label
+      obj[mapping[key]] = obj[key];
+      delete obj[key]; // Optionally, delete the original key
+    }
+  });
+  return obj;
+}
+
 export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const result = beneficiaries.reduce((acc, obj) => {
     const extras = obj?.extras ?? null;
-    if(!extras) return {};
+    if (!extras) return {};
     for (const [key, value] of Object.entries(extras)) {
       if (key && VALID_AGE_GROUP_KEYS.includes(key)) {
         if (!acc[key]) {
@@ -242,7 +264,7 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   };
 };
 
-const createMyData = (myData:any) => {
+const createMyData = (myData: any) => {
   return Object.keys(myData).map((d) => ({
     id: d || 'Title',
     count: myData[d] || 0,
@@ -270,8 +292,10 @@ export const totalVulnerableHH = (beneficiaries: any[]) => {
     if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
     if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
       nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
-    if (extras && extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
-    if (extras && extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
+    if (extras && extras[HOW_MANY_LACTATING])
+      countData += +extras[HOW_MANY_LACTATING];
+    if (extras && extras[HOW_MANY_PREGNANT])
+      countData += +extras[HOW_MANY_PREGNANT];
   }
 
   return {
@@ -318,10 +342,10 @@ export const calculatePhoneStats = (beneficiaries: any[]) => {
 export const calculateBankStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const myData = bankedUnbankedMapping(beneficiaries);
-  const data = createMyData(myData)
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_BANK_STATS',
-    data:data,
+    data: data,
   };
 };
 
@@ -366,7 +390,7 @@ export const calculateHHGenderStats = (beneficiaries: any[]) => {
       } else myData[Gender.UKNOWN] = 1;
     }
   }
-  const data = createMyData(myData)
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_GENDER',
     data,
