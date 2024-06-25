@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GroupOrigins } from '@rahataid/community-tool-sdk';
 import {
-  IsBoolean,
-  IsString,
-  IsOptional,
   IsArray,
-  IsEmpty,
+  IsBoolean,
+  IsObject,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class CreateGroupDto {
@@ -48,4 +48,12 @@ export class CreateGroupDto {
   @IsArray()
   @IsOptional()
   origins?: string[];
+
+  @IsObject()
+  @IsOptional()
+  @ApiProperty({
+    type: 'array',
+    example: { gender: 'MALE', ward_no: 10 },
+  })
+  targetingCriteria?: Record<string, any>;
 }

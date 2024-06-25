@@ -128,12 +128,14 @@ export class TargetService {
   }
 
   async updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
+    const targetCriteria = { data: dto.targetingCriteria } as any;
     const benef = await this.findTargetedBeneficiary(uuid);
     if (!benef.length) throw new Error('No beneficiaries found!');
     const group = await this.groupService.create({
       name: dto.label,
       origins: [GroupOrigins.TARGETING],
       createdBy: dto.createdBy,
+      targetingCriteria: targetCriteria,
     });
     const groupedBenef = benef.map((b: any) => {
       return {
