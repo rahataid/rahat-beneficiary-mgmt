@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {
   CreateGroupDto,
@@ -9,10 +10,8 @@ import { ArchiveType, BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class GroupService {

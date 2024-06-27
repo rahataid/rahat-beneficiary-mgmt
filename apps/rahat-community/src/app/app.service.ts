@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
+import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
+import { SettingsService } from '@rumsan/settings';
 import axios from 'axios';
 import { KOBO_URL } from '../constants';
-import { SettingsService } from '@rumsan/settings';
 import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
-import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 import {
   calculateBankStats,
   calculateExtraFieldStats,
@@ -18,7 +19,6 @@ import {
   calculateVulnerabilityStatus,
   totalVulnerableHH,
 } from './beneficiaries/helpers';
-import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class AppService {

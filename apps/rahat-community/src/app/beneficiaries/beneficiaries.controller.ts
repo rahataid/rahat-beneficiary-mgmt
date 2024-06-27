@@ -110,7 +110,6 @@ export class BeneficiariesController {
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findOne(@Param('uuid') uuid: string) {
-    console.log(uuid);
     return this.beneficiariesService.findOne(uuid);
   }
 
@@ -126,7 +125,6 @@ export class BeneficiariesController {
   @HttpCode(HttpStatus.OK)
   remove(@Param('uuid') uuid: string, @Req() req: any) {
     const userUUID = req?.user?.uuid;
-    console.log(uuid);
     return this.beneficiariesService.remove(uuid, userUUID);
   }
 

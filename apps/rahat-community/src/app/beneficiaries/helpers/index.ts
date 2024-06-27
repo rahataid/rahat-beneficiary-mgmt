@@ -18,6 +18,11 @@ const {
 
 const PHONE_NUMBER_PATTERN = '99900';
 
+const LABEL_MAPPING = {
+  no_of_female: 'Female',
+  no_of_male: 'Male',
+};
+
 export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
   if (Object.keys(extras).length < 1) return main_query_result;
 
@@ -85,14 +90,19 @@ export const mapSentenceCountFromArray = (data: string[]) => {
   }));
 };
 
+const hasKey = (myObj: any, key: string) => {
+  return myObj.hasOwnProperty(key);
+};
+
 export const bankedUnbankedMapping = (data: any[]) => {
   let myData = {};
 
   for (let d of data) {
-    const { extras } = d as any;
-
+    const extras = d?.extras ?? null;
     if (
-      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras &&
+      hasKey(extras, REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+      typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'YES'
@@ -102,7 +112,10 @@ export const bankedUnbankedMapping = (data: any[]) => {
       } else myData['Banked'] = 1;
     }
     if (
-      extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] &&
+      extras &&
+      extras &&
+      hasKey(extras, REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT) &&
+      typeof extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT] === 'string' &&
       extras[REPORTING_FIELD.FAMILY_MEMBER_BANK_ACCOUNT]
         .toUpperCase()
         .trim() === 'NO'
@@ -139,31 +152,31 @@ export const phoneUnphonedMapping = (data: any[]) => {
 export const mapVulnerabilityStatusCount = (data: any[]) => {
   let myData = {};
   for (let d of data) {
-    const { extras } = d;
-    if (extras[HOW_MANY_LACTATING]) {
+    const extras = d?.extras ?? null;
+    if (extras && extras[HOW_MANY_LACTATING]) {
       if (myData['Lactating']) {
         myData['Lactating'] += +extras[HOW_MANY_LACTATING];
       } else myData['Lactating'] = +extras[HOW_MANY_LACTATING];
     }
-    if (extras[HOW_MANY_PREGNANT]) {
+    if (extras && extras[HOW_MANY_PREGNANT]) {
       if (myData['Pregnant']) {
         myData['Pregnant'] += +extras[HOW_MANY_PREGNANT];
       } else myData['Pregnant'] = +extras[HOW_MANY_PREGNANT];
     }
 
-    if (extras[TYPE_OF_SSA_1]) {
+    if (extras && extras[TYPE_OF_SSA_1]) {
       const label = extras[TYPE_OF_SSA_1];
       if (myData[label]) {
         myData[label] += 1;
       } else myData[label] = 1;
     }
-    if (extras[TYPE_OF_SSA_2]) {
+    if (extras && extras[TYPE_OF_SSA_2]) {
       const label = extras[TYPE_OF_SSA_2];
       if (myData[label]) {
         myData[label] += 1;
       } else myData[label] = 1;
     }
-    if (extras[TYPE_OF_SSA_3]) {
+    if (extras && extras[TYPE_OF_SSA_3]) {
       const label = extras[TYPE_OF_SSA_3];
       if (myData[label]) {
         myData[label] += 1;
@@ -188,7 +201,7 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
   let myData = {};
   if (!beneficiaries.length) return [];
   for (let item of beneficiaries) {
-    const d = item.extras;
+    const d = item?.extras ?? null;
     if (d && d[NO_OF_MALE]) {
       if (myData[NO_OF_FEMALE]) {
         myData[NO_OF_FEMALE] += 1;
@@ -205,21 +218,34 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
       } else myData[OTHERS] = 1;
     }
   }
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const sanitized = updateLabels(myData, LABEL_MAPPING);
+  const data = createMyData(sanitized);
   return {
     name: 'TOTAL_WITH_GENDER',
     data,
   };
 };
 
+function updateLabels(obj: any, mapping: any) {
+  // Iterate through the keys in the mapping
+  Object.keys(mapping).forEach((key) => {
+    // Check if the key exists in the object
+    if (obj.hasOwnProperty(key)) {
+      // Update the key with its corresponding label
+      obj[mapping[key]] = obj[key];
+      delete obj[key]; // Optionally, delete the original key
+    }
+  });
+  return obj;
+}
+
 export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const result = beneficiaries.reduce((acc, obj) => {
-    for (const [key, value] of Object.entries(obj.extras)) {
-      if (VALID_AGE_GROUP_KEYS.includes(key)) {
+    const extras = obj?.extras ?? null;
+    if (!extras) return {};
+    for (const [key, value] of Object.entries(extras)) {
+      if (key && VALID_AGE_GROUP_KEYS.includes(key)) {
         if (!acc[key]) {
           acc[key] = 0;
         }
@@ -238,13 +264,17 @@ export const calculateTotalWithAgeGroup = (beneficiaries: any[]) => {
   };
 };
 
+const createMyData = (myData: any) => {
+  return Object.keys(myData).map((d) => ({
+    id: d || 'Title',
+    count: myData[d] || 0,
+  }));
+};
+
 export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   let myData = mapVulnerabilityStatusCount(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'VULNERABIILTY_STATUS',
     data,
@@ -257,13 +287,15 @@ export const totalVulnerableHH = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
     const { extras } = d;
-    if (extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
-    if (extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
-    if (extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
-    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+    if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+    if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
       nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
-    if (extras[HOW_MANY_LACTATING]) countData += +extras[HOW_MANY_LACTATING];
-    if (extras[HOW_MANY_PREGNANT]) countData += +extras[HOW_MANY_PREGNANT];
+    if (extras && extras[HOW_MANY_LACTATING])
+      countData += +extras[HOW_MANY_LACTATING];
+    if (extras && extras[HOW_MANY_PREGNANT])
+      countData += +extras[HOW_MANY_PREGNANT];
   }
 
   return {
@@ -280,7 +312,7 @@ export const calculateExtraFieldStats = (
   if (!beneficiaries) return [];
   const myData = {};
   beneficiaries.forEach((item: any) => {
-    if (item.extras[fieldName]) {
+    if (item.extras && item.extras[fieldName]) {
       const value = item.extras[fieldName];
       if (myData[value]) {
         myData[value] += 1;
@@ -289,10 +321,7 @@ export const calculateExtraFieldStats = (
       }
     }
   });
-  const result = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const result = createMyData(myData);
   const data = result.filter((f) => f.id.toLocaleUpperCase() !== 'NO');
   return {
     name: reportName,
@@ -303,10 +332,7 @@ export const calculateExtraFieldStats = (
 export const calculatePhoneStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   let myData = phoneUnphonedMapping(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_PHONE_STATS',
     data,
@@ -316,13 +342,10 @@ export const calculatePhoneStats = (beneficiaries: any[]) => {
 export const calculateBankStats = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   const myData = bankedUnbankedMapping(beneficiaries);
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_BANK_STATS',
-    data,
+    data: data,
   };
 };
 
@@ -330,8 +353,8 @@ export const calculateQualifiedSSA = (beneficiaries: any[]) => {
   let ssa_data = [];
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
-    const { extras } = d as any;
-    if (extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    const extras = d?.extras ?? null;
+    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
       ssa_data.push(extras[TYPES_OF_SSA_TO_BE_RECEIVED]);
   }
   const mapped = mapSentenceCountFromArray(ssa_data);
@@ -367,10 +390,7 @@ export const calculateHHGenderStats = (beneficiaries: any[]) => {
       } else myData[Gender.UKNOWN] = 1;
     }
   }
-  const data = Object.keys(myData).map((d) => ({
-    id: d,
-    count: myData[d],
-  }));
+  const data = createMyData(myData);
   return {
     name: 'BENEFICIARY_GENDER',
     data,

@@ -81,7 +81,9 @@ export class TargetController {
   updateTargetQueryLabel(
     @Param('uuid') uuid: string,
     @Body() dto: updateTargetQueryLabelDTO,
+    @Req() req: any,
   ) {
+    dto.createdBy = req?.user?.uuid || '';
     return this.targetService.updateTargetQueryLabel(uuid, dto);
   }
 

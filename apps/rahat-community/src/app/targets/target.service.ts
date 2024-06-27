@@ -1,26 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { filterExtraFieldValues } from '../beneficiaries/helpers';
-import { PrismaService } from '@rumsan/prisma';
-import {
-  APP,
-  DB_MODELS,
-  JOBS,
-  QUEUE,
-  QUEUE_RETRY_OPTIONS,
-  TARGET_QUERY_STATUS,
-} from '../../constants';
-import { paginate } from '../utils/paginate';
-import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import {
-  createFinalResult,
-  createPrimaryAndExtraQuery,
-  exportBulkBeneficiary,
-} from './helpers';
-import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { calculateNumberOfDays } from '../utils';
+import { Prisma } from '@prisma/client';
 import {
   CreateTargetQueryDto,
   CreateTargetResultDto,
@@ -30,9 +11,26 @@ import {
   TargetQueryStatusEnum,
   updateTargetQueryLabelDTO,
 } from '@rahataid/community-tool-extensions';
-import { Prisma } from '@prisma/client';
-import { generateExcelData } from '../utils/export-to-excel';
+import { PrismaService } from '@rumsan/prisma';
+import { Queue } from 'bull';
 import { UUID } from 'crypto';
+import {
+  APP,
+  DB_MODELS,
+  JOBS,
+  QUEUE,
+  QUEUE_RETRY_OPTIONS,
+  TARGET_QUERY_STATUS,
+} from '../../constants';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { filterExtraFieldValues } from '../beneficiaries/helpers';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { calculateNumberOfDays } from '../utils';
+import { generateExcelData } from '../utils/export-to-excel';
+import { paginate } from '../utils/paginate';
+import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+import { GroupService } from '../groups/group.service';
+import { GroupOrigins } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class TargetService {
@@ -41,6 +39,7 @@ export class TargetService {
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
+    private groupService: GroupService,
   ) {}
 
   async create(dto: CreateTargetQueryDto) {
@@ -117,10 +116,35 @@ export class TargetService {
     });
   }
 
-  updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
-    return this.prismaService.targetQuery.update({
-      where: { uuid },
-      data: dto,
+  async findTargetedBeneficiary(targetUUID: string) {
+    return this.prismaService.targetResult.findMany({
+      where: {
+        targetUuid: targetUUID,
+      },
+      select: {
+        benefUuid: true,
+      },
+    });
+  }
+
+  async updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
+    const targetCriteria = { data: dto.targetingCriteria } as any;
+    const benef = await this.findTargetedBeneficiary(uuid);
+    if (!benef.length) throw new Error('No beneficiaries found!');
+    const group = await this.groupService.create({
+      name: dto.label,
+      origins: [GroupOrigins.TARGETING],
+      createdBy: dto.createdBy,
+      targetingCriteria: targetCriteria,
+    });
+    const groupedBenef = benef.map((b: any) => {
+      return {
+        beneficiaryUID: b.benefUuid,
+        groupUID: group.uuid,
+      };
+    });
+    return this.prismaService.beneficiaryGroup.createMany({
+      data: groupedBenef,
     });
   }
 
@@ -145,30 +169,32 @@ export class TargetService {
     });
   }
 
-  // ==========TargetResult Schema Operations==========
-  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
-    const { targetUUID } = dto;
-    const target = await this.findOneByUUID(targetUUID);
-    if (!target) throw new Error('Target not found');
-    const rows = await this.prismaService.targetResult.findMany({
-      where: { targetUuid: targetUUID },
+  findBenefByGroup(uuid: string) {
+    return this.prismaService.beneficiaryGroup.findMany({
+      where: { groupUID: uuid },
       include: { beneficiary: true },
     });
-    if (!rows.length) throw new Error('No beneficiaries found for this target');
+  }
+
+  // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
+  // ==========TargetResult Schema Operations==========
+  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const { groupUUID, appURL } = dto;
+    const group = await this.groupService.findUnique(groupUUID);
+    if (!group) throw new Error('Group not found');
+    const rows = await this.findBenefByGroup(group.uuid);
+    if (!rows.length) throw new Error('No beneficiaries found for this group');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    const baseURL = process.env.RAHAT_APP_URL;
-    const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
     const payload = {
-      groupName: target.label,
-      targetUUID: targetUUID,
+      groupName: group.name,
       beneficiaries,
-      apiUrl,
+      appUrl: appURL,
     };
     // Add to queue
     this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
     return {
       success: true,
-      message: `${beneficiaries.length} beneficiaries added to queue for export`,
+      message: `${beneficiaries.length} beneficiaries added to the queue for export`,
     };
   }
 
@@ -193,7 +219,6 @@ export class TargetService {
       beneficiary: true,
     };
 
-    console.log(query);
     const conditions = { targetUuid: targetUuid };
 
     return paginate(
@@ -296,7 +321,6 @@ export class TargetService {
   }
 
   async downloadPinnedBeneficiary(targetUuid: string) {
-    console.log(targetUuid);
     const getLabelName = await this.prismaService.targetQuery.findUnique({
       where: { uuid: targetUuid },
       select: {

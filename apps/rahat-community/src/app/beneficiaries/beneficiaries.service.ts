@@ -21,12 +21,13 @@ import {
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
-import { DB_MODELS } from '../../constants';
+import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 import { query } from 'express';
 import { equals } from 'class-validator';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class BeneficiariesService {
@@ -231,13 +232,30 @@ export class BeneficiariesService {
         );
     }
 
-    const createdData = await this.prisma.beneficiary.create({
+    const benef = await this.prisma.beneficiary.create({
       data: {
         ...dto,
       },
     });
+    if (benef) await this.addBenefToDefaultGroup(benef.uuid);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
-    return createdData;
+    return benef;
+  }
+
+  async addBenefToDefaultGroup(beneficiary: string) {
+    const payload = {
+      name: DEFAULT_GROUP,
+    };
+    const group = await this.prisma.group.upsert({
+      where: payload,
+      update: payload,
+      create: payload,
+    });
+    if (!group) return;
+    return this.beneficiaryGroupService.upsertBeneficiaryGroup(
+      beneficiary,
+      group.uuid,
+    );
   }
 
   async searchTargets(filters: any) {
@@ -382,11 +400,8 @@ export class BeneficiariesService {
       },
     });
 
-    console.log(benef);
     if (!benef) throw new Error('Beneficiary not found!');
     // 1. Archive the beneficiary
-    console.log(userUUID);
-
     const rData = await this.prisma.beneficiary.update({
       where: {
         uuid,

@@ -59,3 +59,5 @@ export enum GenderEnum {
 }
 
 export const EXTERNAL_UUID_FIELD = 'uuid';
+
+export const DEFAULT_GROUP = 'default';

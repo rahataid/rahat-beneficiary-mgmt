@@ -74,6 +74,7 @@ export class FieldDefinitionsService {
       isActive: true,
       isTargeting: true,
       fieldPopulate: true,
+      variations: true,
     };
 
     const isTargeting =
@@ -118,9 +119,9 @@ export class FieldDefinitionsService {
       fieldPopulate && fieldPopulate.data ? { data: fieldPopulate.data } : null;
     const payload = {
       ...dto,
-      name: convertToValidString(dto.name),
       fieldPopulate: populateData,
     };
+    if (dto.name) payload.name = convertToValidString(dto.name);
     return this.prisma.fieldDefinition.update({
       where: { id },
       data: payload,

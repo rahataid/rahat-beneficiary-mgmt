@@ -5,6 +5,11 @@ export enum Gender {
   UKNOWN = 'UNKNOWN',
 }
 
+export enum GroupOrigins {
+  IMPORT = "IMPORT",
+  TARGETING = "TARGETING"
+}
+
 export enum FieldTypeEnum {
   CHECKBOX = 'CHECKBOX',
   DROPDOWN = 'DROPDOWN',
