@@ -335,6 +335,7 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
+    await this.checkDuplicatePhoneAndGovtID(dto.phone, dto.govtIDNumber);
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
