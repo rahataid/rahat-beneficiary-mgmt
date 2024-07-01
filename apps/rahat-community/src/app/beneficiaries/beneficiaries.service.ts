@@ -29,6 +29,11 @@ import { query } from 'express';
 import { equals } from 'class-validator';
 import { UUID } from 'crypto';
 
+interface IDuplicateValidation {
+  hasPhone: boolean;
+  hasGovtID: boolean;
+}
+
 @Injectable()
 export class BeneficiariesService {
   constructor(
@@ -199,18 +204,31 @@ export class BeneficiariesService {
     });
   }
 
-  async checkDuplicatePhoneAndGovtID(phone: string, govtID: string) {
+  async checkDuplicatePhoneAndGovtID(
+    phone: string,
+    govtID: string,
+  ): Promise<IDuplicateValidation> {
+    const result = {
+      hasPhone: false,
+      hasGovtID: false,
+    };
     const beneficiaries = await this.findPhoneAndGovtID();
     if (!beneficiaries.length) return;
     const existPhone = beneficiaries.find((f) => f.phone === phone);
-    if (existPhone) throw new Error('Phone number already exist!');
+    if (phone && existPhone) result.hasPhone = true;
     const existGovtId = beneficiaries.find((f) => f.govtIDNumber === govtID);
-    if (existGovtId) throw new Error('Govt. ID number already exist!');
+    if (govtID && existGovtId) result.hasGovtID = true;
+    return result;
   }
 
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras, walletAddress } = dto;
-    await this.checkDuplicatePhoneAndGovtID(dto.phone, dto.govtIDNumber);
+    const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
+      dto.phone,
+      dto.govtIDNumber,
+    )) as any;
+    if (hasPhone) throw new Error('Phone number already exist!');
+    if (hasGovtID) throw new Error('Govt. ID number already exist!');
 
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
     if (!walletAddress) dto.walletAddress = generateRandomWallet().address;
@@ -335,7 +353,12 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
-    await this.checkDuplicatePhoneAndGovtID(dto.phone, dto.govtIDNumber);
+    const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
+      dto.phone,
+      dto.govtIDNumber,
+    )) as any;
+    if (hasPhone) delete dto.phone;
+    if (hasGovtID) delete dto.govtIDNumber;
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
