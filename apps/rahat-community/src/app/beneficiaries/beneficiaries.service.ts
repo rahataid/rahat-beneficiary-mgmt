@@ -122,31 +122,6 @@ export class BeneficiariesService {
     });
   }
 
-  // if (beneficiaryData.extras.hasOwnProperty('uuid')) {
-  //   beneficiaryData.uuid = beneficiaryData.extras.uuid;
-  //   delete beneficiaryData.extras.uuid;
-  // }
-
-  async upsertByGovtID({ defaultGroupUID, importGroupUID, beneficiary }) {
-    // if (beneficiary.birthDate) {
-    //   beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
-    // }
-    // const exist = await this.findOneByGovtID(beneficiary.govtIDNumber);
-    // if (exist) await this.addBeneficiaryToArchive(exist, ArchiveType.UPDATED);
-    // const res = await this.prisma.beneficiary.upsert({
-    //   where: { govtIDNumber: beneficiary.govtIDNumber },
-    //   update: beneficiary,
-    //   create: beneficiary,
-    // });
-    // if (!exist)
-    //   await this.addToGroups({
-    //     benefUID: res.uuid,
-    //     defaultGroupUID,
-    //     importGroupUID,
-    //   });
-    // return res;
-  }
-
   async addToGroups({ tx, benefUID, defaultGroupUID, importGroupUID }) {
     await this.upsertToDefaultGroup({ tx, defaultGroupUID, benefUID });
     await this.upsertToImportGroup({ tx, importGroupUID, benefUID });
@@ -214,13 +189,31 @@ export class BeneficiariesService {
     });
   }
 
+  async findPhoneAndGovtID() {
+    return this.prisma.beneficiary.findMany({
+      where: {},
+      select: {
+        phone: true,
+        govtIDNumber: true,
+      },
+    });
+  }
+
+  async checkDuplicatePhoneAndGovtID(phone: string, govtID: string) {
+    const beneficiaries = await this.findPhoneAndGovtID();
+    if (!beneficiaries.length) return;
+    const existPhone = beneficiaries.find((f) => f.phone === phone);
+    if (existPhone) throw new Error('Phone number already exist!');
+    const existGovtId = beneficiaries.find((f) => f.govtIDNumber === govtID);
+    if (existGovtId) throw new Error('Govt. ID number already exist!');
+  }
+
   async create(dto: CreateBeneficiaryDto) {
     const { birthDate, extras, walletAddress } = dto;
-    if (birthDate) dto.birthDate = convertDateToISO(birthDate);
+    await this.checkDuplicatePhoneAndGovtID(dto.phone, dto.govtIDNumber);
 
-    if (!walletAddress) {
-      dto.walletAddress = generateRandomWallet().address;
-    }
+    if (birthDate) dto.birthDate = convertDateToISO(birthDate);
+    if (!walletAddress) dto.walletAddress = generateRandomWallet().address;
 
     if (Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
@@ -339,12 +332,6 @@ export class BeneficiariesService {
         uuid,
       },
     });
-  }
-
-  findOneByGovtID(govtID: string) {
-    // return this.prisma.beneficiary.findUnique({
-    //   where: { govtIDNumber: govtID },
-    // });
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
