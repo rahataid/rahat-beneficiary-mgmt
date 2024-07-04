@@ -164,27 +164,66 @@ export class GroupService {
     });
   }
 
-  async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
+  async remove(
+    uuid: string,
+    deleteBeneficiaryFlag: boolean,
+    beneficiaryUuid: string[],
+  ) {
     // get relevant informationn from the group table
     const group = await this.findUnique(uuid);
-    if (group?.beneficiariesGroup?.length > 0) {
-      await this.prisma.$transaction(async (prisma) => {
-        for (const item of group.beneficiariesGroup) {
-          // Delete from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroupService.removeBeneficiaryFromGroup(
-            item.beneficiaryUID,
-            group.uuid,
-          );
+    if (!group) throw new Error('Group not found');
+
+    console.log(beneficiaryUuid);
+    await this.prisma.$transaction(async (prisma) => {
+      for (const benefUid of beneficiaryUuid) {
+        const beneficiarygroup = await prisma.beneficiaryGroup.findFirst({
+          where: {
+            beneficiaryUID: benefUid,
+            groupUID: uuid,
+          },
+        });
+
+        if (beneficiarygroup) {
+          await prisma.beneficiaryGroup.updateMany({
+            where: {
+              beneficiaryUID: benefUid,
+              groupUID: uuid,
+            },
+            data: {
+              groupUID: null,
+            },
+          });
 
           if (deleteBeneficiaryFlag) {
-            // Update archive flag of beneficiary from tbl_beneficiaries
-            await this.beneficaryService.update(item.beneficiaryUID, {
-              archived: true,
+            await prisma.beneficiary.update({
+              where: {
+                uuid: benefUid,
+              },
+              data: {
+                archived: true,
+              },
             });
           }
         }
-      });
-    }
+      }
+    });
+
+    // if (group) {
+    //   for (const item of beneficiaryUuid) {
+    //     // Delete from the group table (tbl_beneficiary_groups)
+    //     await this.beneficaryGroupService.removeBeneficiaryFromGroup(
+    //       item,
+    //       uuid,
+    //     );
+
+    //     if (deleteBeneficiaryFlag) {
+    //       // Update archive flag of beneficiary from tbl_beneficiaries
+    //       await this.beneficaryService.update(item, {
+    //         archived: true,
+    //       });
+    //     }
+    //   }
+    // }
     return 'Beneficiary removed successfully!';
   }
 
