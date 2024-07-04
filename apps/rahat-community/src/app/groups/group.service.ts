@@ -170,60 +170,62 @@ export class GroupService {
     beneficiaryUuid: string[],
   ) {
     // get relevant informationn from the group table
-    const group = await this.findUnique(uuid);
-    if (!group) throw new Error('Group not found');
+    // const group = await this.findUnique(uuid);
+    // console.log('Group=>', group);
+    // if (!group) throw new Error('Group not found');
 
-    console.log(beneficiaryUuid);
-    await this.prisma.$transaction(async (prisma) => {
-      for (const benefUid of beneficiaryUuid) {
-        const beneficiarygroup = await prisma.beneficiaryGroup.findFirst({
-          where: {
-            beneficiaryUID: benefUid,
-            groupUID: uuid,
-          },
-        });
+    // await this.prisma.$transaction(async (prisma) => {
+    //   for (const benefUid of beneficiaryUuid) {
+    //     const beneficiarygroup = await prisma.beneficiaryGroup.findFirst({
+    //       where: {
+    //         beneficiaryUID: benefUid,
+    //         groupUID: uuid,
+    //       },
+    //     });
 
-        if (beneficiarygroup) {
-          await prisma.beneficiaryGroup.updateMany({
-            where: {
-              beneficiaryUID: benefUid,
-              groupUID: uuid,
-            },
-            data: {
-              groupUID: null,
-            },
-          });
-
-          if (deleteBeneficiaryFlag) {
-            await prisma.beneficiary.update({
-              where: {
-                uuid: benefUid,
-              },
-              data: {
-                archived: true,
-              },
-            });
-          }
-        }
-      }
-    });
-
-    // if (group) {
-    //   for (const item of beneficiaryUuid) {
-    //     // Delete from the group table (tbl_beneficiary_groups)
-    //     await this.beneficaryGroupService.removeBeneficiaryFromGroup(
-    //       item,
-    //       uuid,
-    //     );
-
-    //     if (deleteBeneficiaryFlag) {
-    //       // Update archive flag of beneficiary from tbl_beneficiaries
-    //       await this.beneficaryService.update(item, {
-    //         archived: true,
+    //     if (beneficiarygroup) {
+    //       await prisma.beneficiaryGroup.updateMany({
+    //         where: {
+    //           beneficiaryUID: benefUid,
+    //           groupUID: uuid,
+    //         },
+    //         data: {
+    //           groupUID: null,
+    //         },
     //       });
+
+    //       if (deleteBeneficiaryFlag) {
+    //         await prisma.beneficiary.update({
+    //           where: {
+    //             uuid: benefUid,
+    //           },
+    //           data: {
+    //             archived: true,
+    //           },
+    //         });
+    //       }
     //     }
     //   }
-    // }
+    // });
+
+    console.log({ deleteBeneficiaryFlag });
+
+    if (group) {
+      for (const item of beneficiaryUuid) {
+        // Delete from the group table (tbl_beneficiary_groups)
+        console.log({ item });
+        await this.beneficaryGroupService.removeBeneficiaryFromGroup(
+          item,
+          uuid,
+        );
+
+        if (deleteBeneficiaryFlag) {
+          await this.beneficaryService.update(item, {
+            archived: true,
+          });
+        }
+      }
+    }
     return 'Beneficiary removed successfully!';
   }
 
