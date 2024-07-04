@@ -40,14 +40,6 @@ export const injectCustomID = (customUniqueField: string, payload: any) => {
   return final;
 };
 
-function removeDuplicatesByObjectKey(fields: any) {
-  const uniqueFields = {};
-  fields.forEach((item: any) => {
-    uniqueFields[item.fieldName] = item;
-  });
-  return Object.values(uniqueFields);
-}
-
 export const validateSchemaFields = async (
   payload: any,
   extraFields: IExtraField[],

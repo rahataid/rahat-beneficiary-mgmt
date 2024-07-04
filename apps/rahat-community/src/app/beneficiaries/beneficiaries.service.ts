@@ -213,11 +213,12 @@ export class BeneficiariesService {
       hasGovtID: false,
     };
     const beneficiaries = await this.findPhoneAndGovtID();
-    if (!beneficiaries.length) return;
+    if (!beneficiaries.length) result;
     const existPhone = beneficiaries.find((f) => f.phone === phone);
     if (phone && existPhone) result.hasPhone = true;
     const existGovtId = beneficiaries.find((f) => f.govtIDNumber === govtID);
     if (govtID && existGovtId) result.hasGovtID = true;
+
     return result;
   }
 
@@ -233,7 +234,7 @@ export class BeneficiariesService {
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
     if (!walletAddress) dto.walletAddress = generateRandomWallet().address;
 
-    if (Object.keys(extras).length > 0) {
+    if (extras && Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
       const nonMatching = validateAllowedFieldAndTypes(extras, fields);

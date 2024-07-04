@@ -11,8 +11,12 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { IsAlphaString, IsValidDate } from '../../validators';
-import { UUID } from 'crypto';
+import {
+  IsValidLatitude,
+  IsAlphaString,
+  IsValidDate,
+  IsValidLongitude,
+} from '../../validators';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -111,6 +115,7 @@ export class CreateBeneficiaryDto {
   })
   @IsNumber()
   @IsOptional()
+  @IsValidLatitude()
   latitude?: number;
 
   @ApiProperty({
@@ -119,6 +124,7 @@ export class CreateBeneficiaryDto {
   })
   @IsNumber()
   @IsOptional()
+  @IsValidLongitude()
   longitude?: number;
 
   @ApiProperty({
