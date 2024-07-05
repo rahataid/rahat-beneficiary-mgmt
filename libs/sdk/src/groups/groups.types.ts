@@ -60,3 +60,9 @@ export type GroupMessage = {
   message: string;
   flag: string;
 };
+
+export type RemoveGroup = {
+  uuid: string;
+  deleteBeneficiaryFlag: boolean;
+  beneficiaryUuid: string[];
+};

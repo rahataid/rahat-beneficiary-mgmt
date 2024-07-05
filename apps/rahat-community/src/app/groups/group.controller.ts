@@ -15,6 +15,7 @@ import {
   CreateGroupDto,
   ListGroupDto,
   PurgeGroupDto,
+  RemoveGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
@@ -70,13 +71,14 @@ export class GroupController {
     return this.groupService.purgeGroup(dto.groupUuid, dto.beneficiaryUuid);
   }
 
-  @Delete(':uuid/:deleteBeneficiaryFlag')
+  @Delete('remove')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
-  remove(
-    @Param('uuid') uuid: string,
-    @Param('deleteBeneficiaryFlag') deleteBeneficiaryFlag: boolean,
-  ) {
-    return this.groupService.remove(uuid, deleteBeneficiaryFlag);
+  remove(@Body() dto: RemoveGroupDto) {
+    return this.groupService.remove(
+      dto.uuid,
+      dto.deleteBeneficiaryFlag,
+      dto.beneficiaryUuid,
+    );
   }
 
   @Delete(':uuid')
