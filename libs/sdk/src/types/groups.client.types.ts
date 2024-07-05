@@ -7,6 +7,7 @@ import {
   GroupResponse,
   GroupResponseById,
   ListGroup,
+  RemoveGroup,
 } from '../groups';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -36,10 +37,7 @@ export type GroupClient = {
   ) => Promise<FormattedResponse<GroupResponse>>;
 
   remove: (
-    {
-      uuid,
-      deleteBeneficiaryFlag,
-    }: { uuid: string; deleteBeneficiaryFlag: boolean },
+    data: RemoveGroup,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupResponse>>;
 

@@ -164,27 +164,28 @@ export class GroupService {
     });
   }
 
-  async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
-    // get relevant informationn from the group table
+  async remove(
+    uuid: string,
+    deleteBeneficiaryFlag: boolean,
+    beneficiaryUuid: string[],
+  ) {
     const group = await this.findUnique(uuid);
-    if (group?.beneficiariesGroup?.length > 0) {
-      await this.prisma.$transaction(async (prisma) => {
-        for (const item of group.beneficiariesGroup) {
-          // Delete from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroupService.removeBeneficiaryFromGroup(
-            item.beneficiaryUID,
-            group.uuid,
-          );
+    if (!group) throw new Error('Group not found');
+    if (group) {
+      for (const item of beneficiaryUuid) {
+        await this.beneficaryGroupService.removeBeneficiaryFromGroup(
+          item,
+          uuid,
+        );
 
-          if (deleteBeneficiaryFlag) {
-            // Update archive flag of beneficiary from tbl_beneficiaries
-            await this.beneficaryService.update(item.beneficiaryUID, {
-              archived: true,
-            });
-          }
+        if (deleteBeneficiaryFlag) {
+          await this.beneficaryService.update(item, {
+            archived: true,
+          });
         }
-      });
+      }
     }
+
     return 'Beneficiary removed successfully!';
   }
 
