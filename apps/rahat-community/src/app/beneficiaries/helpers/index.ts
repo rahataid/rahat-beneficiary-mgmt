@@ -202,20 +202,26 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
   if (!beneficiaries.length) return [];
   for (let item of beneficiaries) {
     const d = item?.extras ?? null;
-    if (d && d[NO_OF_MALE]) {
+    if (d && d[NO_OF_FEMALE]) {
       if (myData[NO_OF_FEMALE]) {
-        myData[NO_OF_FEMALE] += 1;
-      } else myData[NO_OF_FEMALE] = 1;
+        const existing = Number(myData[NO_OF_FEMALE]);
+        const latest = Number(d[NO_OF_FEMALE]);
+        myData[NO_OF_FEMALE] = existing + latest;
+      } else myData[NO_OF_FEMALE] = d[NO_OF_FEMALE];
     }
     if (d && d[NO_OF_MALE]) {
       if (myData[NO_OF_MALE]) {
-        myData[NO_OF_MALE] += 1;
-      } else myData[NO_OF_MALE] = 1;
+        const existing = Number(myData[NO_OF_MALE]);
+        const latest = Number(d[NO_OF_MALE]);
+        myData[NO_OF_MALE] = existing + latest;
+      } else myData[NO_OF_MALE] = d[NO_OF_MALE];
     }
     if (d && d[OTHERS]) {
       if (myData[OTHERS]) {
-        myData[OTHERS] += 1;
-      } else myData[OTHERS] = 1;
+        const existing = Number(myData[OTHERS]);
+        const latest = Number(d[OTHERS]);
+        myData[OTHERS] = existing + latest;
+      } else myData[OTHERS] = d[OTHERS];
     }
   }
   const sanitized = updateLabels(myData, LABEL_MAPPING);
