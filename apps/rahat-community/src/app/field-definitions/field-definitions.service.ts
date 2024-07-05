@@ -9,6 +9,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { convertToValidString } from '../utils';
 import { ExcelParser } from '../utils/excel.parser';
+import { contains, equals } from 'class-validator';
 
 @Injectable()
 export class FieldDefinitionsService {
@@ -66,7 +67,8 @@ export class FieldDefinitionsService {
     });
   }
 
-  findAll(query) {
+  async findAll(query) {
+    // console.log('Query=>', query);
     const select = {
       id: true,
       name: true,
@@ -87,9 +89,10 @@ export class FieldDefinitionsService {
     let where: any = {};
 
     if (query.name) {
+      const searchText = query.name.trim().replace(/\s+/g, '_');
       where = {
         name: {
-          contains: query.name,
+          contains: searchText,
           mode: 'insensitive',
         },
       };
