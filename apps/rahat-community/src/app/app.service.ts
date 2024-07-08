@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
+import {
+  FilterBeneficiaryByLocationDto,
+  UpdateUserAgreementDto,
+} from '@rahataid/community-tool-extensions';
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsService } from '@rumsan/settings';
@@ -19,6 +22,7 @@ import {
   calculateVulnerabilityStatus,
   totalVulnerableHH,
 } from './beneficiaries/helpers';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AppService {
@@ -26,6 +30,24 @@ export class AppService {
     private prisma: PrismaService,
     private benefService: BeneficiariesService,
   ) {}
+
+  async getUserAgreement(userId: string) {
+    return this.prisma.userAgreement.findUnique({
+      where: {
+        userId,
+      },
+    });
+  }
+
+  async updateUserAgreement(dto: UpdateUserAgreementDto) {
+    return this.prisma.userAgreement.upsert({
+      where: {
+        userId: dto.userId,
+      },
+      update: dto,
+      create: dto,
+    });
+  }
 
   async calculateStats(beneficiaries: any[]) {
     const [

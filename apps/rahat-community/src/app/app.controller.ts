@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -9,7 +18,11 @@ import {
   SUBJECTS,
 } from '@rumsan/user';
 import { AppService } from './app.service';
-import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
+import {
+  FilterBeneficiaryByLocationDto,
+  UpdateUserAgreementDto,
+} from '@rahataid/community-tool-extensions';
+import { UUID } from 'crypto';
 
 @Controller('app')
 @ApiTags('APP')
@@ -21,6 +34,18 @@ export class AppController {
   @Get()
   getData() {
     return this.appService.getData();
+  }
+
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @Get('user-agreement/:userId')
+  getUserAgreement(@Param('userId') userId: string) {
+    return this.appService.getUserAgreement(userId);
+  }
+
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @Post('user-agreement')
+  updateUserAgreement(@Body() dto: UpdateUserAgreementDto) {
+    return this.appService.updateUserAgreement(dto);
   }
 
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
