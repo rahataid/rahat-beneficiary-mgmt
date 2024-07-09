@@ -124,7 +124,9 @@ export class FieldDefinitionsService {
       ...dto,
       fieldPopulate: populateData,
     };
-    if (dto.name) payload.name = convertToValidString(dto.name);
+    if (dto.name && payload.name !== 'govtIDNumber') {
+      payload.name = convertToValidString(dto.name);
+    }
     return this.prisma.fieldDefinition.update({
       where: { id },
       data: payload,
