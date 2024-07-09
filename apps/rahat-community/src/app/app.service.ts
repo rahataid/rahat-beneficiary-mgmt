@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   FilterBeneficiaryByLocationDto,
-  UpdateUserAgreementDto,
+  UpsertUserAgreementDto,
 } from '@rahataid/community-tool-extensions';
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
@@ -39,7 +39,7 @@ export class AppService {
     });
   }
 
-  async updateUserAgreement(dto: UpdateUserAgreementDto) {
+  async upsertUserAgreement(dto: UpsertUserAgreementDto) {
     return this.prisma.userAgreement.upsert({
       where: {
         userId: dto.userId,

@@ -20,7 +20,7 @@ import {
 import { AppService } from './app.service';
 import {
   FilterBeneficiaryByLocationDto,
-  UpdateUserAgreementDto,
+  UpsertUserAgreementDto,
 } from '@rahataid/community-tool-extensions';
 import { UUID } from 'crypto';
 
@@ -44,8 +44,8 @@ export class AppController {
 
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @Post('user-agreement')
-  updateUserAgreement(@Body() dto: UpdateUserAgreementDto) {
-    return this.appService.updateUserAgreement(dto);
+  upsertUserAgreement(@Body() dto: UpsertUserAgreementDto) {
+    return this.appService.upsertUserAgreement(dto);
   }
 
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })

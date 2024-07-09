@@ -1,9 +1,19 @@
 import { Pagination } from '@rumsan/sdk/types';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import { FilterStatsDto } from '../app';
+import { FilterStatsDto, UserAgreement } from '../app';
 
 export type AppClient = {
+  getUserAgreement: (
+    userId?: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
+
+  upsertUserAgreement: (
+    data: UserAgreement,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<UserAgreement>>;
+
   koboImportByForm: (
     name?: string,
     config?: AxiosRequestConfig,

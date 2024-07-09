@@ -1,10 +1,26 @@
 import { formatResponse } from '@rumsan/sdk/utils';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { AppClient } from '../types';
-import { FilterStatsDto } from '../app';
+import { FilterStatsDto, UserAgreement } from '../app';
 
 export const getAppClient = (client: AxiosInstance): AppClient => {
   return {
+    getUserAgreement: async (userId?: string, config?: AxiosRequestConfig) => {
+      const response = await client.post(
+        `/app/user-agreement/${userId}`,
+        config,
+      );
+      return formatResponse<any>(response);
+    },
+
+    upsertUserAgreement: async (
+      data?: UserAgreement,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.post(`/app/user-agreement`, config);
+      return formatResponse<any>(response);
+    },
+
     getAppStats: async (data?: FilterStatsDto, config?: AxiosRequestConfig) => {
       const response = await client.get('/app/stats', {
         params: data,
