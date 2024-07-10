@@ -287,26 +287,43 @@ export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
   };
 };
 
+const checkVulnerableHH = (extras: any) => {
+  let hasVulnerable = false;
+  if (!extras) return false;
+  if (
+    extras[TYPE_OF_SSA_1] ||
+    extras[TYPE_OF_SSA_2] ||
+    extras[TYPE_OF_SSA_3] ||
+    extras[TYPES_OF_SSA_TO_BE_RECEIVED] ||
+    extras[HOW_MANY_LACTATING] ||
+    extras[HOW_MANY_PREGNANT]
+  ) {
+    hasVulnerable = true;
+  }
+  return hasVulnerable;
+};
+
 export const totalVulnerableHH = (beneficiaries: any[]) => {
-  let countData = 0;
-  let nonCountData = [];
+  let totalCount = 0;
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
     const { extras } = d;
-    if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
-    if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
-    if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
-    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
-      nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
-    if (extras && extras[HOW_MANY_LACTATING])
-      countData += +extras[HOW_MANY_LACTATING];
-    if (extras && extras[HOW_MANY_PREGNANT])
-      countData += +extras[HOW_MANY_PREGNANT];
+    const vulnerable = checkVulnerableHH(extras);
+    if (vulnerable) totalCount++;
+    // if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+    // if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+    // if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+    // if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    //   nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
+    // if (extras && extras[HOW_MANY_LACTATING])
+    //   countData += +extras[HOW_MANY_LACTATING];
+    // if (extras && extras[HOW_MANY_PREGNANT])
+    //   countData += +extras[HOW_MANY_PREGNANT];
   }
 
   return {
     name: 'TOTAL_VULNERABLE_HOUSEHOLD',
-    data: { count: nonCountData.length + countData },
+    data: { count: totalCount },
   };
 };
 
