@@ -64,11 +64,13 @@ export class FieldDefinitionsService {
   listActive() {
     return this.prisma.fieldDefinition.findMany({
       where: { isActive: true },
+      orderBy: {
+        name: 'asc',
+      },
     });
   }
 
   async findAll(query) {
-    // console.log('Query=>', query);
     const select = {
       id: true,
       name: true,
