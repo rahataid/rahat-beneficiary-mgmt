@@ -291,12 +291,13 @@ const checkVulnerableHH = (extras: any) => {
   let hasVulnerable = false;
   if (!extras) return false;
   if (
-    extras[TYPE_OF_SSA_1] ||
-    extras[TYPE_OF_SSA_2] ||
-    extras[TYPE_OF_SSA_3] ||
-    extras[TYPES_OF_SSA_TO_BE_RECEIVED] ||
-    extras[HOW_MANY_LACTATING] ||
-    extras[HOW_MANY_PREGNANT]
+    (extras[TYPE_OF_SSA_1] && extras[TYPE_OF_SSA_1] !== 'No') ||
+    (extras[TYPE_OF_SSA_2] && extras[TYPE_OF_SSA_2] !== 'No') ||
+    (extras[TYPE_OF_SSA_3] && extras[TYPE_OF_SSA_3] !== 'No') ||
+    (extras[TYPES_OF_SSA_TO_BE_RECEIVED] &&
+      extras[TYPES_OF_SSA_TO_BE_RECEIVED] !== 'No') ||
+    (extras[HOW_MANY_LACTATING] && extras[HOW_MANY_LACTATING] !== 'No') ||
+    (extras[HOW_MANY_PREGNANT] && extras[HOW_MANY_PREGNANT] !== 'No')
   ) {
     hasVulnerable = true;
   }
