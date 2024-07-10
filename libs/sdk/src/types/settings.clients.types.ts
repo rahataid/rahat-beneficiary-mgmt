@@ -5,6 +5,7 @@ import {
   SettingList,
   SettingResponse,
 } from '../settings/settings.types';
+import { Pagination } from '@rumsan/sdk/types';
 
 export type SettingClient = {
   create: (
@@ -13,6 +14,12 @@ export type SettingClient = {
   ) => Promise<FormattedResponse<SettingResponse>>;
 
   list: (
+    data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<SettingList>>;
+
+  update: (
+    data: SettingInput,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<SettingResponse>>;
 };
