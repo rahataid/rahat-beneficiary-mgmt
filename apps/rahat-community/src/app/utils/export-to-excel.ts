@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 const flattenObject = (obj: any, prefix = '') => {
   return Object.keys(obj).reduce((acc, key) => {
     const newKey = prefix ? `${prefix}_${key}` : key;
-    const fieldKey = newKey.replace(/^extras[^a-zA-Z]*/, '');
+    const fieldKey = newKey.replace(/^extras_*/, '');
     if (typeof obj[key] === 'object' && obj[key] !== null) {
       Object.assign(acc, flattenObject(obj[key], newKey));
     } else {
@@ -28,7 +28,6 @@ export const generateExcelData = (data: any) => {
           return acc;
         }, {});
     });
-
     return flattenedData;
 
     // const ws = XLSX.utils.json_to_sheet(flattenedData);
