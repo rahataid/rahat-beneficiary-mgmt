@@ -73,7 +73,7 @@ export class BeneficiariesController {
 
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
   async bulkInsert(@Body() dto: BulkInsertDto) {
     return this.beneficiariesService.addBulk(dto);
   }
