@@ -1,6 +1,19 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  FilterBeneficiaryByLocationDto,
+  ListSettingDto,
+  UpdateSettngsDto,
+} from '@rahataid/community-tool-extensions';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -9,7 +22,6 @@ import {
   SUBJECTS,
 } from '@rumsan/user';
 import { AppService } from './app.service';
-import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 
 @Controller('app')
 @ApiTags('APP')
@@ -45,7 +57,15 @@ export class AppController {
   @Get('settings')
   @ApiBearerAuth('JWT')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
-  getSettings() {
-    return this.appService.getSettings();
+  getSettings(@Query() query: ListSettingDto) {
+    return this.appService.getSettings(query);
+  }
+
+  @Patch('settings/update/:name')
+  @ApiBearerAuth('JWT')
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  update(@Param('name') name: string, @Body() dto: UpdateSettngsDto) {
+    console.log(name);
+    return this.appService.updateSettngs(name, dto);
   }
 }

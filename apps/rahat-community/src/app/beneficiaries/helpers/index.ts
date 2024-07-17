@@ -207,21 +207,21 @@ export const calculateTotalWithGender = (beneficiaries: any[]) => {
         const existing = Number(myData[NO_OF_FEMALE]);
         const latest = Number(d[NO_OF_FEMALE]);
         myData[NO_OF_FEMALE] = existing + latest;
-      } else myData[NO_OF_FEMALE] = d[NO_OF_FEMALE];
+      } else myData[NO_OF_FEMALE] = Number(d[NO_OF_FEMALE]);
     }
     if (d && d[NO_OF_MALE]) {
       if (myData[NO_OF_MALE]) {
         const existing = Number(myData[NO_OF_MALE]);
         const latest = Number(d[NO_OF_MALE]);
         myData[NO_OF_MALE] = existing + latest;
-      } else myData[NO_OF_MALE] = d[NO_OF_MALE];
+      } else myData[NO_OF_MALE] = Number(d[NO_OF_MALE]);
     }
     if (d && d[OTHERS]) {
       if (myData[OTHERS]) {
         const existing = Number(myData[OTHERS]);
         const latest = Number(d[OTHERS]);
         myData[OTHERS] = existing + latest;
-      } else myData[OTHERS] = d[OTHERS];
+      } else myData[OTHERS] = Number(d[OTHERS]);
     }
   }
   const sanitized = updateLabels(myData, LABEL_MAPPING);
@@ -287,26 +287,44 @@ export const calculateVulnerabilityStatus = (beneficiaries: any[]) => {
   };
 };
 
+const checkVulnerableHH = (extras: any) => {
+  let hasVulnerable = false;
+  if (!extras) return false;
+  if (
+    (extras[TYPE_OF_SSA_1] && extras[TYPE_OF_SSA_1] !== 'No') ||
+    (extras[TYPE_OF_SSA_2] && extras[TYPE_OF_SSA_2] !== 'No') ||
+    (extras[TYPE_OF_SSA_3] && extras[TYPE_OF_SSA_3] !== 'No') ||
+    (extras[TYPES_OF_SSA_TO_BE_RECEIVED] &&
+      extras[TYPES_OF_SSA_TO_BE_RECEIVED] !== 'No') ||
+    (extras[HOW_MANY_LACTATING] && extras[HOW_MANY_LACTATING] !== 'No') ||
+    (extras[HOW_MANY_PREGNANT] && extras[HOW_MANY_PREGNANT] !== 'No')
+  ) {
+    hasVulnerable = true;
+  }
+  return hasVulnerable;
+};
+
 export const totalVulnerableHH = (beneficiaries: any[]) => {
-  let countData = 0;
-  let nonCountData = [];
+  let totalCount = 0;
   if (!beneficiaries.length) return [];
   for (let d of beneficiaries) {
     const { extras } = d;
-    if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
-    if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
-    if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
-    if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
-      nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
-    if (extras && extras[HOW_MANY_LACTATING])
-      countData += +extras[HOW_MANY_LACTATING];
-    if (extras && extras[HOW_MANY_PREGNANT])
-      countData += +extras[HOW_MANY_PREGNANT];
+    const vulnerable = checkVulnerableHH(extras);
+    if (vulnerable) totalCount++;
+    // if (extras && extras[TYPE_OF_SSA_1]) nonCountData.push(TYPE_OF_SSA_1);
+    // if (extras && extras[TYPE_OF_SSA_2]) nonCountData.push(TYPE_OF_SSA_2);
+    // if (extras && extras[TYPE_OF_SSA_3]) nonCountData.push(TYPE_OF_SSA_3);
+    // if (extras && extras[TYPES_OF_SSA_TO_BE_RECEIVED])
+    //   nonCountData.push(TYPES_OF_SSA_TO_BE_RECEIVED);
+    // if (extras && extras[HOW_MANY_LACTATING])
+    //   countData += +extras[HOW_MANY_LACTATING];
+    // if (extras && extras[HOW_MANY_PREGNANT])
+    //   countData += +extras[HOW_MANY_PREGNANT];
   }
 
   return {
     name: 'TOTAL_VULNERABLE_HOUSEHOLD',
-    data: { count: nonCountData.length + countData },
+    data: { count: totalCount },
   };
 };
 

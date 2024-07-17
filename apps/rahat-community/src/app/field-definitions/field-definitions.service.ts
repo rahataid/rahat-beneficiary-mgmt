@@ -64,11 +64,13 @@ export class FieldDefinitionsService {
   listActive() {
     return this.prisma.fieldDefinition.findMany({
       where: { isActive: true },
+      orderBy: {
+        name: 'asc',
+      },
     });
   }
 
   async findAll(query) {
-    // console.log('Query=>', query);
     const select = {
       id: true,
       name: true,
@@ -124,7 +126,9 @@ export class FieldDefinitionsService {
       ...dto,
       fieldPopulate: populateData,
     };
-    if (dto.name) payload.name = convertToValidString(dto.name);
+    if (dto.name && payload.name !== 'govtIDNumber') {
+      payload.name = convertToValidString(dto.name);
+    }
     return this.prisma.fieldDefinition.update({
       where: { id },
       data: payload,

@@ -6,6 +6,7 @@ import {
   SettingList,
   SettingResponse,
 } from '../settings/settings.types';
+import { Pagination } from '@rumsan/sdk/types';
 
 export const getSettingsClient = (client: AxiosInstance): SettingClient => {
   return {
@@ -13,9 +14,21 @@ export const getSettingsClient = (client: AxiosInstance): SettingClient => {
       const response = await client.post('/settings', data, config);
       return formatResponse<SettingResponse>(response);
     },
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/app/settings', config);
+    list: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/app/settings', {
+        params: data,
+        ...config,
+      });
       return formatResponse<SettingList>(response);
+    },
+
+    update: async (data: SettingInput, config?: AxiosRequestConfig) => {
+      const response = await client.patch(
+        `app/settings/update/${data?.name}`,
+        data,
+        config,
+      );
+      return formatResponse<SettingResponse>(response);
     },
   };
 };
