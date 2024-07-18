@@ -1,19 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  FilterBeneficiaryByLocationDto,
-  ListSettingDto,
-  UpdateSettngsDto,
-} from '@rahataid/community-tool-extensions';
+import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -52,20 +40,5 @@ export class AppController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   filterSettingByType() {
     return this.appService.findKobotoolSettings();
-  }
-
-  @Get('settings')
-  @ApiBearerAuth('JWT')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
-  getSettings(@Query() query: ListSettingDto) {
-    return this.appService.getSettings(query);
-  }
-
-  @Patch('settings/update/:name')
-  @ApiBearerAuth('JWT')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
-  update(@Param('name') name: string, @Body() dto: UpdateSettngsDto) {
-    console.log(name);
-    return this.appService.updateSettngs(name, dto);
   }
 }
