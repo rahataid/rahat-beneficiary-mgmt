@@ -78,8 +78,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(@nestjs/core@10.3.7(@nestjs/common@10.3.7(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/microservices@10.3.7)(@nestjs/platform-express@10.3.7)(reflect-metadata@0.1.14)(rxjs@7.8.1))(prisma@5.12.1)(reflect-metadata@0.1.14)
       '@rumsan/extensions':
-        specifier: ^0.0.26
-        version: 0.0.26(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+        specifier: ^0.0.28
+        version: 0.0.28(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@rumsan/prisma':
         specifier: ^1.0.125
         version: 1.0.130(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
@@ -2601,8 +2601,8 @@ packages:
   '@rumsan/extensions@0.0.25':
     resolution: {integrity: sha512-zm6LQiNwQ2uZwgjG3BbwNKJOeJzoaoIRRTNSxWWyCsYS5WeoUhYtwfP05jbLampe5bf0QPtJ++Jlif1RDiGz4A==, tarball: https://npm.pkg.github.com/download/@rumsan/extensions/0.0.25/c5f37634be0f103f29b1cf9d52d78c48bf1bfa6a}
 
-  '@rumsan/extensions@0.0.26':
-    resolution: {integrity: sha512-czk1u9koU6WHh5hq8VmypK4+3HIEssJRwelob8gEzwtxF0RyYNTwn6+6jPv3sHUVPNccj5ca9asgb16lFLlAxA==, tarball: https://npm.pkg.github.com/download/@rumsan/extensions/0.0.26/3a2d2e3cb0f580b1f0314a64472922e3d21895ff}
+  '@rumsan/extensions@0.0.28':
+    resolution: {integrity: sha512-mDh3JJAGuLlmVZoc8LGsSlaMweOjzVlIOsMCZJuuu6XuZRZowW507tIEjjllS12lyjWRNvFYITTqPbPBXzSaxw==, tarball: https://npm.pkg.github.com/download/@rumsan/extensions/0.0.28/a5a9464ae419e0a2bc03ab18d75f22477595ab85}
 
   '@rumsan/prisma@1.0.112':
     resolution: {integrity: sha512-j0POzEFg62uL0sadQI72KSaY9nD5iIX/itCTU1rZSWhCyGxRw3h2AJhAx9hPplTKsj2KpRAOqHObfiHtOvEIGw==, tarball: https://npm.pkg.github.com/download/@rumsan/prisma/1.0.112/71fbb6c324ef1c72bd9e85a8eeb483fdf787c28a}
@@ -12437,7 +12437,7 @@ snapshots:
       - prisma
       - reflect-metadata
 
-  '@rumsan/extensions@0.0.26(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)':
+  '@rumsan/extensions@0.0.28(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)':
     dependencies:
       '@rumsan/core': 3.0.140
       '@rumsan/prisma': 1.0.130(class-transformer@0.5.1)(class-validator@0.14.1)(prisma@5.12.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
