@@ -305,7 +305,7 @@ export class BeneficiariesService {
       }
     }
 
-    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
+    // if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
 
     if (filters.location) {
       OR_CONDITIONS.push({
@@ -335,7 +335,7 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
-    return paginate(
+    const rData = await paginate(
       this.prisma.beneficiary,
       { where: { ...conditions, archived: false } },
       {
@@ -343,6 +343,8 @@ export class BeneficiariesService {
         perPage: +filters?.perPage,
       },
     );
+
+    return rData;
   }
 
   findOne(uuid: string) {
