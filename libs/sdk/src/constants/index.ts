@@ -86,3 +86,5 @@ export const VALID_AGE_GROUP_KEYS = [
   '65_above_female',
   '65_above_male',
 ];
+
+export const VERIFICATION_ADDRESS_SETTINGS_NAME = 'VERIFICATION_APP';

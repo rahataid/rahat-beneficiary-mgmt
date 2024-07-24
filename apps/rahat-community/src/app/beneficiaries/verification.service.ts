@@ -1,0 +1,113 @@
+import { InjectQueue } from '@nestjs/bull';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  BQUEUE,
+  JOBS,
+  VERIFICATION_ADDRESS_SETTINGS_NAME,
+} from '@rahataid/community-tool-sdk';
+// import { ClientProxy } from '@nestjs/microservices';
+
+import { PrismaService } from '@rumsan/prisma';
+// import type { Address } from 'abitype';
+import { Queue } from 'bull';
+import * as crypto from 'crypto'; // Import the crypto module
+// import { recoverMessageAddress } from 'viem';
+
+@Injectable()
+export class VerificationService {
+  constructor(
+    private readonly configService: ConfigService,
+    private prisma: PrismaService,
+    @InjectQueue(BQUEUE.COMMUNITY_BENEFICIARY)
+    private readonly beneficiaryQueue: Queue,
+  ) {}
+  private readonly algorithm = 'aes-256-cbc';
+  private readonly privateKey = this.configService.get('PRIVATE_KEY');
+  private iv = Buffer.from('0123456789ABCDEF0123456789ABCDEF', 'hex');
+
+  getSecret = () => {
+    if (!this.privateKey) {
+      throw new Error('No PRIVATE_KEY found in config file');
+    }
+    const hash = crypto.createHash('sha256');
+    hash.update(this.privateKey);
+    return hash.digest('hex').split('').slice(0, 32).join('');
+  };
+  // Encryption function
+  encrypt(data) {
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(this.getSecret()),
+      this.iv,
+    );
+    let encryptedData = cipher.update(data, 'utf8', 'hex');
+    encryptedData += cipher.final('hex');
+    return encryptedData;
+  }
+
+  // Decryption function
+  decrypt(encryptedData) {
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(this.getSecret()),
+      this.iv,
+    );
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  }
+
+  async generateLink(uuid: string) {
+    const verificationAddress = await this.prisma.setting.findFirst({
+      where: {
+        name: VERIFICATION_ADDRESS_SETTINGS_NAME,
+      },
+      select: {
+        value: true,
+      },
+    });
+
+    if (!verificationAddress) throw new Error('No Verification App set');
+
+    const baseUrl = Object.values(verificationAddress.value).find((v) => v);
+
+    const benefDetails = await this.prisma.beneficiary.findUnique({
+      where: {
+        uuid,
+      },
+      select: {
+        email: true,
+        firstName: true,
+        lastName: true,
+        walletAddress: true,
+      },
+    });
+    if (!benefDetails.email) throw new Error('Email address not found');
+    const encrypted = this.encrypt(benefDetails.walletAddress);
+    const email = benefDetails.email;
+    const name = `${benefDetails.firstName} ${benefDetails.lastName}`;
+    await this.beneficiaryQueue.add(JOBS.SEND_EMAIL, {
+      encrypted,
+      email,
+      name,
+      baseUrl,
+    });
+    return 'Success';
+  }
+
+  //set Beneficiary as verified based on walletAddress
+  // async setBeneficiaryAsVerified(walletAddress: string) {
+  //   const ben = await this.prisma.beneficiary.findFirst({
+  //     where: { walletAddress },
+  //   });
+  //   if (!ben) throw new Error('Data not Found');
+
+  //   return this.prisma.beneficiary.update({
+  //     where: { uuid: ben.uuid },
+  //     data: {
+  //       isVerified: true,
+  //     },
+  //   });
+  // }
+}
