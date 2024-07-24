@@ -37,6 +37,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import { VerificationService } from './verification.service';
 
 const MAX_FILE_SIZE = 10000000000;
 
@@ -49,6 +50,8 @@ export class BeneficiariesController {
     private readonly beneficiariesService: BeneficiariesService,
 
     private readonly benStatsService: BeneficiaryStatService,
+
+    private readonly verificationService: VerificationService,
   ) {}
 
   @Get('stats')
@@ -132,5 +135,11 @@ export class BeneficiariesController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findStatsByName(@Param('name') name: string) {
     return this.benStatsService.getStatsByName(name);
+  }
+
+  @Post('send-verification/:uuid')
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
+  generateLink(@Param('uuid') uuid: string) {
+    return this.verificationService.generateLink(uuid);
   }
 }
