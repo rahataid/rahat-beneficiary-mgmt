@@ -12,4 +12,5 @@ export const JOBS = {
   LISTBYID: 'rahat.jobs.group.listbyid',
   REMOVE: 'rahat.jobs.group.remove',
   UPDATE: 'rahat.jobs.group.update',
+  SEND_EMAIL: 'rahat.jobs.beneficiary.send_email',
 };

@@ -6,9 +6,8 @@ import {
   DistinctLocation,
   ImportBeneficiary,
   Stats,
-  UpdateBeneficiary,
 } from '../beneficiary';
-import { BeneficiaryClient, FileResponse, TFile } from '../types';
+import { BeneficiaryClient, FileResponse } from '../types';
 
 export const getBeneficiaryClient = (
   client: AxiosInstance,
@@ -78,6 +77,13 @@ export const getBeneficiaryClient = (
     listDistinctLocations: async (config?: AxiosRequestConfig) => {
       const response = await client.get('/beneficiaries/location', config);
       return formatResponse<DistinctLocation[]>(response);
+    },
+    verifyBeneficiary: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.post(
+        `beneficiaries/send-verification/${uuid}`,
+        config,
+      );
+      return formatResponse<any>(response);
     },
   };
 };

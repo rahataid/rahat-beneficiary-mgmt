@@ -1,25 +1,23 @@
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import {
-  SettingInput,
-  SettingList,
-  SettingResponse,
-} from '../settings/settings.types';
-import { Pagination } from '@rumsan/sdk/types';
+import { SettingList } from '../settings/settings.types';
+import { Pagination, Setting } from '@rumsan/sdk/types';
 
 export type SettingClient = {
-  create: (
-    data: SettingInput,
-    config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<SettingResponse>>;
-
-  list: (
+  listSettings: (
     data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<SettingList>>;
-
-  update: (
-    data: SettingInput,
+  create: (
+    data: Setting,
     config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<SettingResponse>>;
+  ) => Promise<FormattedResponse<Setting>>;
+  getByName: (
+    name: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Setting>>;
+  update: (
+    data: Setting,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<Setting>>;
 };

@@ -7,7 +7,8 @@ import { MulterModule } from '@nestjs/platform-express';
 import { ScheduleModule } from '@nestjs/schedule';
 import { StatsModule } from '@rahataid/community-tool-stats';
 import { PrismaService } from '@rumsan/prisma';
-import { SettingsModule } from '@rumsan/settings';
+import { SettingsModule } from '@rumsan/extensions/settings';
+
 import {
   AuthsModule,
   RSUserModule,

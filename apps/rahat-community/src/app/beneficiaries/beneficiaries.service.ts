@@ -8,7 +8,6 @@ import {
   UpdateBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
-import { ArchiveType } from 'libs/sdk/src/enums';
 import XLSX from 'xlsx';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
@@ -18,6 +17,7 @@ import { createSearchQuery } from './helpers';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
+  ArchiveType,
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
@@ -25,9 +25,6 @@ import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
-import { query } from 'express';
-import { equals } from 'class-validator';
-import { UUID } from 'crypto';
 
 interface IDuplicateValidation {
   hasPhone: boolean;
@@ -305,7 +302,7 @@ export class BeneficiariesService {
       }
     }
 
-    if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
+    // if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
 
     if (filters.location) {
       OR_CONDITIONS.push({
@@ -335,7 +332,7 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
-    return paginate(
+    const rData = await paginate(
       this.prisma.beneficiary,
       { where: { ...conditions, archived: false } },
       {
@@ -343,6 +340,8 @@ export class BeneficiariesService {
         perPage: +filters?.perPage,
       },
     );
+
+    return rData;
   }
 
   findOne(uuid: string) {
