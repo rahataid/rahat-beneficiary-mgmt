@@ -1,6 +1,7 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { VerificationSignatureDTO } from '@rahataid/community-tool-extensions';
 import {
   BQUEUE,
   JOBS,
@@ -9,10 +10,9 @@ import {
 // import { ClientProxy } from '@nestjs/microservices';
 
 import { PrismaService } from '@rumsan/prisma';
-// import type { Address } from 'abitype';
 import { Queue } from 'bull';
-import * as crypto from 'crypto'; // Import the crypto module
-// import { recoverMessageAddress } from 'viem';
+import * as crypto from 'crypto';
+import { recoverMessageAddress } from 'viem';
 
 @Injectable()
 export class VerificationService {
@@ -96,18 +96,32 @@ export class VerificationService {
     return 'Success';
   }
 
-  //set Beneficiary as verified based on walletAddress
-  // async setBeneficiaryAsVerified(walletAddress: string) {
-  //   const ben = await this.prisma.beneficiary.findFirst({
-  //     where: { walletAddress },
-  //   });
-  //   if (!ben) throw new Error('Data not Found');
+  async setBeneficiaryAsVerified(walletAddress: string) {
+    const ben = await this.prisma.beneficiary.findFirst({
+      where: { walletAddress },
+    });
+    if (!ben) throw new Error('Data not Found');
 
-  //   return this.prisma.beneficiary.update({
-  //     where: { uuid: ben.uuid },
-  //     data: {
-  //       isVerified: true,
-  //     },
-  //   });
-  // }
+    return this.prisma.beneficiary.update({
+      where: { uuid: ben.uuid },
+      data: {
+        isVerified: true,
+      },
+    });
+  }
+
+  async verifySignature(verificationData: VerificationSignatureDTO) {
+    const { encryptedData, signature } = verificationData;
+    const decryptedData = this.decrypt(encryptedData);
+    const recoverAddress = await recoverMessageAddress({
+      message: encryptedData,
+      signature,
+    });
+
+    if (recoverAddress !== decryptedData) {
+      throw new Error('Wallet Not Verified');
+    }
+
+    return this.setBeneficiaryAsVerified(decryptedData);
+  }
 }
