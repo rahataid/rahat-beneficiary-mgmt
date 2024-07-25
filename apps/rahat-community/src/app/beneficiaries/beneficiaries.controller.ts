@@ -37,6 +37,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import { VerificationService } from './verification.service';
 
 const MAX_FILE_SIZE = 10000000000;
 
@@ -49,6 +50,8 @@ export class BeneficiariesController {
     private readonly beneficiariesService: BeneficiariesService,
 
     private readonly benStatsService: BeneficiaryStatService,
+
+    private readonly verificationService: VerificationService,
   ) {}
 
   @Get('stats')
@@ -73,7 +76,7 @@ export class BeneficiariesController {
 
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.ALL })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
   async bulkInsert(@Body() dto: BulkInsertDto) {
     return this.beneficiariesService.addBulk(dto);
   }
@@ -101,10 +104,15 @@ export class BeneficiariesController {
     return this.beneficiariesService.findAll(filters);
   }
 
+  @Get('location')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
+  findAllLocation() {
+    return this.beneficiariesService.findAllLocation();
+  }
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findOne(@Param('uuid') uuid: string) {
-    console.log(uuid);
     return this.beneficiariesService.findOne(uuid);
   }
 
@@ -127,5 +135,11 @@ export class BeneficiariesController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findStatsByName(@Param('name') name: string) {
     return this.benStatsService.getStatsByName(name);
+  }
+
+  @Post('send-verification/:uuid')
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
+  generateLink(@Param('uuid') uuid: string) {
+    return this.verificationService.generateLink(uuid);
   }
 }

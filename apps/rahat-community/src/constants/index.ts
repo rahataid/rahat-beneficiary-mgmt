@@ -18,14 +18,15 @@ export const TARGET_QUERY_STATUS = {
 
 export const QUEUE = {
   TARGETING: 'targeting',
-  BENEFICIARY: {
-    IMPORT: 'queue.beneficiary.import',
-  },
+  BENEFICIARY: 'beneficiary',
 };
 
 export const JOBS = {
   TARGET_BENEFICIARY: 'target_beneficiary',
-  BENEFICIARY: { IMPORT: 'job.beneficiary.import' },
+  BENEFICIARY: {
+    IMPORT: 'job.beneficiary.import',
+    EXPORT: 'job.beneficiary.export',
+  },
   OTP: 'otp',
 };
 
@@ -58,3 +59,5 @@ export enum GenderEnum {
 }
 
 export const EXTERNAL_UUID_FIELD = 'uuid';
+
+export const DEFAULT_GROUP = 'default';

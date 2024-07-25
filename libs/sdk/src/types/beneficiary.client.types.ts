@@ -3,12 +3,12 @@ import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
+  DistinctLocation,
   ImportBeneficiary,
   Stats,
   UpdateBeneficiary,
 } from '../beneficiary/beneficiary.types';
 import { FileResponse } from './response.types';
-import { TFile } from './file.types';
 
 export type BeneficiaryClient = {
   create: (
@@ -54,4 +54,13 @@ export type BeneficiaryClient = {
   getBeneficiaryStats: (
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<Stats[]>>;
+
+  listDistinctLocations: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<DistinctLocation[]>>;
+
+  verifyBeneficiary: (
+    uuid: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
 };

@@ -59,4 +59,32 @@ export const REPORTING_FIELD = {
   BANK_NAME: 'bank_name',
   HH_GOVT_ID_TYPE: 'household_head_government_id_type',
   HH_EDUCATION: 'household_head_education_qualification',
+  VULNERABILITY_CATEGORY: 'if_yes_which_category',
+  TYPE_OF_PHONE_SET: 'type_of_phone_set',
+  FAMILY_MEMBER_BANK_ACCOUNT:
+    'is_there_any_family_member_who_has_an_active_bank_account',
+  NO_OF_MALE: 'no_of_male',
+  NO_OF_FEMALE: 'no_of_female',
+  OTHERS: 'others',
+  TYPES_OF_SSA_TO_BE_RECEIVED: 'types_of_ssa_to_be_received',
+  HOW_MANY_LACTATING: 'if_yes_how_many_lactating',
+  HOW_MANY_PREGNANT: 'if_yes_how_many_pregnant',
+  TYPE_OF_SSA_1: 'type_of_ssa_1',
+  TYPE_OF_SSA_2: 'type_of_ssa_2',
+  TYPE_OF_SSA_3: 'type_of_ssa_3',
 };
+
+export const VALID_AGE_GROUP_KEYS = [
+  'female_below_the_age_of_5_years',
+  'male_below_the_age_of_5_years',
+  '5_18__female',
+  '5_18__male',
+  '1949_female',
+  '1949_male',
+  '5065_female',
+  '5065_male',
+  '65_above_female',
+  '65_above_male',
+];
+
+export const VERIFICATION_ADDRESS_SETTINGS_NAME = 'VERIFICATION_APP';

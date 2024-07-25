@@ -1,6 +1,7 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -12,6 +13,7 @@ import { AppService } from './app.service';
 
 @Controller('app')
 @ApiTags('APP')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtGuard, AbilitiesGuard)
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -21,9 +23,14 @@ export class AppController {
     return this.appService.getData();
   }
 
-  @ApiBearerAuth('JWT')
-  @Get('kobo-import/:name')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @Get('stats')
+  getStats(@Query('') query: FilterBeneficiaryByLocationDto) {
+    return this.appService.getStats(query);
+  }
+
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @Get('kobo-import/:name')
   getDataFromKoboTool(@Param('name') name: string) {
     return this.appService.getDataFromKoboTool(name);
   }
@@ -33,12 +40,5 @@ export class AppController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   filterSettingByType() {
     return this.appService.findKobotoolSettings();
-  }
-
-  @Get('settings')
-  @ApiBearerAuth('JWT')
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
-  getSettings() {
-    return this.appService.getSettings();
   }
 }

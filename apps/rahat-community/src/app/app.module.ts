@@ -1,33 +1,34 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaService } from '@rumsan/prisma';
-import { ConfigModule } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
-import { ScheduleModule } from '@nestjs/schedule';
-import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
-import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
-import { GroupModule } from './groups/group.module';
-import { BeneficiaryGroupModule } from './beneficiary-groups/beneficiary-group.module';
+import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MulterModule } from '@nestjs/platform-express';
-import { SourceModule } from './sources/source.module';
-import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
-import { BeneficiarySourceModule } from './beneficiary-sources/beneficiary-source.module';
-import { TargetModule } from './targets/target.module';
-import { BeneficiaryProcessor, TargetProcessor } from './processors';
-import { ListenersModule } from './listeners/listeners.module';
-import { ScheduleService } from './schedulers/schedule.provider';
+import { ScheduleModule } from '@nestjs/schedule';
+import { StatsModule } from '@rahataid/community-tool-stats';
+import { PrismaService } from '@rumsan/prisma';
+import { SettingsModule } from '@rumsan/extensions/settings';
+
 import {
   AuthsModule,
   RSUserModule,
   RolesModule,
   UsersModule,
 } from '@rumsan/user';
-import { SettingsModule } from '@rumsan/settings';
-import { StatsModule } from '@rahataid/community-tool-stats';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
+import { BeneficiaryStatService } from './beneficiaries/beneficiaryStats.service';
+import { BeneficiaryGroupModule } from './beneficiary-groups/beneficiary-group.module';
+import { BeneficiaryImportModule } from './beneficiary-import/beneficiary-import.module';
+import { BeneficiarySourceModule } from './beneficiary-sources/beneficiary-source.module';
+import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
+import { GroupModule } from './groups/group.module';
+import { ListenersModule } from './listeners/listeners.module';
+import { BeneficiaryProcessor, TargetProcessor } from './processors';
+import { ScheduleService } from './schedulers/schedule.provider';
+import { SourceModule } from './sources/source.module';
+import { TargetModule } from './targets/target.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { StatsModule } from '@rahataid/community-tool-stats';
     BeneficiaryProcessor,
     PrismaService,
     ScheduleService,
+    BeneficiaryStatService,
   ],
 })
 export class AppModule {}

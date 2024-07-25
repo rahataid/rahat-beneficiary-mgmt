@@ -10,7 +10,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 @Module({
   imports: [
     FieldDefinitionsModule,
-    BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
+    BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
   ],
   controllers: [SourceController],
   providers: [SourceService, PrismaService, FieldDefinitionsService],

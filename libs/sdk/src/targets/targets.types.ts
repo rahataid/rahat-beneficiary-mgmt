@@ -2,6 +2,11 @@ import { UUID } from 'crypto';
 import { Beneficiary } from '../beneficiary';
 import { TargetQueryStatus } from '../enums';
 
+export type ExportTargeBeneficiary = {
+  groupUUID: UUID;
+  appURL: string;
+};
+
 export type TargetPost = {
   filterOptions?: any;
 };

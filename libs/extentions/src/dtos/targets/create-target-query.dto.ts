@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { UUID } from 'crypto';
 
 export enum TargetQueryStatusEnum {
   PENDING = 'PENDING',
@@ -23,4 +24,20 @@ export class CreateTargetQueryDto {
   })
   @IsOptional()
   createdBy?: string;
+}
+
+export class ExportTargetBeneficiaryDto {
+  @ApiProperty({
+    type: 'uuid',
+    example: '4837585a-d0e8-43c3-9382-ad29495a60d2',
+  })
+  @IsUUID()
+  groupUUID!: UUID;
+
+  @ApiProperty({
+    type: 'string',
+    example: 'https://api.rumsan.com/',
+  })
+  @IsString()
+  appURL!: string;
 }

@@ -9,6 +9,7 @@ import {
 } from '@rahataid/community-tool-extensions';
 import { convertToValidString } from '../utils';
 import { ExcelParser } from '../utils/excel.parser';
+import { contains, equals } from 'class-validator';
 
 @Injectable()
 export class FieldDefinitionsService {
@@ -63,10 +64,13 @@ export class FieldDefinitionsService {
   listActive() {
     return this.prisma.fieldDefinition.findMany({
       where: { isActive: true },
+      orderBy: {
+        name: 'asc',
+      },
     });
   }
 
-  findAll(query) {
+  async findAll(query) {
     const select = {
       id: true,
       name: true,
@@ -74,6 +78,7 @@ export class FieldDefinitionsService {
       isActive: true,
       isTargeting: true,
       fieldPopulate: true,
+      variations: true,
     };
 
     const isTargeting =
@@ -86,9 +91,10 @@ export class FieldDefinitionsService {
     let where: any = {};
 
     if (query.name) {
+      const searchText = query.name.trim().replace(/\s+/g, '_');
       where = {
         name: {
-          contains: query.name,
+          contains: searchText,
           mode: 'insensitive',
         },
       };
@@ -118,9 +124,11 @@ export class FieldDefinitionsService {
       fieldPopulate && fieldPopulate.data ? { data: fieldPopulate.data } : null;
     const payload = {
       ...dto,
-      name: convertToValidString(dto.name),
       fieldPopulate: populateData,
     };
+    if (dto.name && payload.name !== 'govtIDNumber') {
+      payload.name = convertToValidString(dto.name);
+    }
     return this.prisma.fieldDefinition.update({
       where: { id },
       data: payload,

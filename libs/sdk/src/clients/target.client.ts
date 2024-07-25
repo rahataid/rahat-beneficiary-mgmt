@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { TargetClient } from '../types';
 import {
+  ExportTargeBeneficiary,
   PatchResult,
   Result,
   TargetList,
@@ -19,6 +20,14 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
       return formatResponse<TargetResults>(response);
     },
 
+    exportTargetBeneficiary: async (
+      data?: ExportTargeBeneficiary,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.post('/targets/export', data, config);
+      return formatResponse<TargetResults>(response);
+    },
+
     list: async (data?: Pagination, config?: AxiosRequestConfig) => {
       const response = await client.get('/targets', {
         params: data,
@@ -28,13 +37,13 @@ export const getTargetClient = (client: AxiosInstance): TargetClient => {
     },
 
     listByTargetUuid: async (
-      target_uuid: string,
+      { target_uuid, query }: { target_uuid: string; query?: Pagination },
       config?: AxiosRequestConfig,
     ) => {
-      const response = await client.get(
-        `/targets/${target_uuid}/result`,
-        config,
-      );
+      const response = await client.get(`/targets/${target_uuid}/result`, {
+        params: query,
+        ...config,
+      });
       return formatResponse<PaginatedResult<Result>>(response);
     },
 

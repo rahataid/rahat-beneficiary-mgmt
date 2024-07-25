@@ -25,7 +25,7 @@ export const convertToValidString = (inputString: string) => {
   const words = cleanedString.split(/\s+/);
 
   // Join the words with underscore
-  return words.join('_').toLocaleLowerCase();
+  return words.join('_').toLowerCase();
 };
 
 export const formatDateAndTime = (date: Date) => {

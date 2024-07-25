@@ -3,11 +3,11 @@ import { formatResponse } from '@rumsan/sdk/utils';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import {
   Beneficiary,
+  DistinctLocation,
   ImportBeneficiary,
   Stats,
-  UpdateBeneficiary,
 } from '../beneficiary';
-import { BeneficiaryClient, FileResponse, TFile } from '../types';
+import { BeneficiaryClient, FileResponse } from '../types';
 
 export const getBeneficiaryClient = (
   client: AxiosInstance,
@@ -72,6 +72,18 @@ export const getBeneficiaryClient = (
     getBeneficiaryStats: async (config?: AxiosRequestConfig) => {
       const response = await client.get('/beneficiaries/stats', config);
       return formatResponse<Stats[]>(response);
+    },
+
+    listDistinctLocations: async (config?: AxiosRequestConfig) => {
+      const response = await client.get('/beneficiaries/location', config);
+      return formatResponse<DistinctLocation[]>(response);
+    },
+    verifyBeneficiary: async (uuid: string, config?: AxiosRequestConfig) => {
+      const response = await client.post(
+        `beneficiaries/send-verification/${uuid}`,
+        config,
+      );
+      return formatResponse<any>(response);
     },
   };
 };

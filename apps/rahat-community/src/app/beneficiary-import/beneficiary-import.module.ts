@@ -14,7 +14,7 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
 
 @Module({
   imports: [
-    BullModule.registerQueue({ name: QUEUE.BENEFICIARY.IMPORT }),
+    BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
     BullModule.registerQueue({ name: BQUEUE.COMMUNITY_BENEFICIARY }),
   ],
   controllers: [BeneficiaryImportController],

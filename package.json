@@ -14,7 +14,8 @@
     "dev": "npx nx serve rahat-community",
     "serve:frontend": "npx nx serve frontend",
     "test": "npx nx test rahat-community-e2e:e2e",
-    "prisma:generate": "npx prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "setup-data": "ts-node prisma/setup.ts"
   },
   "husky": {
     "hooks": {
@@ -26,6 +27,7 @@
   },
   "private": true,
   "dependencies": {
+    "@casl/ability": "^6.7.1",
     "@hookform/resolvers": "^3.3.4",
     "@nestjs-modules/mailer": "^1.9.1",
     "@nestjs/bull": "^10.0.1",
@@ -35,6 +37,7 @@
     "@nestjs/event-emitter": "^2.0.3",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mapped-types": "^2.0.5",
+    "@nestjs/microservices": "^10.3.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.2",
     "@nestjs/schedule": "^4.0.0",
@@ -49,11 +52,11 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@rumsan/core": "3.0.1",
-    "@rumsan/extensions": "^0.0.22",
+    "@rumsan/extensions": "0.0.28",
     "@rumsan/prisma": "^1.0.125",
-    "@rumsan/sdk": "^0.0.45",
-    "@rumsan/settings": "^0.0.108",
-    "@rumsan/user": "^3.0.159",
+    "@rumsan/sdk": "0.0.45",
+    "@rumsan/settings": "0.0.108",
+    "@rumsan/user": "3.0.159",
     "axios": "^1.6.7",
     "bull": "^4.12.2",
     "class-transformer": "^0.5.1",

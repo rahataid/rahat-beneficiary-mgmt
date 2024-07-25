@@ -88,8 +88,8 @@ export const users: Array<{
   },
   {
     id: 3,
-    name: 'Mr User',
-    email: 'user@mailinator.com',
+    name: 'Rumsan User',
+    email: 'rumsan@mailinator.com',
   },
   {
     id: 4,
@@ -121,7 +121,7 @@ export const userRoles: Array<{
   {
     id: 3,
     userId: 3,
-    roleId: 3,
+    roleId: 1,
   },
   {
     id: 4,
@@ -157,7 +157,7 @@ export const auths: Array<{
     id: 3,
     userId: 3,
     service: Service.EMAIL,
-    serviceId: 'user@mailinator.com',
+    serviceId: 'rumsan@mailinator.com',
   },
   {
     id: 4,

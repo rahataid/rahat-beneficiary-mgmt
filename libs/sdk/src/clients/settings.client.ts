@@ -1,21 +1,35 @@
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { SettingClient } from '../types/settings.clients.types';
-import {
-  SettingInput,
-  SettingList,
-  SettingResponse,
-} from '../settings/settings.types';
+import { SettingList, SettingResponse } from '../settings/settings.types';
+import { Pagination, Setting } from '@rumsan/sdk/types';
 
 export const getSettingsClient = (client: AxiosInstance): SettingClient => {
   return {
-    create: async (data: SettingInput, config?: AxiosRequestConfig) => {
+    create: async (data: Setting, config?: AxiosRequestConfig) => {
       const response = await client.post('/settings', data, config);
       return formatResponse<SettingResponse>(response);
     },
-    list: async (config?: AxiosRequestConfig) => {
-      const response = await client.get('/app/settings', config);
+    listSettings: async (data?: Pagination, config?: AxiosRequestConfig) => {
+      const response = await client.get('/settings', {
+        params: data,
+        ...config,
+      });
       return formatResponse<SettingList>(response);
+    },
+
+    update: async (data: Setting, config?: AxiosRequestConfig) => {
+      const response = await client.patch(
+        `/settings/${data?.name}`,
+        data,
+        config,
+      );
+      return formatResponse<SettingResponse>(response);
+    },
+
+    getByName: async (name: string, config?: AxiosRequestConfig) => {
+      const response = await client.get(`/settings/${name}`, config);
+      return formatResponse<SettingResponse>(response);
     },
   };
 };

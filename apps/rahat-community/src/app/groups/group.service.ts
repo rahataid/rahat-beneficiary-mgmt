@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {
   CreateGroupDto,
   ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { ArchiveType } from '@rahataid/community-tool-sdk';
+import { ArchiveType, BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
 
@@ -19,7 +19,7 @@ export class GroupService {
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
-    private beneficarySourceService: BeneficiarySourceService,
+    private eventEmitter: EventEmitter2,
   ) {}
   async create(dto: CreateGroupDto) {
     return await this.prisma.group.create({
@@ -164,27 +164,28 @@ export class GroupService {
     });
   }
 
-  async remove(uuid: string, deleteBeneficiaryFlag: boolean) {
-    // get relevant informationn from the group table
+  async remove(
+    uuid: string,
+    deleteBeneficiaryFlag: boolean,
+    beneficiaryUuid: string[],
+  ) {
     const group = await this.findUnique(uuid);
-    if (group?.beneficiariesGroup?.length > 0) {
-      await this.prisma.$transaction(async (prisma) => {
-        for (const item of group.beneficiariesGroup) {
-          // Delete from the group table (tbl_beneficiary_groups)
-          await this.beneficaryGroupService.removeBeneficiaryFromGroup(
-            item.beneficiaryUID,
-            group.uuid,
-          );
+    if (!group) throw new Error('Group not found');
+    if (group) {
+      for (const item of beneficiaryUuid) {
+        await this.beneficaryGroupService.removeBeneficiaryFromGroup(
+          item,
+          uuid,
+        );
 
-          if (deleteBeneficiaryFlag) {
-            // Update archive flag of beneficiary from tbl_beneficiaries
-            await this.beneficaryService.update(item.beneficiaryUID, {
-              archived: true,
-            });
-          }
+        if (deleteBeneficiaryFlag) {
+          await this.beneficaryService.update(item, {
+            archived: true,
+          });
         }
-      });
+      }
     }
+
     return 'Beneficiary removed successfully!';
   }
 
@@ -230,53 +231,10 @@ export class GroupService {
     });
   }
 
-  // async purgeGroup(uuid: string) {
-  //   const group = await this.findUnique(uuid);
-  //   if (!group) throw new Error('Group not found');
-  //   if (group.isSystem) throw new Error('System group cannot be purged!');
-
-  //   if (group?.beneficiariesGroup?.length > 0) {
-  //     await this.prisma.$transaction(async (prisma) => {
-  //       for (const item of group.beneficiariesGroup) {
-  //         // Delete benef from the group table (tbl_beneficiary_groups)
-  //         await this.beneficaryGroupService.removeBenefFromMultipleGroups(
-  //           item.beneficiaryUID,
-  //         );
-
-  //         // Remove benef from targetResult
-  //         await this.removeMultipleBenefFromTargetResult(item.beneficiaryUID);
-
-  //         // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
-  //         await this.beneficarySourceService.removeBeneficiaryFromSource(
-  //           item.beneficiaryUID,
-  //         );
-
-  //         // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-  //         const deletedBeneficiary =
-  //           await this.beneficaryService.deletePermanently(item.beneficiaryUID);
-
-  //         // add to archive beneficiary table (tbl_archive_beneficiaries)
-  //         await this.archiveDeletedBeneficiary(
-  //           deletedBeneficiary,
-  //           ArchiveType.DELETED,
-  //         );
-  //       }
-  //     });
-  //   }
-
-  //   // finally delete group
-  //   return await this.prisma.group.delete({
-  //     where: {
-  //       uuid,
-  //     },
-  //   });
-  // }
-
+  // Delete beneficiary permanently
   async purgeGroup(groupUuid: string, beneficiaryUuid: string[]) {
     const group = await this.findUnique(groupUuid);
     if (!group) throw new Error('Group not found');
-    if (group.isSystem) throw new Error('System group cannot be purged!');
-
     group.uuid &&
       (await this.prisma.$transaction(async (prisma) => {
         for (const item of beneficiaryUuid) {
@@ -316,13 +274,8 @@ export class GroupService {
           );
         }
       }));
-    // finally delete group
-    // return await this.prisma.group.delete({
-    //   where: {
 
-    //   },
-    // });
-
+    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
     return 'Group purged successfully!';
   }
 
