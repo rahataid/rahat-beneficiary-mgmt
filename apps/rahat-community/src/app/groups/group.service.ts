@@ -12,6 +12,7 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
+import { VerificationService } from '../beneficiaries/verification.service';
 
 @Injectable()
 export class GroupService {
@@ -19,6 +20,7 @@ export class GroupService {
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
+    private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
   ) {}
   async create(dto: CreateGroupDto) {
@@ -305,5 +307,17 @@ export class GroupService {
       },
     });
     return 'Group deleted successfully!';
+  }
+
+  async bulkGenerateLink(groupUID: string) {
+    const rData = await this.findUnique(groupUID);
+
+    const generateLinkPromises = rData.beneficiariesGroup.map((benefUid) =>
+      this.verificationService.generateLink(benefUid.beneficiaryUID),
+    );
+
+    await Promise.all(generateLinkPromises);
+
+    return 'Success';
   }
 }

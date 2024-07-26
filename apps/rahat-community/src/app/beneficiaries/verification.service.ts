@@ -14,6 +14,8 @@ import { Queue } from 'bull';
 import * as crypto from 'crypto';
 import { recoverMessageAddress } from 'viem';
 
+const HEX_CHAR = '0123456789ABCDEF0123456789ABCDEF';
+
 @Injectable()
 export class VerificationService {
   constructor(
@@ -24,7 +26,7 @@ export class VerificationService {
   ) {}
   private readonly algorithm = 'aes-256-cbc';
   private readonly privateKey = this.configService.get('PRIVATE_KEY');
-  private iv = Buffer.from('0123456789ABCDEF0123456789ABCDEF', 'hex');
+  private iv = Buffer.from(HEX_CHAR, 'hex');
 
   getSecret = () => {
     if (!this.privateKey) {
