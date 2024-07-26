@@ -14,6 +14,7 @@ export type Beneficiary = {
   latitude?: number;
   longitude?: number;
   govtIDNumber?: string;
+  isVerified?: boolean;
   notes?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
@@ -68,6 +69,7 @@ export type ListBeneficiary = {
   latitude?: number;
   longitude?: number;
   govtIDNumber?: string;
+  isVerified?: boolean;
   notes?: string;
   bankedStatus?: BankedStatus;
   internetStatus?: InternetStatus;
