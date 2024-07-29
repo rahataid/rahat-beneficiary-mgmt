@@ -148,6 +148,7 @@ export class GroupService {
             uuid: true,
             groupUID: true,
             beneficiaryUID: true,
+            beneficiary: true,
           },
         },
         uuid: true,
@@ -312,12 +313,29 @@ export class GroupService {
   async bulkGenerateLink(groupUID: string) {
     const rData = await this.findUnique(groupUID);
 
-    const generateLinkPromises = rData.beneficiariesGroup.map((benefUid) =>
-      this.verificationService.generateLink(benefUid.beneficiaryUID),
-    );
+    const filterEmail = rData.beneficiariesGroup.filter((benef) => {
+      return benef.beneficiary.email === null;
+    });
+    const status = rData.beneficiariesGroup.filter((benefUid) => {
+      return (
+        benefUid.beneficiary.isVerified === false &&
+        benefUid.beneficiary.email !== null
+      );
+    });
 
-    await Promise.all(generateLinkPromises);
+    if (!status) throw new Error('No pending verification found!');
+    const generateLink = status.map((benefUid) => {
+      this.verificationService.generateLink(benefUid.beneficiaryUID);
+    });
 
-    return 'Success';
+    await Promise.all(generateLink);
+
+    const k =
+      filterEmail.length > 0
+        ? `${filterEmail.length} out of ${rData.beneficiariesGroup.length} beneficiaries does not have email`
+        : 'success';
+
+    console.log(k);
+    return k;
   }
 }
