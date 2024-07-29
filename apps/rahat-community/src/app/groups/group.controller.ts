@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -29,8 +30,8 @@ import { GroupService } from './group.service';
 
 @Controller('group')
 @ApiTags('Group')
-// @ApiBearerAuth('JWT')
-// @UseGuards(JwtGuard, AbilitiesGuard)
+@ApiBearerAuth('JWT')
+@UseGuards(JwtGuard, AbilitiesGuard)
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
@@ -58,14 +59,12 @@ export class GroupController {
   findOne(@Param('uuid') uuid: string, @Query() query: ListGroupDto) {
     return this.groupService.findOne(uuid, query);
   }
-
   @Get('bulk/:groupUID')
-  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
   bulkGenerateLink(@Param('groupUID') groupUID: string) {
     return this.groupService.bulkGenerateLink(groupUID);
   }
-
-  @Patch(':uuid')
+  @Put(':uuid')
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.GROUP })
   update(@Param('uuid') uuid: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupService.update(uuid, updateGroupDto);
