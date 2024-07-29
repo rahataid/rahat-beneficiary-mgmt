@@ -51,11 +51,11 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     PrismaService,
     FieldDefinitionsService,
     BeneficiaryStatService,
-    VerificationService,
     MailProcessor,
+    VerificationService,
 
     // LogService,
   ],
-  exports: [BeneficiariesService],
+  exports: [BeneficiariesService, VerificationService],
 })
 export class BeneficiariesModule {}

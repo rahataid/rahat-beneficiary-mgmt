@@ -11,6 +11,7 @@ import { QUEUE } from '../../constants';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { VerificationService } from '../beneficiaries/verification.service';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
     SourceService,
     GroupService,
     BeneficiaryGroupService,
+    VerificationService,
   ],
 })
 export class BeneficiaryImportModule {}

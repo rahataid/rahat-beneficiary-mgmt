@@ -12,6 +12,7 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
+import { VerificationService } from '../beneficiaries/verification.service';
 
 @Injectable()
 export class GroupService {
@@ -19,6 +20,7 @@ export class GroupService {
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
+    private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
   ) {}
   async create(dto: CreateGroupDto) {
@@ -146,6 +148,7 @@ export class GroupService {
             uuid: true,
             groupUID: true,
             beneficiaryUID: true,
+            beneficiary: true,
           },
         },
         uuid: true,
@@ -305,5 +308,33 @@ export class GroupService {
       },
     });
     return 'Group deleted successfully!';
+  }
+
+  async bulkGenerateLink(groupUID: string) {
+    const rData = await this.findUnique(groupUID);
+
+    const filterEmail = rData.beneficiariesGroup.filter((benef) => {
+      return benef.beneficiary.email === null;
+    });
+    const status = rData.beneficiariesGroup.filter((benefUid) => {
+      return (
+        benefUid.beneficiary.isVerified === false &&
+        benefUid.beneficiary.email !== null
+      );
+    });
+
+    if (!status) throw new Error('No pending verification found!');
+    const generateLink = status.map((benefUid) => {
+      this.verificationService.generateLink(benefUid.beneficiaryUID);
+    });
+
+    await Promise.all(generateLink);
+
+    const k =
+      filterEmail.length > 0
+        ? `${filterEmail.length} out of ${rData.beneficiariesGroup.length} beneficiaries does not have email`
+        : 'Successfully Send Link';
+
+    return k;
   }
 }
