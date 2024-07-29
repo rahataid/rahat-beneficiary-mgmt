@@ -333,9 +333,8 @@ export class GroupService {
     const k =
       filterEmail.length > 0
         ? `${filterEmail.length} out of ${rData.beneficiariesGroup.length} beneficiaries does not have email`
-        : 'success';
+        : 'Successfully Send Link';
 
-    console.log(k);
     return k;
   }
 }
