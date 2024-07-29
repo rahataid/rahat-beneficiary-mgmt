@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -59,7 +60,7 @@ export class GroupController {
     return this.groupService.findOne(uuid, query);
   }
 
-  @Patch(':uuid')
+  @Put(':uuid')
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.GROUP })
   update(@Param('uuid') uuid: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupService.update(uuid, updateGroupDto);
