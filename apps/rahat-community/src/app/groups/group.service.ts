@@ -198,12 +198,17 @@ export class GroupService {
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
       (item) => {
-        return { ...item.beneficiary, groupName };
+        const { firstName, lastName, ...rest } = item.beneficiary;
+
+        return {
+          ...rest,
+          householdHeadName: `${firstName} ${lastName}`,
+          groupName,
+        };
       },
     );
 
     const excelData = generateExcelData(formattedData);
-
     // res.setHeader(
     //   'Content-Type',
     //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
