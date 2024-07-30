@@ -60,8 +60,8 @@ export class VerificationService {
     return decrypted;
   }
 
-  async generateLink(uuid: string) {
-    const verificationAddress = await this.prisma.setting.findFirst({
+  async getVerificationApp() {
+    return this.prisma.setting.findFirst({
       where: {
         name: VERIFICATION_ADDRESS_SETTINGS_NAME,
       },
@@ -69,11 +69,14 @@ export class VerificationService {
         value: true,
       },
     });
+  }
 
-    if (!verificationAddress) throw new Error('No Verification App set');
+  async generateLink(uuid: string) {
+    const verificationApp = await this.getVerificationApp();
+    if (!verificationApp)
+      throw new Error('Please setup verification app first!');
 
-    const baseUrl = Object.values(verificationAddress.value).find((v) => v);
-
+    const baseUrl = Object.values(verificationApp.value).find((v) => v);
     const benefDetails = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,

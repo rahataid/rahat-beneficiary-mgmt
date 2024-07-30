@@ -6,7 +6,11 @@ import {
   ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { ArchiveType, BeneficiaryEvents } from '@rahataid/community-tool-sdk';
+import {
+  ArchiveType,
+  BeneficiaryEvents,
+  VERIFICATION_ADDRESS_SETTINGS_NAME,
+} from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
@@ -315,31 +319,47 @@ export class GroupService {
     return 'Group deleted successfully!';
   }
 
+  async getVerificationApp() {
+    return this.prisma.setting.findFirst({
+      where: {
+        name: VERIFICATION_ADDRESS_SETTINGS_NAME,
+      },
+      select: {
+        value: true,
+      },
+    });
+  }
+
   async bulkGenerateLink(groupUID: string) {
+    const verificationApp = await this.getVerificationApp();
+    if (!verificationApp)
+      throw new Error('Please setup verification app first!');
     const rData = await this.findUnique(groupUID);
 
-    const filterEmail = rData.beneficiariesGroup.filter((benef) => {
+    const nonEmailBenef = rData.beneficiariesGroup.filter((benef) => {
       return benef.beneficiary.email === null;
     });
-    const status = rData.beneficiariesGroup.filter((benefUid) => {
+
+    const nonVerifiedBenef = rData.beneficiariesGroup.filter((benefUid) => {
       return (
         benefUid.beneficiary.isVerified === false &&
         benefUid.beneficiary.email !== null
       );
     });
 
-    if (!status) throw new Error('No pending verification found!');
-    const generateLink = status.map((benefUid) => {
+    if (!nonVerifiedBenef.length)
+      throw new Error('Did not find non-verified beneficiaries with an email');
+    const generateLink = nonVerifiedBenef.map((benefUid) => {
       this.verificationService.generateLink(benefUid.beneficiaryUID);
     });
 
     await Promise.all(generateLink);
 
-    const k =
-      filterEmail.length > 0
-        ? `${filterEmail.length} out of ${rData.beneficiariesGroup.length} beneficiaries does not have email`
-        : 'Successfully Send Link';
+    const emptyEmailMsg =
+      nonEmailBenef.length > 0
+        ? `${nonEmailBenef.length} beneficiaries dont have an email`
+        : '';
 
-    return k;
+    return `Sent verification link to ${nonVerifiedBenef.length} beneficiaries. ${emptyEmailMsg}`;
   }
 }
