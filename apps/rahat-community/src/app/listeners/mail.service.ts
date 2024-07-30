@@ -20,7 +20,7 @@ export class EmailService {
         port: this.config.get('SMTP_PORT'),
         secure: true,
         auth: {
-          user: this.config.get('SMTP_USER'),
+          user: this.config.get('SMTP_USERNAME'),
           pass: this.config.get('SMTP_PASSWORD'),
         },
       });
