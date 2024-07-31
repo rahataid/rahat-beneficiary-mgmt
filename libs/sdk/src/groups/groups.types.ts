@@ -66,3 +66,8 @@ export type RemoveGroup = {
   deleteBeneficiaryFlag: boolean;
   beneficiaryUuid: string[];
 };
+
+export type ResultGroup = {
+  message: string;
+  success: boolean;
+};

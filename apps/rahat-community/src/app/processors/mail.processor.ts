@@ -14,11 +14,11 @@ export class MailProcessor {
   @Process(JOBS.SEND_EMAIL)
   async generateLink(job: Job) {
     const { data } = job;
-    console.log(data);
+    console.log('EMail Data=>', data);
     if (data) {
       return this.mailerService.sendMail({
         to: data.email,
-        from: this.configService.get('SMTP_USER'),
+        from: this.configService.get('SMTP_USERNAME'),
         subject: 'Wallet Verification Link',
         template: './wallet-verification',
         context: {

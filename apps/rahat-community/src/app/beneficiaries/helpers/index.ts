@@ -64,6 +64,16 @@ export const createSearchQuery = (filters: any) => {
         }
       }
 
+      if (key === 'createdAt') {
+        const targetDate = filters[key];
+        const startDate = new Date(targetDate + 'T00:00:00.000Z');
+        const endDate = new Date(targetDate + 'T23:59:59.999Z');
+        condition[key] = {
+          gte: startDate,
+          lte: endDate,
+        };
+      }
+
       AND_CONDITIONS.push(condition);
     }
   }

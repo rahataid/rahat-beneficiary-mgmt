@@ -8,6 +8,7 @@ import {
   GroupResponseById,
   ListGroup,
   RemoveGroup,
+  ResultGroup,
 } from '../groups';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -53,4 +54,9 @@ export type GroupClient = {
     uuid?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<GroupMessage>>;
+
+  bulkGenerateLink: (
+    groupUID: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<ResultGroup>>;
 };

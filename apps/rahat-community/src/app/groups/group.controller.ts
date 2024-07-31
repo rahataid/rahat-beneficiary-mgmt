@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -58,8 +59,12 @@ export class GroupController {
   findOne(@Param('uuid') uuid: string, @Query() query: ListGroupDto) {
     return this.groupService.findOne(uuid, query);
   }
-
-  @Patch(':uuid')
+  @Get('bulk/:groupUID')
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
+  bulkGenerateLink(@Param('groupUID') groupUID: string) {
+    return this.groupService.bulkGenerateLink(groupUID);
+  }
+  @Put(':uuid')
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.GROUP })
   update(@Param('uuid') uuid: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupService.update(uuid, updateGroupDto);

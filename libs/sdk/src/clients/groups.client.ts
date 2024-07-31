@@ -9,6 +9,7 @@ import {
   GroupPurge,
   GroupMessage,
   RemoveGroup,
+  ResultGroup,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -76,6 +77,10 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
     deleteGroup: async (uuid?: string, config?: AxiosRequestConfig) => {
       const response = await client.delete(`/group/${uuid}`, config);
       return formatResponse<GroupMessage>(response);
+    },
+    bulkGenerateLink: async (groupUID: string) => {
+      const response = await client.get(`/group/bulk/${groupUID}`);
+      return formatResponse<ResultGroup>(response);
     },
   };
 };
