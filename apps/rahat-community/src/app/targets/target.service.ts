@@ -131,7 +131,8 @@ export class TargetService {
     const targetCriteria = { data: dto.targetingCriteria } as any;
     const benef = await this.findTargetedBeneficiary(uuid);
     if (!benef.length) throw new Error('No beneficiaries found!');
-    const group = await this.groupService.create({
+
+    const group = await this.groupService.upsertByName({
       name: dto.label,
       origins: [GroupOrigins.TARGETING],
       createdBy: dto.createdBy,
@@ -143,9 +144,13 @@ export class TargetService {
         groupUID: group.uuid,
       };
     });
-    return this.prismaService.beneficiaryGroup.createMany({
+
+    const bgData = await this.prismaService.beneficiaryGroup.createMany({
       data: groupedBenef,
+      skipDuplicates: true,
     });
+
+    return bgData;
   }
 
   async findTargetQueryById(queryUID: string) {
