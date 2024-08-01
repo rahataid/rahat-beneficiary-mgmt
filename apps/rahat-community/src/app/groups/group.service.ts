@@ -6,12 +6,17 @@ import {
   ListGroupDto,
   UpdateGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { ArchiveType, BeneficiaryEvents } from '@rahataid/community-tool-sdk';
+import {
+  ArchiveType,
+  BeneficiaryEvents,
+  VERIFICATION_ADDRESS_SETTINGS_NAME,
+} from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
+import { VerificationService } from '../beneficiaries/verification.service';
 
 @Injectable()
 export class GroupService {
@@ -19,6 +24,7 @@ export class GroupService {
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
+    private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
   ) {}
   async create(dto: CreateGroupDto) {
@@ -31,14 +37,15 @@ export class GroupService {
     return this.prisma.group.findUnique({ where: { name } });
   }
 
-  upsertByName(dto: any) {
-    return this.prisma.group.upsert({
+  async upsertByName(dto: any) {
+    const k = await this.prisma.group.upsert({
       where: {
         name: dto.name,
       },
       update: dto,
       create: dto,
     });
+    return k;
   }
 
   async findAll(query: ListGroupDto) {
@@ -146,6 +153,7 @@ export class GroupService {
             uuid: true,
             groupUID: true,
             beneficiaryUID: true,
+            beneficiary: true,
           },
         },
         uuid: true,
@@ -195,12 +203,17 @@ export class GroupService {
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
       (item) => {
-        return { ...item.beneficiary, groupName };
+        const { firstName, lastName, ...rest } = item.beneficiary;
+
+        return {
+          ...rest,
+          householdHeadName: `${firstName} ${lastName}`,
+          groupName,
+        };
       },
     );
 
     const excelData = generateExcelData(formattedData);
-
     // res.setHeader(
     //   'Content-Type',
     //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -305,5 +318,49 @@ export class GroupService {
       },
     });
     return 'Group deleted successfully!';
+  }
+
+  async getVerificationApp() {
+    return this.prisma.setting.findFirst({
+      where: {
+        name: VERIFICATION_ADDRESS_SETTINGS_NAME,
+      },
+      select: {
+        value: true,
+      },
+    });
+  }
+
+  async bulkGenerateLink(groupUID: string) {
+    const verificationApp = await this.getVerificationApp();
+    if (!verificationApp)
+      throw new Error('Please setup verification app first!');
+    const rData = await this.findUnique(groupUID);
+
+    const nonEmailBenef = rData.beneficiariesGroup.filter((benef) => {
+      return benef.beneficiary.email === null;
+    });
+
+    const nonVerifiedBenef = rData.beneficiariesGroup.filter((benefUid) => {
+      return (
+        benefUid.beneficiary.isVerified === false &&
+        benefUid.beneficiary.email !== null
+      );
+    });
+
+    if (!nonVerifiedBenef.length)
+      throw new Error('Did not find non-verified beneficiaries with an email');
+    const generateLink = nonVerifiedBenef.map((benefUid) => {
+      this.verificationService.generateLink(benefUid.beneficiaryUID);
+    });
+
+    await Promise.all(generateLink);
+
+    const emptyEmailMsg =
+      nonEmailBenef.length > 0
+        ? `${nonEmailBenef.length} beneficiaries dont have an email`
+        : '';
+
+    return `Sent verification link to ${nonVerifiedBenef.length} beneficiaries. ${emptyEmailMsg}`;
   }
 }

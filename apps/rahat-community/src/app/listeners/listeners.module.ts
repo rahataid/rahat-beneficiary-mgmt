@@ -14,11 +14,14 @@ import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.servic
 import { GroupService } from '../groups/group.service';
 import { EmailService } from './mail.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { VerificationService } from '../beneficiaries/verification.service';
+import { BQUEUE } from '@rahataid/community-tool-sdk';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
+    BullModule.registerQueue({ name: BQUEUE.COMMUNITY_BENEFICIARY }),
   ],
   providers: [
     ListenerService,
@@ -34,6 +37,7 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
     BeneficiaryStatService,
     GroupService,
     BeneficiaryGroupService,
+    VerificationService,
   ],
 })
 export class ListenersModule {}

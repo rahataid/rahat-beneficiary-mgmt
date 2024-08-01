@@ -34,6 +34,7 @@ import {
   CreateBeneficiaryDto,
   ListBeneficiaryDto,
   UpdateBeneficiaryDto,
+  VerificationSignatureDTO,
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
@@ -44,7 +45,6 @@ const MAX_FILE_SIZE = 10000000000;
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtGuard, AbilitiesGuard)
 export class BeneficiariesController {
   constructor(
     private readonly beneficiariesService: BeneficiariesService,
@@ -53,19 +53,22 @@ export class BeneficiariesController {
 
     private readonly verificationService: VerificationService,
   ) {}
-
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get('stats')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   async getStats() {
     return this.benStatsService.getAllStats();
   }
+
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get('db-fields')
   @HttpCode(HttpStatus.OK)
   beneDBFields() {
     return this.beneficiariesService.fetchDBFields();
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Post()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
@@ -74,6 +77,7 @@ export class BeneficiariesController {
     return this.beneficiariesService.create(dto);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Post('bulk')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
@@ -81,6 +85,7 @@ export class BeneficiariesController {
     return this.beneficiariesService.addBulk(dto);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Post('upload')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
   @ApiConsumes('multipart/form-data')
@@ -97,6 +102,7 @@ export class BeneficiariesController {
     return this.beneficiariesService.uploadFile(file);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get()
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
@@ -104,18 +110,21 @@ export class BeneficiariesController {
     return this.beneficiariesService.findAll(filters);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get('location')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findAllLocation() {
     return this.beneficiariesService.findAllLocation();
   }
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get(':uuid')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findOne(@Param('uuid') uuid: string) {
     return this.beneficiariesService.findOne(uuid);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Put(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.BENEFICIARY })
@@ -123,6 +132,7 @@ export class BeneficiariesController {
     return this.beneficiariesService.update(uuid, dto);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Delete(':uuid')
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.BENEFICIARY })
   @HttpCode(HttpStatus.OK)
@@ -131,15 +141,22 @@ export class BeneficiariesController {
     return this.beneficiariesService.remove(uuid, userUUID);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Get(':name')
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   findStatsByName(@Param('name') name: string) {
     return this.benStatsService.getStatsByName(name);
   }
 
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @Post('send-verification/:uuid')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
   generateLink(@Param('uuid') uuid: string) {
     return this.verificationService.generateLink(uuid);
+  }
+
+  @Post('verify-signature')
+  verifySignature(@Body() dto: VerificationSignatureDTO) {
+    return this.verificationService.verifySignature(dto);
   }
 }
