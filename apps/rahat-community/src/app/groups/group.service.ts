@@ -37,14 +37,15 @@ export class GroupService {
     return this.prisma.group.findUnique({ where: { name } });
   }
 
-  upsertByName(dto: any) {
-    return this.prisma.group.upsert({
+  async upsertByName(dto: any) {
+    const k = await this.prisma.group.upsert({
       where: {
         name: dto.name,
       },
       update: dto,
       create: dto,
     });
+    return k;
   }
 
   async findAll(query: ListGroupDto) {
