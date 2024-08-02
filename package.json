@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.local.ts"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules tmp",
