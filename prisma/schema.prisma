@@ -23,6 +23,7 @@ model BeneficiaryArchive {
   phone          String?
   email          String?
   archived       Boolean        @default(false)
+  isVerified     Boolean        @default(false)
   location       String?
   latitude       Float?
   longitude      Float?

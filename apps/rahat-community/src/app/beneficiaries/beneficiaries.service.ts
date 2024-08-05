@@ -26,6 +26,8 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
 
+const TARGETS_PER_PAGE = 10000;
+
 interface IDuplicateValidation {
   hasPhone: boolean;
   hasGovtID: boolean;
@@ -274,7 +276,7 @@ export class BeneficiariesService {
       { where: search_conditions },
       {
         page: +filters?.page,
-        perPage: +filters?.perPage || 500,
+        perPage: +filters?.perPage || TARGETS_PER_PAGE,
       },
     );
   }
