@@ -10,6 +10,8 @@ import { Prisma } from '@prisma/client';
 import { UUID } from 'crypto';
 import { GroupOrigins } from '@rahataid/community-tool-sdk';
 
+const BATCH_SIZE = 50;
+
 @Injectable()
 export class BeneficiaryGroupService {
   constructor(private prisma: PrismaService) {}
@@ -18,70 +20,42 @@ export class BeneficiaryGroupService {
     return arr.includes(GroupOrigins.IMPORT && GroupOrigins.TARGETING);
   }
 
-  // TODO: Cleanup this function
   async create(dto: CreateBeneficiaryGroupDto) {
     const currentGroup = await this.findGroupByUUID(dto.groupUID);
-    if (currentGroup?.origins?.length) {
-      const exist = this.hasOrigins(currentGroup.origins);
-      if (exist)
-        throw new Error('Assigning beneficiary to this group is not allowed!');
-    }
-    const groupBenefData = await this.prisma.$transaction(async (prisma) => {
-      const resultArray = [];
-      const errors = [];
-      for (const beneficiaryUUID of dto.beneficiaryUID) {
-        const data = await prisma.beneficiaryGroup.findFirst({
-          where: {
-            beneficiaryUID: beneficiaryUUID,
-            groupUID: dto.groupUID,
-          },
-        });
-        if (data) {
-          const beneficiaryName = await prisma.beneficiary.findUnique({
+    // if (currentGroup?.origins?.length) {
+    //   const exist = this.hasOrigins(currentGroup.origins);
+    //   if (exist)
+    //     throw new Error('Assigning beneficiary to this group is not allowed!');
+    // }
+    const totalBeneficiaries = dto.beneficiaryUID.length;
+    for (let i = 0; i < totalBeneficiaries; i += BATCH_SIZE) {
+      const currentBatch = dto.beneficiaryUID.slice(i, i + BATCH_SIZE);
+
+      await this.prisma.$transaction(async (txn) => {
+        for (const beneficiaryUUID of currentBatch) {
+          await txn.beneficiaryGroup.upsert({
             where: {
-              uuid: beneficiaryUUID,
+              benefGroupIdentifier: {
+                beneficiaryUID: beneficiaryUUID,
+                groupUID: dto.groupUID,
+              },
             },
-            select: {
-              firstName: true,
-              lastName: true,
+            update: {
+              beneficiaryUID: beneficiaryUUID,
+              groupUID: dto.groupUID,
+            },
+            create: {
+              beneficiaryUID: beneficiaryUUID,
+              groupUID: dto.groupUID,
             },
           });
-          errors.push(
-            `${beneficiaryName.firstName} ${beneficiaryName.lastName}`,
-          );
-          continue;
         }
-        const createdBenefGroup = await prisma.beneficiaryGroup.create({
-          data: {
-            beneficiary: {
-              connect: {
-                uuid: beneficiaryUUID,
-              },
-            },
-            group: {
-              connect: {
-                uuid: dto.groupUID,
-              },
-            },
-          },
-        });
-        resultArray.push(createdBenefGroup);
-      }
-      const errorMessage = errors.length > 0 && errors.join(',');
-      const groupName = await prisma.group.findUnique({
-        where: {
-          uuid: dto.groupUID,
-        },
-        select: {
-          name: true,
-        },
       });
-      const finalResult = {
-        finalMessage: `${dto.beneficiaryUID.length} beneficiaries assigned to  ${groupName.name} group`,
-      };
-      return finalResult;
-    });
-    return groupBenefData;
+    }
+
+    return {
+      finalMessage: `${totalBeneficiaries} beneficiaries assigned to ${currentGroup.name} group`,
+    };
   }
 
   async findGroupByUUID(uuid: UUID) {
