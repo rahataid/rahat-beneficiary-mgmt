@@ -13,7 +13,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
-import { createSearchQuery } from './helpers';
+import { createSearchQuery, searchConditionQuery } from './helpers';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
@@ -311,9 +311,42 @@ export class BeneficiariesService {
       conditions = { OR: OR_CONDITIONS };
     }
 
-    if (filters.firstName) {
+    if (filters.name) {
+      const search_conditions = searchConditionQuery(filters.name);
+      if (search_conditions.firstName && !search_conditions.lastName) {
+        OR_CONDITIONS.push({
+          OR: [
+            {
+              firstName: {
+                contains: search_conditions.firstName,
+                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: search_conditions.firstName,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        });
+        conditions = { OR: OR_CONDITIONS };
+      }
       OR_CONDITIONS.push({
-        firstName: { contains: filters.firstName, mode: 'insensitive' },
+        AND: [
+          {
+            lastName: {
+              contains: search_conditions.lastName,
+              mode: 'insensitive',
+            },
+          },
+          {
+            firstName: {
+              contains: search_conditions.firstName,
+              mode: 'insensitive',
+            },
+          },
+        ],
       });
       conditions = { OR: OR_CONDITIONS };
     }
@@ -340,7 +373,6 @@ export class BeneficiariesService {
         perPage: +filters?.perPage,
       },
     );
-
     return rData;
   }
 

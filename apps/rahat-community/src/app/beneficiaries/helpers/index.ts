@@ -84,6 +84,20 @@ export const createSearchQuery = (filters: any) => {
   return conditions;
 };
 
+export const searchConditionQuery = (name: string) => {
+  const regex = /\w{4,}\s/;
+  const match = regex.exec(name);
+
+  if (match) {
+    const spaceIndex = match.index + match[0].length - 1;
+    const firstName = name.substring(0, spaceIndex).trim();
+    const lastName = name.substring(spaceIndex).trim();
+    return { firstName, lastName };
+  }
+
+  return { firstName: name };
+};
+
 export const mapSentenceCountFromArray = (data: string[]) => {
   const countMap = {} as any;
   data.forEach((sentence) => {
