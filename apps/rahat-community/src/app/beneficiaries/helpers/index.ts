@@ -84,8 +84,8 @@ export const createSearchQuery = (filters: any) => {
   return conditions;
 };
 
-export const searchConditionQuery = (name: string) => {
-  const regex = /\w{4,}\s/;
+export const splitBenefName = (name: string) => {
+  const regex = /\w{3,}\s/;
   const match = regex.exec(name);
 
   if (match) {
@@ -95,7 +95,7 @@ export const searchConditionQuery = (name: string) => {
     return { firstName, lastName };
   }
 
-  return { firstName: name };
+  return { firstName: name, lastName: name };
 };
 
 export const mapSentenceCountFromArray = (data: string[]) => {

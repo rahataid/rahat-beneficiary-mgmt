@@ -13,7 +13,7 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { validateAllowedFieldAndTypes } from '../field-definitions/helpers';
 import { deleteFileFromDisk } from '../utils/multer';
 import { paginate } from '../utils/paginate';
-import { createSearchQuery, searchConditionQuery } from './helpers';
+import { createSearchQuery, splitBenefName } from './helpers';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
@@ -314,41 +314,31 @@ export class BeneficiariesService {
     }
 
     if (filters.name) {
-      const search_conditions = searchConditionQuery(filters.name);
-      if (search_conditions.firstName && !search_conditions.lastName) {
+      const { firstName, lastName } = splitBenefName(filters.name);
+      const search_conditions = [
+        {
+          firstName: {
+            contains: firstName,
+            mode: 'insensitive',
+          },
+        },
+        {
+          lastName: {
+            contains: lastName,
+            mode: 'insensitive',
+          },
+        },
+      ];
+
+      if (firstName === lastName) {
         OR_CONDITIONS.push({
-          OR: [
-            {
-              firstName: {
-                contains: search_conditions.firstName,
-                mode: 'insensitive',
-              },
-            },
-            {
-              lastName: {
-                contains: search_conditions.firstName,
-                mode: 'insensitive',
-              },
-            },
-          ],
+          OR: search_conditions,
         });
         conditions = { OR: OR_CONDITIONS };
       }
+
       OR_CONDITIONS.push({
-        AND: [
-          {
-            lastName: {
-              contains: search_conditions.lastName,
-              mode: 'insensitive',
-            },
-          },
-          {
-            firstName: {
-              contains: search_conditions.firstName,
-              mode: 'insensitive',
-            },
-          },
-        ],
+        AND: search_conditions,
       });
       conditions = { OR: OR_CONDITIONS };
     }
