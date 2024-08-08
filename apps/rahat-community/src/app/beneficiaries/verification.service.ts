@@ -2,11 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { VerificationSignatureDTO } from '@rahataid/community-tool-extensions';
-import {
-  BQUEUE,
-  JOBS,
-  VERIFICATION_ADDRESS_SETTINGS_NAME,
-} from '@rahataid/community-tool-sdk';
+import { BQUEUE, JOBS, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 // import { ClientProxy } from '@nestjs/microservices';
 
 import { PrismaService } from '@rumsan/prisma';
@@ -63,7 +59,7 @@ export class VerificationService {
   async getVerificationApp() {
     return this.prisma.setting.findFirst({
       where: {
-        name: VERIFICATION_ADDRESS_SETTINGS_NAME,
+        name: SETTINGS_NAMES.VERIFICATION_APP,
       },
       select: {
         value: true,

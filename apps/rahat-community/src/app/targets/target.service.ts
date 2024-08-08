@@ -34,7 +34,7 @@ import {
   createPrimaryAndExtraQuery,
 } from './helpers';
 import { GroupService } from '../groups/group.service';
-import { GroupOrigins } from '@rahataid/community-tool-sdk';
+import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class TargetService {
@@ -187,7 +187,7 @@ export class TargetService {
 
   async verifyPublicKey(appUrl: string) {
     const settings = await this.prismaService.setting.findUnique({
-      where: { name: 'APP_IDENTITY' },
+      where: { name: SETTINGS_NAMES.APP_IDENTITY },
     });
     if (!settings) throw new Error('Please setup app identity first!');
     const settingsData: any = settings.value;
