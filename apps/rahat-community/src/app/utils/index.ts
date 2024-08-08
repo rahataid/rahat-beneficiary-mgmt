@@ -55,3 +55,9 @@ export const allowOnlyAlphabetAndNumbers = (inputString: string) => {
   let result = matches ? matches.join('') : '';
   return result;
 };
+
+export const getBaseUrl = (url: string) => {
+  if (!url) return '';
+  const parsedUrl = new URL(url);
+  return `${parsedUrl.protocol}//${parsedUrl.hostname}:${parsedUrl.port}`;
+};

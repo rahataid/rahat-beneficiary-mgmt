@@ -100,7 +100,7 @@ export const SYSTEM_DB_FIELDS = [
 
 export const SETTINGS = {
   EXTERNAL_APPS: 'EXTERNAL_APPS', // Export beneficiary data
-  APP_DENTITY: 'APP_DENTITY', // Sign message by private key
+  APP_DENTITY: 'APP_IDENTITY', // Sign message by private key
   SMTP: 'SMTP', // Email configuration
   VERIFICATION_APP: 'VERIFICATION_APP', // Verify wallet address
 };

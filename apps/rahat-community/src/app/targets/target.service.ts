@@ -25,10 +25,14 @@ import {
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { calculateNumberOfDays } from '../utils';
+import { calculateNumberOfDays, getBaseUrl } from '../utils';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
-import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+import {
+  checkPublicKey,
+  createFinalResult,
+  createPrimaryAndExtraQuery,
+} from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins } from '@rahataid/community-tool-sdk';
 
@@ -181,9 +185,23 @@ export class TargetService {
     });
   }
 
+  async verifyPublicKey(appUrl: string) {
+    const settings = await this.prismaService.setting.findUnique({
+      where: { name: 'APP_IDENTITY' },
+    });
+    if (!settings) throw new Error('Please setup app identity first!');
+    const settingsData: any = settings.value;
+    const baseUrl = getBaseUrl(appUrl);
+    const apiUrl = `${baseUrl}/v1/app/auth-apps/${settingsData.PUBLIC_KEY}/identity`;
+    const response: any = await checkPublicKey(apiUrl);
+    if (!response || !response.data) throw new Error('Invalid app identity!');
+    return response.data;
+  }
+
   // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
   // ==========TargetResult Schema Operations==========
   async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const verified = await this.verifyPublicKey(dto.appURL);
     const { groupUUID, appURL } = dto;
     const group = await this.groupService.findUnique(groupUUID);
     if (!group) throw new Error('Group not found');

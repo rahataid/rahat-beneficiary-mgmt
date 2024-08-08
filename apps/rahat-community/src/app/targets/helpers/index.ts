@@ -49,3 +49,11 @@ export const exportBulkBeneficiary = async (
       throw new Error(error);
     });
 };
+
+export const checkPublicKey = (apiUrl: string) => {
+  return new Promise((resolve, reject) => {
+    axios.get(apiUrl).then(async (response) => {
+      resolve(response.data);
+    });
+  });
+};
