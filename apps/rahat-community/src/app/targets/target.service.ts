@@ -32,6 +32,7 @@ import {
   checkPublicKey,
   createFinalResult,
   createPrimaryAndExtraQuery,
+  generateSignature,
 } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
@@ -192,10 +193,11 @@ export class TargetService {
     if (!settings) throw new Error('Please setup app identity first!');
     const settingsData: any = settings.value;
     const baseUrl = getBaseUrl(appUrl);
-    const apiUrl = `${baseUrl}/v1/app/auth-apps/${settingsData.PUBLIC_KEY}/identity`;
+    const { ADDRESS, PRIVATE_KEY } = settingsData;
+    const apiUrl = `${baseUrl}/v1/app/auth-apps/${ADDRESS}/identity`;
     const response: any = await checkPublicKey(apiUrl);
     if (!response || !response.data) throw new Error('Invalid app identity!');
-    return response.data;
+    return { ...response.data, privateKey: PRIVATE_KEY };
   }
 
   // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
@@ -208,10 +210,16 @@ export class TargetService {
     const rows = await this.findBenefByGroup(group.uuid);
     if (!rows.length) throw new Error('No beneficiaries found for this group');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
+    const signature = await generateSignature(
+      verified.nonceMessage,
+      verified.privateKey,
+    );
     const payload = {
       groupName: group.name,
       beneficiaries,
       appUrl: appURL,
+      signature,
+      address: verified.address,
     };
     // Add to queue
     this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
