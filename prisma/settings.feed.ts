@@ -5,6 +5,8 @@ import { SETTINGS_NAMES } from './seed-data';
 const privateKey = generatePrivateKey();
 const identity = privateKeyToAccount(privateKey);
 
+console.log('App identity=>', identity.address);
+
 const settingsData = [
   {
     name: SETTINGS_NAMES.APP_IDENTITY,
