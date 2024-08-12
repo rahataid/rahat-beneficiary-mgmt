@@ -25,12 +25,17 @@ import {
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { calculateNumberOfDays } from '../utils';
+import { calculateNumberOfDays, getBaseUrl } from '../utils';
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
-import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
+import {
+  checkPublicKey,
+  createFinalResult,
+  createPrimaryAndExtraQuery,
+  generateSignature,
+} from './helpers';
 import { GroupService } from '../groups/group.service';
-import { GroupOrigins } from '@rahataid/community-tool-sdk';
+import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class TargetService {
@@ -181,19 +186,40 @@ export class TargetService {
     });
   }
 
+  async verifyPublicKey(appUrl: string) {
+    const settings = await this.prismaService.setting.findUnique({
+      where: { name: SETTINGS_NAMES.APP_IDENTITY },
+    });
+    if (!settings) throw new Error('Please setup app identity first!');
+    const settingsData: any = settings.value;
+    const baseUrl = getBaseUrl(appUrl);
+    const { ADDRESS, PRIVATE_KEY } = settingsData;
+    const apiUrl = `${baseUrl}/v1/app/auth-apps/${ADDRESS}/identity`;
+    const response: any = await checkPublicKey(apiUrl);
+    if (!response || !response.data) throw new Error('Invalid app identity!');
+    return { ...response.data, privateKey: PRIVATE_KEY };
+  }
+
   // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
   // ==========TargetResult Schema Operations==========
   async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const verified = await this.verifyPublicKey(dto.appURL);
     const { groupUUID, appURL } = dto;
     const group = await this.groupService.findUnique(groupUUID);
     if (!group) throw new Error('Group not found');
     const rows = await this.findBenefByGroup(group.uuid);
     if (!rows.length) throw new Error('No beneficiaries found for this group');
     const beneficiaries = rows.map((r: any) => r.beneficiary);
+    const signature = await generateSignature(
+      verified.nonceMessage,
+      verified.privateKey,
+    );
     const payload = {
       groupName: group.name,
       beneficiaries,
       appUrl: appURL,
+      signature,
+      address: verified.address,
     };
     // Add to queue
     this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);

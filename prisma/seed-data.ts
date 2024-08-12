@@ -97,3 +97,10 @@ export const SYSTEM_DB_FIELDS = [
     isSystem: true,
   },
 ];
+
+export const SETTINGS_NAMES = {
+  VERIFICATION_APP: 'VERIFICATION_APP',
+  APP_IDENTITY: 'APP_IDENTITY',
+  EXTERNAL_APPS: 'EXTERNAL_APPS',
+  SMTP: 'SMTP',
+};
