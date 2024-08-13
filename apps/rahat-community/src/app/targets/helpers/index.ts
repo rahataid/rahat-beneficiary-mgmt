@@ -51,18 +51,21 @@ export const exportBulkBeneficiary = async (
     },
   };
 
-  axios(axiosConfig)
-    .then((response) => {
-      return response.data;
-    })
-    .catch((error) => {
-      const message = error?.response?.data?.message || 'Something went wrong';
-      console.error('Export Error:', message);
-      return {
-        success: false,
-        message,
-      };
-    });
+  return new Promise((resolve, reject) => {
+    axios(axiosConfig)
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        const message =
+          error?.response?.data?.message || 'Something went wrong';
+        console.error('Export Error:', message);
+        reject({
+          success: false,
+          message,
+        });
+      });
+  });
 };
 
 export const checkPublicKey = (apiUrl: string) => {

@@ -32,10 +32,13 @@ import {
   checkPublicKey,
   createFinalResult,
   createPrimaryAndExtraQuery,
+  exportBulkBeneficiary,
   generateSignature,
 } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
+
+const EXPORT_BATCH_SIZE = 500;
 
 @Injectable()
 export class TargetService {
@@ -214,18 +217,30 @@ export class TargetService {
       verified.nonceMessage,
       verified.privateKey,
     );
-    const payload = {
-      groupName: group.name,
-      beneficiaries,
-      appUrl: appURL,
-      signature,
-      address: verified.address,
-    };
-    // Add to queue
-    this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, payload, QUEUE_RETRY_OPTIONS);
+
+    for (let i = 0; i < beneficiaries.length; i += EXPORT_BATCH_SIZE) {
+      const batchBeneficiares = beneficiaries.slice(i, i + EXPORT_BATCH_SIZE);
+      const payload = {
+        appUrl: appURL,
+        signature,
+        address: verified.address,
+        buffer: Buffer.from(
+          JSON.stringify({
+            groupName: group.name,
+            beneficiaries: batchBeneficiares,
+          }),
+        ),
+      };
+
+      // calculate size of buffer
+      const size = Buffer.byteLength(JSON.stringify(payload.buffer), 'utf8');
+      console.log('Buffer size:', size / (1024 * 1024), 'MB');
+
+      await exportBulkBeneficiary(payload);
+    }
     return {
       success: true,
-      message: `${beneficiaries.length} beneficiaries added to the queue for export`,
+      message: `${beneficiaries.length} beneficiaries exported successfully!`,
     };
   }
 
