@@ -9,13 +9,15 @@ import { QUEUE } from '../../constants';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { GroupModule } from '../groups/group.module';
+import { SocketGateway } from '../gateway/socket.gateway';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
     BullModule.registerQueue({ name: BQUEUE.COMMUNITY_BENEFICIARY }),
-    GroupModule
+
+    GroupModule,
   ],
   controllers: [TargetController],
   providers: [
@@ -24,6 +26,7 @@ import { GroupModule } from '../groups/group.module';
     PrismaService,
     FieldDefinitionsService,
     BeneficiaryGroupService,
+    SocketGateway,
   ],
 })
 export class TargetModule {}
