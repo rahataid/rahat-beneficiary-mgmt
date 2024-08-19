@@ -23,6 +23,7 @@ export const QUEUE = {
 
 export const JOBS = {
   TARGET_BENEFICIARY: 'target_beneficiary',
+  SOCKET_EMIT: 'socket_emit',
   BENEFICIARY: {
     IMPORT: 'job.beneficiary.import',
     EXPORT: 'job.beneficiary.export',
@@ -36,6 +37,8 @@ export const EVENTS = {
   BENEF_SOURCE_CREATED: 'benef.source.created',
   CHALLENGE_CREATED: 'rsu.challenge_created',
   OTP_CREATED: 'rsu.otp_created',
+  EMIT_TARGET_RESULT: 'emit_target_result',
+  TARGETING_COMPLETED: 'beneficiary.targeting.completed',
 };
 
 export const APP = {

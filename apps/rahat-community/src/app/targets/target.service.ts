@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Req } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import { Prisma } from '@prisma/client';
@@ -17,6 +17,7 @@ import { UUID } from 'crypto';
 import {
   APP,
   DB_MODELS,
+  EVENTS,
   JOBS,
   QUEUE,
   QUEUE_RETRY_OPTIONS,
@@ -37,6 +38,7 @@ import {
 } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const EXPORT_BATCH_SIZE = 500;
 
@@ -45,6 +47,7 @@ export class TargetService {
   constructor(
     @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
+    private eventEmitter: EventEmitter2,
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
     private groupService: GroupService,
@@ -55,11 +58,13 @@ export class TargetService {
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
+
     return target;
   }
 
   async saveTargetResult(data: CreateTargetResultDto) {
     const { filterOptions, targetUuid } = data;
+
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
     const getFilterData = filterOptions[0]?.data;
@@ -87,6 +92,9 @@ export class TargetService {
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
+
+    this.eventEmitter.emit(EVENTS.TARGETING_COMPLETED, targetUuid);
+
     return {
       message: `${filteredData.length} Target result saved successfully`,
     };
@@ -113,7 +121,6 @@ export class TargetService {
       // 4.Merge result i.e. final_result UNION filteredDta
       final_result = createFinalResult(final_result, filteredData);
     }
-
     return final_result;
   }
 
@@ -255,7 +262,7 @@ export class TargetService {
     }
   }
 
-  findByTargetUUID(targetUuid: string, query?: ListTargetUIDDto) {
+  async findByTargetUUID(targetUuid: string, query?: ListTargetUIDDto) {
     // return paginate(this.prismaService.targetResult, {
     //   where: { targetUuid: targetUuid },
     //   include: { beneficiary: true },
@@ -267,7 +274,7 @@ export class TargetService {
 
     const conditions = { targetUuid: targetUuid };
 
-    return paginate(
+    const rData = await paginate(
       this.prismaService.targetResult,
       { where: { ...conditions }, include },
 
@@ -276,6 +283,11 @@ export class TargetService {
         perPage: +query?.perPage,
       },
     );
+    // console.log(rData);
+    // setTimeout(async () => {
+    // }, 2000);
+
+    return rData;
   }
 
   async cleanTargetQueryAndResults() {
