@@ -92,9 +92,8 @@ export class TargetService {
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
-    // this.targetingQueue.add(JOBS.SOCKET_EMIT, data);
 
-    this.eventEmitter.emit(EVENTS.EMIT_TARGET_RESULT, targetUuid);
+    this.eventEmitter.emit(EVENTS.TARGETING_COMPLETED, targetUuid);
 
     return {
       message: `${filteredData.length} Target result saved successfully`,

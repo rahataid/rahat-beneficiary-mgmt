@@ -1,6 +1,6 @@
 import { BeneficiaryEvents } from '@rahataid/community-tool-sdk';
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { EMAIL_TEMPLATES, EVENTS } from '../../constants';
 import { BeneficiaryStatService } from '../beneficiaries/beneficiaryStats.service';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
@@ -14,7 +14,6 @@ export class ListenerService {
     private benefImport: BeneficiaryImportService,
     private emailService: EmailService,
     private readonly benStats: BeneficiaryStatService,
-    private eventEmitter: EventEmitter2,
   ) {}
   @OnEvent(EVENTS.CREATE_TARGET_RESULT)
   async createTargetResult(data: any) {
@@ -57,16 +56,5 @@ export class ListenerService {
   async onBeneficiaryChanged() {
     console.log('listener called');
     // await this.benStats.saveAllStats();
-  }
-
-  @OnEvent(EVENTS.EMIT_TARGET_RESULT)
-  async findByTargetUUID(targetUuid: string) {
-    const rData = await this.targetService.findByTargetUUID(targetUuid);
-    rData &&
-      this.eventEmitter.emit(
-        EVENTS.TARGET_RESULT_EMIT_SOCKET_MESSAGE,
-        targetUuid,
-      );
-    return rData;
   }
 }

@@ -38,7 +38,7 @@ export const EVENTS = {
   CHALLENGE_CREATED: 'rsu.challenge_created',
   OTP_CREATED: 'rsu.otp_created',
   EMIT_TARGET_RESULT: 'emit_target_result',
-  TARGET_RESULT_EMIT_SOCKET_MESSAGE: 'target_result_emit_socket_message',
+  TARGETING_COMPLETED: 'beneficiary.targeting.completed',
 };
 
 export const APP = {

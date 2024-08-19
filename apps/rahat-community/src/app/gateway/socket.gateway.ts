@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { EVENTS } from '../../constants';
 
 @WebSocketGateway({
+  pingTimeout: 5000,
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -28,7 +29,7 @@ export class SocketGateway
   io: Server;
 
   afterInit() {
-    this.logger.log('Initialized');
+    this.logger.log('Websocket Initialized!');
   }
 
   handleConnection(client: Socket, ...args: any[]) {
@@ -39,11 +40,9 @@ export class SocketGateway
     this.logger.log(`Cliend id:${client.id} disconnected`);
   }
 
-  @OnEvent(EVENTS.TARGET_RESULT_EMIT_SOCKET_MESSAGE)
-  async handleTargetListedMessage(targetUuid: string) {
-    this.logger.log(
-      `${EVENTS.TARGET_RESULT_EMIT_SOCKET_MESSAGE} events received`,
-    );
-    this.io.emit('pong2', targetUuid);
+  @OnEvent(EVENTS.TARGETING_COMPLETED)
+  async notifyTargeting(targetUuid: string) {
+    this.logger.log(`targeting completed for ${targetUuid}`);
+    this.io.emit('targeting-completed', targetUuid);
   }
 }
