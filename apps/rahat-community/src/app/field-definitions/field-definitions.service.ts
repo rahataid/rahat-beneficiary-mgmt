@@ -11,7 +11,10 @@ import { convertToValidString } from '../utils';
 import { ExcelParser } from '../utils/excel.parser';
 import { contains, equals } from 'class-validator';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
-import { convertStringsToDropdownOptions } from './helpers';
+import {
+  convertStringsToDropdownOptions,
+  removeConsecutiveSpaces,
+} from './helpers';
 
 @Injectable()
 export class FieldDefinitionsService {
@@ -35,7 +38,12 @@ export class FieldDefinitionsService {
     data.createdBy = req?.user?.uuid || '';
     const { name, fieldType, dropdownPopulates, ...rest } = data;
     const parsedName = convertToValidString(name);
-    const payload = { name: parsedName, fieldType, ...rest };
+    const payload = {
+      name: parsedName,
+      variations: [removeConsecutiveSpaces(name)],
+      fieldType,
+      ...rest,
+    };
     if (fieldType === FIELD_DEF_TYPES.DROPDOWN && dropdownPopulates) {
       const pupulateData = convertStringsToDropdownOptions(dropdownPopulates);
       if (pupulateData) payload.fieldPopulate = pupulateData;

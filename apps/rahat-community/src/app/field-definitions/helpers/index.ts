@@ -23,6 +23,6 @@ export const convertStringsToDropdownOptions = (dropdownPopulates: string) => {
   };
 };
 
-const removeConsecutiveSpaces = (str: string) => {
+export const removeConsecutiveSpaces = (str: string) => {
   return str.replace(/\s{2,}/g, ' ').trim();
 };
