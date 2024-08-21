@@ -16,13 +16,18 @@ import {
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
 import {
+  BENEF_UNIQUE_FIELDS,
   formatEnumFieldValues,
+  resolveUniqueFields,
   validateSchemaFields,
 } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums } from '@rahataid/community-tool-sdk';
+
+// TODO: Make it dynamic
+const UNIQUE_FIELDS = ['govtIDNumber', 'walletAddress'];
 
 @Injectable()
 export class SourceService {
@@ -37,39 +42,51 @@ export class SourceService {
       select: {
         phone: true,
         govtIDNumber: true,
+        walletAddress: true,
+        email: true,
       },
     });
     return res;
   }
 
-  async checkDuplicateBeneficiary(payload: any) {
+  async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
     const existing = await this.fetchExistingBeneficiaries();
-    return this.compareDuplicateBeneficiary(payload, existing);
+    return this.compareDuplicateBeneficiary(payload, existing, uniqueFields);
   }
 
   // TODO: Compare duplicate based on settings
-  async compareDuplicateBeneficiary(payload: any, existingData: any) {
+  async compareDuplicateBeneficiary(
+    payload: any,
+    existingData: any,
+    uniqueFields: string[],
+  ) {
     let result = [];
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+      resolveUniqueFields(uniqueFields);
     for (let p of payload) {
-      if (p.phone) {
-        const found = existingData.find(
-          (f) =>
-            allowOnlyAlphabetAndNumbers(f.phone) ===
-            allowOnlyAlphabetAndNumbers(p.phone),
-        );
-        if (found) p.isDuplicate = true;
-      }
-      if (p.govtIDNumber) {
-        const found = existingData.find(
-          (f) =>
-            allowOnlyAlphabetAndNumbers(f.govtIDNumber) ===
-            allowOnlyAlphabetAndNumbers(p.govtIDNumber),
-        );
-        if (found) p.isDuplicate = true;
-      }
+      if (hasPhone) p = this.attachIsDuplicate(p, 'phone', existingData);
+      if (hasEmail) p = this.attachIsDuplicate(p, 'email', existingData);
+      if (hasGovtID)
+        p = this.attachIsDuplicate(p, 'govtIDNumber', existingData);
+
+      if (hasWalletAddress)
+        p = this.attachIsDuplicate(p, 'walletAddress', existingData);
+
       result.push(p);
     }
     return result;
+  }
+
+  attachIsDuplicate(p: any, fieldName: string, existingData: any) {
+    if (p[fieldName]) {
+      const found = existingData.find(
+        (f) =>
+          allowOnlyAlphabetAndNumbers(f[fieldName]) ===
+          allowOnlyAlphabetAndNumbers(p[fieldName]),
+      );
+      if (found) p.isDuplicate = true;
+    }
+    return p;
   }
 
   // 1. Validate required fields
@@ -93,7 +110,6 @@ export class SourceService {
       };
     });
     const extraFields = await this.listExtraFields();
-    console.log('Extra Fields', extraFields);
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasUUID) {
       payloadWithUUID = data.map((d: any) => {
@@ -113,6 +129,7 @@ export class SourceService {
         payloadWithUUID,
         extraFields,
         hasUUID,
+        UNIQUE_FIELDS,
       );
 
       if (allValidationErrors.length)
@@ -132,7 +149,7 @@ export class SourceService {
   }
 
   async listExtraFields() {
-    const fd = await this.fdService.listActive();
+    const fd = await this.fdService.listActiveSecondary();
     if (!fd.length) return [];
 
     return fd.map((item: any) => {
@@ -153,10 +170,14 @@ export class SourceService {
       data,
       extraFields,
       hasUUID,
+      UNIQUE_FIELDS,
     );
 
     // 2. Pass here
-    const duplicates = await this.checkDuplicateBeneficiary(processedData);
+    const duplicates = await this.checkDuplicateBeneficiary(
+      processedData,
+      UNIQUE_FIELDS,
+    );
 
     const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };

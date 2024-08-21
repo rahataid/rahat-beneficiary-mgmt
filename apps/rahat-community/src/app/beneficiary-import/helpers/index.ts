@@ -12,8 +12,13 @@ import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
-  GOVT_ID_NUMBER: 'govtIDNumber',
+};
+
+export const BENEF_UNIQUE_FIELDS = {
   PHONE: 'phone',
+  EMAIL: 'email',
+  GOVT_ID_NUMBER: 'govtIDNumber',
+  WALLET_ADDERSS: 'walletAddress',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -44,14 +49,15 @@ export const validateSchemaFields = async (
   payload: any,
   extraFields: IExtraField[],
   hasUUID: boolean,
+  uniqueFields: string[],
 ) => {
   // TODO: Update this based on settings
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
-    BENEFICIARY_REQ_FIELDS.GOVT_ID_NUMBER,
-    BENEFICIARY_REQ_FIELDS.PHONE,
+    ...uniqueFields,
   ];
+  console.log('requiredFields', requiredFields);
   // if (customUniqueField) requiredFields.push(customUniqueField);
   if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
@@ -346,4 +352,20 @@ export const formatEnumFieldValues = (item: any) => {
   if (item.internetStatus)
     item.internetStatus = item.internetStatus.toUpperCase();
   return item;
+};
+
+export const resolveUniqueFields = (uniqueFields: string[]) => {
+  const rData = {
+    hasPhone: false,
+    hasEmail: false,
+    hasGovtID: false,
+    hasWalletAddress: false,
+  };
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.PHONE)) rData.hasPhone = true;
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.EMAIL)) rData.hasEmail = true;
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER))
+    rData.hasGovtID = true;
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.WALLET_ADDERSS))
+    rData.hasWalletAddress = true;
+  return rData;
 };
