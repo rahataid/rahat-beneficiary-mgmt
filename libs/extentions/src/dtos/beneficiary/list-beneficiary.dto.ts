@@ -29,7 +29,7 @@ export class ListBeneficiaryDto {
   @ApiPropertyOptional({ example: 'Philip' })
   @IsString()
   @IsOptional()
-  firstName?: string;
+  name?: string;
 
   @ApiPropertyOptional({ example: 'Philip' })
   @IsString()

@@ -1,4 +1,12 @@
 import axios from 'axios';
+import { Address, signMessage } from 'viem/accounts';
+
+export type TExportBulkBeneficiary = {
+  appUrl: string;
+  signature: string;
+  address: string;
+  buffer: any;
+};
 
 export const createPrimaryAndExtraQuery = (
   primary_fields: any,
@@ -27,25 +35,47 @@ export const createFinalResult = (final_result: any, filteredData: any) => {
 };
 
 export const exportBulkBeneficiary = async (
-  apiUrl: string,
-  buffer: any,
+  payload: TExportBulkBeneficiary,
 ): Promise<any> => {
-  if (!apiUrl) throw new Error('API endpoint is required');
+  const { appUrl, signature, address, buffer } = payload;
+  if (!appUrl) throw new Error('API endpoint is required');
 
   const axiosConfig = {
     method: 'post',
-    url: apiUrl,
+    url: appUrl,
     data: buffer,
     headers: {
       'Content-Type': 'application/octet-stream',
+      'auth-signature': signature,
+      'auth-address': address,
     },
   };
 
-  axios(axiosConfig)
-    .then((response) => {
-      return response.data;
-    })
-    .catch((error) => {
-      throw new Error(error);
+  return new Promise((resolve, reject) => {
+    axios(axiosConfig)
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        const message =
+          error?.response?.data?.message || 'Something went wrong';
+        console.error('Export Error:', message);
+        reject({
+          success: false,
+          message,
+        });
+      });
+  });
+};
+
+export const checkPublicKey = (apiUrl: string) => {
+  return new Promise((resolve, reject) => {
+    axios.get(apiUrl).then(async (response) => {
+      resolve(response.data);
     });
+  });
+};
+
+export const generateSignature = (message: string, privateKey: Address) => {
+  return signMessage({ message, privateKey });
 };

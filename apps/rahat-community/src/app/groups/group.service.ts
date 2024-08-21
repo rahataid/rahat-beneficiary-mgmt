@@ -9,7 +9,7 @@ import {
 import {
   ArchiveType,
   BeneficiaryEvents,
-  VERIFICATION_ADDRESS_SETTINGS_NAME,
+  SETTINGS_NAMES,
 } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
@@ -323,7 +323,7 @@ export class GroupService {
   async getVerificationApp() {
     return this.prisma.setting.findFirst({
       where: {
-        name: VERIFICATION_ADDRESS_SETTINGS_NAME,
+        name: SETTINGS_NAMES.VERIFICATION_APP,
       },
       select: {
         value: true,

@@ -29,6 +29,7 @@ import { BeneficiaryProcessor, TargetProcessor } from './processors';
 import { ScheduleService } from './schedulers/schedule.provider';
 import { SourceModule } from './sources/source.module';
 import { TargetModule } from './targets/target.module';
+import { SocketGateway } from './gateway/socket.gateway';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { TargetModule } from './targets/target.module';
         password: process.env.REDIS_PASSWORD,
       },
     }),
+
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),
     RSUserModule.forRoot([AuthsModule, UsersModule, RolesModule]),
     StatsModule,
@@ -67,6 +69,7 @@ import { TargetModule } from './targets/target.module';
     PrismaService,
     ScheduleService,
     BeneficiaryStatService,
+    SocketGateway,
   ],
 })
 export class AppModule {}

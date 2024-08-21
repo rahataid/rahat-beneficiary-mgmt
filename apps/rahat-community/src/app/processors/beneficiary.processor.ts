@@ -2,7 +2,6 @@ import { OnQueueCompleted, Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { exportBulkBeneficiary } from '../targets/helpers';
 
 @Processor(QUEUE.BENEFICIARY)
 export class BeneficiaryProcessor {
@@ -15,10 +14,12 @@ export class BeneficiaryProcessor {
 
   @Process(JOBS.BENEFICIARY.EXPORT)
   async exportBeneficiary(job: Job<any>) {
-    const { data } = job;
-    const { appUrl, ...rest } = data;
-    const buffer = Buffer.from(JSON.stringify(rest));
-    return exportBulkBeneficiary(appUrl, buffer);
+    console.log('Not implemented!');
+    return;
+    // const { data } = job;
+    // const { appUrl, address, signature, ...rest } = data;
+    // const buffer = Buffer.from(JSON.stringify(rest));
+    // return exportBulkBeneficiary({ appUrl, address, signature, buffer });
   }
 
   @OnQueueCompleted()
