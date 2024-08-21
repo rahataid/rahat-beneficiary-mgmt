@@ -45,6 +45,7 @@ export const validateSchemaFields = async (
   extraFields: IExtraField[],
   hasUUID: boolean,
 ) => {
+  // TODO: Update this based on settings
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
