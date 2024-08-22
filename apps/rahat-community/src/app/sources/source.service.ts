@@ -47,6 +47,7 @@ export class SourceService {
     return this.compareDuplicateBeneficiary(payload, existing);
   }
 
+  // TODO: Compare duplicate based on settings
   async compareDuplicateBeneficiary(payload: any, existingData: any) {
     let result = [];
     for (let p of payload) {
@@ -92,6 +93,7 @@ export class SourceService {
       };
     });
     const extraFields = await this.listExtraFields();
+    console.log('Extra Fields', extraFields);
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
     if (hasUUID) {
       payloadWithUUID = data.map((d: any) => {
@@ -142,13 +144,18 @@ export class SourceService {
     });
   }
 
+  // TODO: Fetch org. import settings
+  // Eg: phone,govtIDNumber, walletAddress,email required & unique
+  // Make phone and govtIDNumber default required and unique
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
+    // 1. Pass here
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
       hasUUID,
     );
 
+    // 2. Pass here
     const duplicates = await this.checkDuplicateBeneficiary(processedData);
 
     const dateParsedDuplicates = duplicates.map((d) => {

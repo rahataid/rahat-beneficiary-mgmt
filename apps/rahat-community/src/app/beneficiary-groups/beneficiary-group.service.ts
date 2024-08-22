@@ -1,5 +1,6 @@
 import {
   CreateBeneficiaryGroupDto,
+  ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { Injectable } from '@nestjs/common';
@@ -70,12 +71,10 @@ export class BeneficiaryGroupService {
     });
   }
 
-  async findAll(filters: any) {
-    const select: Prisma.BeneficiaryGroupSelect = {};
-    // return await this.prisma.beneficiaryGroup.findMany({});
+  async findAll(filters: ListBeneficiaryGroupDto) {
     return paginate(
       this.prisma.beneficiaryGroup,
-      { select },
+      { where: {} },
       {
         page: +filters?.page,
         perPage: +filters?.perPage,
