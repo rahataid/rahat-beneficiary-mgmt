@@ -21,6 +21,7 @@ import {
 } from '@rumsan/user';
 import {
   CreateBeneficiaryGroupDto,
+  ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
@@ -51,7 +52,7 @@ export class BeneficiaryGroupController {
     subject: SUBJECTS.GROUP,
   })
   @UseGuards(JwtGuard, AbilitiesGuard)
-  findAll(@Query('') filters: any) {
+  findAll(@Query() filters: ListBeneficiaryGroupDto) {
     return this.beneficiaryGroupService.findAll(filters);
   }
 
