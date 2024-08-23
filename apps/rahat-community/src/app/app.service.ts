@@ -136,7 +136,6 @@ export class AppService {
     });
   }
 
-  // TODO: Move this to settings module
   async findKobotoolSettings() {
     const res: any[] = await this.prisma.setting.findMany({
       where: {
