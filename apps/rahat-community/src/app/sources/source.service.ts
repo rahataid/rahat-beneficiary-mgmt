@@ -59,13 +59,26 @@ export class SourceService {
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
       resolveUniqueFields(uniqueFields);
     for (let p of payload) {
-      if (hasPhone) p = this.attachIsDuplicate(p, 'phone', existingData);
-      if (hasEmail) p = this.attachIsDuplicate(p, 'email', existingData);
-      if (hasGovtID)
-        p = this.attachIsDuplicate(p, 'govtIDNumber', existingData);
-
-      if (hasWalletAddress)
-        p = this.attachIsDuplicate(p, 'walletAddress', existingData);
+      if (hasPhone) {
+        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.PHONE, existingData);
+      }
+      if (hasEmail) {
+        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.EMAIL, existingData);
+      }
+      if (hasGovtID) {
+        p = this.attachIsDuplicate(
+          p,
+          BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
+          existingData,
+        );
+      }
+      if (hasWalletAddress) {
+        p = this.attachIsDuplicate(
+          p,
+          BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
+          existingData,
+        );
+      }
 
       result.push(p);
     }
