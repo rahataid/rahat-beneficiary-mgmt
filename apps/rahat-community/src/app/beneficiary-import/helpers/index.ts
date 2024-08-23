@@ -18,7 +18,7 @@ export const BENEF_UNIQUE_FIELDS = {
   PHONE: 'phone',
   EMAIL: 'email',
   GOVT_ID_NUMBER: 'govtIDNumber',
-  WALLET_ADDERSS: 'walletAddress',
+  WALLET_ADDRESS: 'walletAddress',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -365,7 +365,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.EMAIL)) rData.hasEmail = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER))
     rData.hasGovtID = true;
-  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.WALLET_ADDERSS))
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.WALLET_ADDRESS))
     rData.hasWalletAddress = true;
   return rData;
 };
