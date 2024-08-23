@@ -40,7 +40,7 @@ import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-const EXPORT_BATCH_SIZE = 500;
+const EXPORT_BATCH_SIZE = 100;
 
 @Injectable()
 export class TargetService {

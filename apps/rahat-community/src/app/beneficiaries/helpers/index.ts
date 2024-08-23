@@ -155,7 +155,9 @@ export const bankedUnbankedMapping = (data: any[]) => {
 export const phoneUnphonedMapping = (data: any[]) => {
   let myData = {};
   for (let d of data) {
-    const hasTrippleNine = d.phone.startsWith(PHONE_NUMBER_PATTERN);
+    const hasTrippleNine = d.phone
+      ? d.phone.startsWith(PHONE_NUMBER_PATTERN)
+      : true;
     if (hasTrippleNine) {
       if (myData['Unphoned']) {
         myData['Unphoned'] += 1;
