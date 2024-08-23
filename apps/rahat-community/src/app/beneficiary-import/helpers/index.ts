@@ -51,13 +51,11 @@ export const validateSchemaFields = async (
   hasUUID: boolean,
   uniqueFields: string[],
 ) => {
-  // TODO: Update this based on settings
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
     ...uniqueFields,
   ];
-  console.log('requiredFields', requiredFields);
   // if (customUniqueField) requiredFields.push(customUniqueField);
   if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(

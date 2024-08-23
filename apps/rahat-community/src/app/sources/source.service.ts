@@ -50,7 +50,6 @@ export class SourceService {
     return this.compareDuplicateBeneficiary(payload, existing, uniqueFields);
   }
 
-  // TODO: Compare duplicate based on settings
   async compareDuplicateBeneficiary(
     payload: any,
     existingData: any,
@@ -147,7 +146,7 @@ export class SourceService {
       },
     });
     if (!row || !row.value)
-      return [BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER, BENEF_UNIQUE_FIELDS.PHONE];
+      throw new Error('Please setup unique fields from settings!');
     return row.value?.DATA.split(',');
   }
 
@@ -179,7 +178,9 @@ export class SourceService {
     ];
     if (fields.some((field) => !allowedFields.includes(field))) {
       throw new Error(
-        `Allowed unique fields are: ${allowedFields.join(', ')}.`,
+        `Allowed unique fields are: [${allowedFields.join(
+          ', ',
+        )}]. Please check your settings!`,
       );
     }
     return true;
