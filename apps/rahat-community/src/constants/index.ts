@@ -39,6 +39,7 @@ export const EVENTS = {
   OTP_CREATED: 'rsu.otp_created',
   EMIT_TARGET_RESULT: 'emit_target_result',
   TARGETING_COMPLETED: 'beneficiary.targeting.completed',
+  BENEF_EXPORT: 'beneficiary.export',
 };
 
 export const APP = {
