@@ -420,6 +420,8 @@ export class BeneficiariesService {
     return await this.prisma.log.create({ data: logData });
   }
 
+  // TODO: Code cleanup
+  // Split code into multiple functions
   async remove(uuid: string, userUUID: string) {
     const benef = await this.prisma.beneficiary.findUnique({
       where: {

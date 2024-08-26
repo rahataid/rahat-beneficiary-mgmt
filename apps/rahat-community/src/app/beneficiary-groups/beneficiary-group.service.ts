@@ -1,15 +1,14 @@
+import { Injectable } from '@nestjs/common';
 import {
   CreateBeneficiaryGroupDto,
   ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@rumsan/prisma';
-import { RSError } from '@rumsan/core';
-import { paginate } from '../utils/paginate';
-import { Prisma } from '@prisma/client';
-import { UUID } from 'crypto';
 import { GroupOrigins } from '@rahataid/community-tool-sdk';
+import { RSError } from '@rumsan/core';
+import { PrismaService } from '@rumsan/prisma';
+import { UUID } from 'crypto';
+import { paginate } from '../utils/paginate';
 
 const BATCH_SIZE = 50;
 
@@ -21,6 +20,8 @@ export class BeneficiaryGroupService {
     return arr.includes(GroupOrigins.IMPORT && GroupOrigins.TARGETING);
   }
 
+  // TODO: Add queue for large number of beneficiaries
+  // No need of transaction as we are not updating any other table
   async create(dto: CreateBeneficiaryGroupDto) {
     const currentGroup = await this.findGroupByUUID(dto.groupUID);
     // if (currentGroup?.origins?.length) {

@@ -164,8 +164,4 @@ export class FieldDefinitionsService {
       data: dto,
     });
   }
-
-  remove(id: number) {
-    return `This action removes a #${id} fieldDefinition`;
-  }
 }

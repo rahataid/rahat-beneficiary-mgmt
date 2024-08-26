@@ -136,6 +136,7 @@ export class AppService {
     });
   }
 
+  // TODO: Cleanup hardcoded values
   async findKobotoolSettings() {
     const res: any[] = await this.prisma.setting.findMany({
       where: {
@@ -155,12 +156,11 @@ export class AppService {
       },
     });
     if (!res.length) return [];
-    const sanitized = res.map((item) => {
+    return res.map((item) => {
       return {
         name: item.name,
         formId: item.value.FORM_ID,
       };
     });
-    return sanitized;
   }
 }
