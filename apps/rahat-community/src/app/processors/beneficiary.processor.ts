@@ -17,6 +17,11 @@ export class BeneficiaryProcessor {
     this.eventEmitter.emit(EVENTS.BENEF_EXPORT, job.data);
   }
 
+  @Process(JOBS.CREATE_BENEF_GROUP)
+  async createBeneficiaryGroup(job: Job<any>) {
+    this.eventEmitter.emit(EVENTS.CREATE_BENEF_GROUP, job.data);
+  }
+
   @OnQueueCompleted()
   onJobCompleted(job: Job) {
     console.log('✅ Completed:', job.name);
