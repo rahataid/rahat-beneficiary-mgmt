@@ -213,7 +213,7 @@ export class TargetService {
   // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
   // ==========TargetResult Schema Operations==========
 
-  async exportTargetProcessed(dto: ExportTargetBeneficiaryDto) {
+  async processExportTarget(dto: ExportTargetBeneficiaryDto) {
     const { groupUUID, appURL } = dto;
     const verified = await this.verifyPublicKey(appURL);
     const group = await this.groupService.findUnique(groupUUID);
@@ -259,7 +259,7 @@ export class TargetService {
     await this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, { groupUUID, appURL });
     return {
       success: true,
-      message: `${beneficiaries.length} beneficiaries exported successfully!`,
+      message: `${beneficiaries.length} beneficiaries will be exported shortly!`,
     };
   }
 

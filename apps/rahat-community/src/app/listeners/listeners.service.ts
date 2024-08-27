@@ -53,7 +53,7 @@ export class ListenerService {
 
   @OnEvent(EVENTS.BENEF_EXPORT)
   async exportBeneficiaries(data: ExportTargetBeneficiaryDto) {
-    return this.targetService.exportTargetProcessed(data);
+    return this.targetService.processExportTarget(data);
   }
 
   @OnEvent(BeneficiaryEvents.BENEFICIARY_CREATED)
