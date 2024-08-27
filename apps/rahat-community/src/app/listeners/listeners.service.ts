@@ -7,6 +7,7 @@ import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-impo
 import { TargetService } from '../targets/target.service';
 import { SourceCreatedDto } from './listeners.dto';
 import { EmailService } from './mail.service';
+import { ExportTargetBeneficiaryDto } from '@rahataid/community-tool-extensions';
 @Injectable()
 export class ListenerService {
   constructor(
@@ -48,6 +49,11 @@ export class ListenerService {
   @OnEvent(EVENTS.BENEF_SOURCE_CREATED)
   async importBeneficiaries(data: SourceCreatedDto) {
     return this.benefImport.importBySourceUUID(data.sourceUUID);
+  }
+
+  @OnEvent(EVENTS.BENEF_EXPORT)
+  async exportBeneficiaries(data: ExportTargetBeneficiaryDto) {
+    return this.targetService.processExportTarget(data);
   }
 
   @OnEvent(BeneficiaryEvents.BENEFICIARY_CREATED)
