@@ -14,12 +14,7 @@ export class BeneficiaryProcessor {
 
   @Process(JOBS.BENEFICIARY.EXPORT)
   async exportBeneficiary(job: Job<any>) {
-    console.log('Not implemented!');
-    return;
-    // const { data } = job;
-    // const { appUrl, address, signature, ...rest } = data;
-    // const buffer = Buffer.from(JSON.stringify(rest));
-    // return exportBulkBeneficiary({ appUrl, address, signature, buffer });
+    this.eventEmitter.emit(EVENTS.BENEF_EXPORT, job.data);
   }
 
   @OnQueueCompleted()

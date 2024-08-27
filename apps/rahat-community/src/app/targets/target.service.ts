@@ -40,7 +40,7 @@ import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-const EXPORT_BATCH_SIZE = 100;
+const EXPORT_BATCH_SIZE = 500;
 
 @Injectable()
 export class TargetService {
@@ -212,9 +212,10 @@ export class TargetService {
 
   // const apiUrl = `${baseURL}/v1/beneficiaries/import-tools`;
   // ==========TargetResult Schema Operations==========
-  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
-    const verified = await this.verifyPublicKey(dto.appURL);
+
+  async exportTargetProcessed(dto: ExportTargetBeneficiaryDto) {
     const { groupUUID, appURL } = dto;
+    const verified = await this.verifyPublicKey(appURL);
     const group = await this.groupService.findUnique(groupUUID);
     if (!group) throw new Error('Group not found');
     const rows = await this.findBenefByGroup(group.uuid);
@@ -242,9 +243,20 @@ export class TargetService {
       // calculate size of buffer
       const size = Buffer.byteLength(JSON.stringify(payload.buffer), 'utf8');
       console.log('Buffer size:', size / (1024 * 1024), 'MB');
-
       await exportBulkBeneficiary(payload);
     }
+  }
+
+  async exportTargetBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    await this.verifyPublicKey(dto.appURL);
+    const { groupUUID, appURL } = dto;
+    const group = await this.groupService.findUnique(groupUUID);
+    if (!group) throw new Error('Group not found');
+    const rows = await this.findBenefByGroup(group.uuid);
+    if (!rows.length) throw new Error('No beneficiaries found for this group');
+    const beneficiaries = rows.map((r: any) => r.beneficiary);
+
+    await this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, { groupUUID, appURL });
     return {
       success: true,
       message: `${beneficiaries.length} beneficiaries exported successfully!`,
