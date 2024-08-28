@@ -164,10 +164,8 @@ const validatePrimaryFields = async (
     }
 
     // Required fields validation
-    const keys = Object.keys(item);
     for (let f of requiredFields) {
-      let exist = keys.includes(f);
-      if (!exist) {
+      if (!item[f]) {
         emptyFields.push(f);
         primaryErrors.push({
           uuid: item.uuid,
