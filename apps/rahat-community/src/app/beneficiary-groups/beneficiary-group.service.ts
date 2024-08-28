@@ -9,55 +9,61 @@ import { RSError } from '@rumsan/core';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { paginate } from '../utils/paginate';
+import { InjectQueue } from '@nestjs/bull';
+import { JOBS, QUEUE } from '../../constants';
+import { Queue } from 'bull';
 
 const BATCH_SIZE = 50;
 
 @Injectable()
 export class BeneficiaryGroupService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
+    private prisma: PrismaService,
+  ) {}
 
   hasOrigins(arr: any) {
     return arr.includes(GroupOrigins.IMPORT && GroupOrigins.TARGETING);
   }
 
-  // TODO: Add queue for large number of beneficiaries
-  // No need of transaction as we are not updating any other table
   async create(dto: CreateBeneficiaryGroupDto) {
     const currentGroup = await this.findGroupByUUID(dto.groupUID);
-    // if (currentGroup?.origins?.length) {
-    //   const exist = this.hasOrigins(currentGroup.origins);
-    //   if (exist)
-    //     throw new Error('Assigning beneficiary to this group is not allowed!');
-    // }
-    const totalBeneficiaries = dto.beneficiaryUID.length;
-    for (let i = 0; i < totalBeneficiaries; i += BATCH_SIZE) {
-      const currentBatch = dto.beneficiaryUID.slice(i, i + BATCH_SIZE);
 
-      await this.prisma.$transaction(async (txn) => {
-        for (const beneficiaryUUID of currentBatch) {
-          await txn.beneficiaryGroup.upsert({
-            where: {
-              benefGroupIdentifier: {
-                beneficiaryUID: beneficiaryUUID,
-                groupUID: dto.groupUID,
-              },
-            },
-            update: {
-              beneficiaryUID: beneficiaryUUID,
-              groupUID: dto.groupUID,
-            },
-            create: {
-              beneficiaryUID: beneficiaryUUID,
-              groupUID: dto.groupUID,
-            },
-          });
-        }
-      });
-    }
+    const totalBeneficiaries = dto.beneficiaryUID.length;
+
+    await this.benefQueue.add(JOBS.CREATE_BENEF_GROUP, {
+      ...dto,
+    });
 
     return {
       finalMessage: `${totalBeneficiaries} beneficiaries assigned to ${currentGroup.name} group`,
     };
+  }
+
+  async createBeneficiaryGroup(dto: CreateBeneficiaryGroupDto) {
+    const totalBeneficiaries = dto.beneficiaryUID.length;
+    for (let i = 0; i < totalBeneficiaries; i += BATCH_SIZE) {
+      const currentBatch = dto.beneficiaryUID.slice(i, i + BATCH_SIZE);
+
+      for (const beneficiaryUUID of currentBatch) {
+        await this.prisma.beneficiaryGroup.upsert({
+          where: {
+            benefGroupIdentifier: {
+              beneficiaryUID: beneficiaryUUID,
+              groupUID: dto.groupUID,
+            },
+          },
+          update: {
+            beneficiaryUID: beneficiaryUUID,
+            groupUID: dto.groupUID,
+          },
+          create: {
+            beneficiaryUID: beneficiaryUUID,
+            groupUID: dto.groupUID,
+          },
+        });
+      }
+    }
   }
 
   async findGroupByUUID(uuid: UUID) {

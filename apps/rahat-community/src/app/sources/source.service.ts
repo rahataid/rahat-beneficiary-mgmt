@@ -111,22 +111,19 @@ export class SourceService {
     const uniqueFields = await this.getUniqueFieldSettings();
     this.validateUniqueFields(uniqueFields);
 
+    const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+
     let payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
       const formatted = formatEnumFieldValues(d);
+      const uid = hasUUID ? d[EXTERNAL_UUID_FIELD] : uuid();
       return {
         ...formatted,
-        uuid: uuid(),
+        uuid: uid,
       };
     });
     const extraFields = await this.listExtraFields();
-    const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
-    if (hasUUID) {
-      payloadWithUUID = data.map((d: any) => {
-        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
-      });
-    }
 
     if (action === IMPORT_ACTION.VALIDATE)
       return this.ValidateBeneficiaryImort({
