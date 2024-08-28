@@ -84,6 +84,15 @@ export class FieldDefinitionsService {
     });
   }
 
+  listActiveSecondary() {
+    return this.prisma.fieldDefinition.findMany({
+      where: { isActive: true, isSystem: false },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
   async findAll(query) {
     const select = {
       id: true,
@@ -154,9 +163,5 @@ export class FieldDefinitionsService {
       where: { id },
       data: dto,
     });
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} fieldDefinition`;
   }
 }

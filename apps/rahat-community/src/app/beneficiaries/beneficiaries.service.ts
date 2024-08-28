@@ -281,7 +281,8 @@ export class BeneficiariesService {
     );
   }
 
-  async findAll(filters: ListBeneficiaryDto) {
+  async filterConditions(filters: ListBeneficiaryDto) {
+    // console.log(filters.location !== null);
     const OR_CONDITIONS = [];
     let conditions = {};
 
@@ -290,10 +291,10 @@ export class BeneficiariesService {
 
     const keys = Object.keys(filters);
     const values = Object.values(filters);
+
     for (let i = 0; i < keys.length; i++) {
       const searchField = keys[i].toLocaleLowerCase();
-      const found = fieldNames.includes(searchField);
-      if (found) {
+      if (fieldNames.includes(searchField)) {
         const fieldName = keys[i];
         OR_CONDITIONS.push({
           extras: {
@@ -304,13 +305,10 @@ export class BeneficiariesService {
       }
     }
 
-    // if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
-
-    if (filters.location) {
+    if (filters.location !== undefined) {
       OR_CONDITIONS.push({
         location: { contains: filters.location, mode: 'insensitive' },
       });
-      conditions = { OR: OR_CONDITIONS };
     }
 
     if (filters.name) {
@@ -334,28 +332,37 @@ export class BeneficiariesService {
         OR_CONDITIONS.push({
           OR: search_conditions,
         });
-        conditions = { OR: OR_CONDITIONS };
+      } else {
+        OR_CONDITIONS.push({
+          AND: search_conditions,
+        });
       }
-
-      OR_CONDITIONS.push({
-        AND: search_conditions,
-      });
-      conditions = { OR: OR_CONDITIONS };
     }
 
     if (filters.govtIDNumber) {
       OR_CONDITIONS.push({
-        govtIDNumber: { contains: filters.govtIDNumber, mode: 'insensitive' },
+        govtIDNumber: {
+          contains: filters.govtIDNumber,
+          mode: 'insensitive',
+        },
       });
-      conditions = { OR: OR_CONDITIONS };
     }
 
     if (filters.phone) {
       OR_CONDITIONS.push({
         phone: { contains: filters.phone, mode: 'insensitive' },
       });
+    }
+
+    if (OR_CONDITIONS.length) {
       conditions = { OR: OR_CONDITIONS };
     }
+
+    return conditions;
+  }
+
+  async findAll(filters: ListBeneficiaryDto) {
+    const conditions = await this.filterConditions(filters);
 
     const rData = await paginate(
       this.prisma.beneficiary,
@@ -365,8 +372,96 @@ export class BeneficiariesService {
         perPage: +filters?.perPage,
       },
     );
+
     return rData;
   }
+
+  // async findAll(filters: ListBeneficiaryDto) {
+  //   const OR_CONDITIONS = [];
+  //   let conditions = {};
+
+  //   const fields = await this.fieldDefService.listActive();
+  //   const fieldNames = fields.map((f) => f.name);
+
+  //   const keys = Object.keys(filters);
+  //   const values = Object.values(filters);
+  //   for (let i = 0; i < keys.length; i++) {
+  //     const searchField = keys[i].toLocaleLowerCase();
+  //     const found = fieldNames.includes(searchField);
+  //     if (found) {
+  //       const fieldName = keys[i];
+  //       OR_CONDITIONS.push({
+  //         extras: {
+  //           path: [fieldName],
+  //           string_contains: values[i],
+  //         },
+  //       });
+  //     }
+  //   }
+
+  //   // if (OR_CONDITIONS.length) conditions = { OR: OR_CONDITIONS };
+
+  //   if (filters.location) {
+  //     OR_CONDITIONS.push({
+  //       location: { contains: filters.location, mode: 'insensitive' },
+  //     });
+  //     conditions = { OR: OR_CONDITIONS };
+  //   }
+
+  //   if (filters.name) {
+  //     const { firstName, lastName } = splitBenefName(filters.name);
+  //     const search_conditions = [
+  //       {
+  //         firstName: {
+  //           contains: firstName,
+  //           mode: 'insensitive',
+  //         },
+  //       },
+  //       {
+  //         lastName: {
+  //           contains: lastName,
+  //           mode: 'insensitive',
+  //         },
+  //       },
+  //     ];
+
+  //     if (firstName === lastName) {
+  //       OR_CONDITIONS.push({
+  //         OR: search_conditions,
+  //       });
+  //       conditions = { OR: OR_CONDITIONS };
+  //     }
+
+  //     OR_CONDITIONS.push({
+  //       AND: search_conditions,
+  //     });
+  //     conditions = { OR: OR_CONDITIONS };
+  //   }
+
+  //   if (filters.govtIDNumber) {
+  //     OR_CONDITIONS.push({
+  //       govtIDNumber: { contains: filters.govtIDNumber, mode: 'insensitive' },
+  //     });
+  //     conditions = { OR: OR_CONDITIONS };
+  //   }
+
+  //   if (filters.phone) {
+  //     OR_CONDITIONS.push({
+  //       phone: { contains: filters.phone, mode: 'insensitive' },
+  //     });
+  //     conditions = { OR: OR_CONDITIONS };
+  //   }
+
+  //   const rData = await paginate(
+  //     this.prisma.beneficiary,
+  //     { where: { ...conditions, archived: false } },
+  //     {
+  //       page: +filters?.page,
+  //       perPage: +filters?.perPage,
+  //     },
+  //   );
+  //   return rData;
+  // }
 
   findOne(uuid: string) {
     return this.prisma.beneficiary.findUnique({
@@ -383,11 +478,7 @@ export class BeneficiariesService {
     )) as any;
     if (hasPhone) delete dto.phone;
     if (hasGovtID) delete dto.govtIDNumber;
-    const findUuid = await this.prisma.beneficiary.findUnique({
-      where: {
-        uuid,
-      },
-    });
+    const findUuid = await this.findOne(uuid);
 
     if (!findUuid) throw new Error('Not Found');
     const { birthDate, extras } = dto;
@@ -420,8 +511,8 @@ export class BeneficiariesService {
     return await this.prisma.log.create({ data: logData });
   }
 
-  async remove(uuid: string, userUUID: string) {
-    const benef = await this.prisma.beneficiary.findUnique({
+  async findUnique(uuid: string) {
+    return this.prisma.beneficiary.findUnique({
       where: {
         uuid,
       },
@@ -434,10 +525,10 @@ export class BeneficiariesService {
         },
       },
     });
+  }
 
-    if (!benef) throw new Error('Beneficiary not found!');
-    // 1. Archive the beneficiary
-    const rData = await this.prisma.beneficiary.update({
+  async archiveBeneficiary(uuid: string) {
+    return this.prisma.beneficiary.update({
       where: {
         uuid,
       },
@@ -445,6 +536,13 @@ export class BeneficiariesService {
         archived: true,
       },
     });
+  }
+  async remove(uuid: string, userUUID: string) {
+    const benef = await this.findUnique(uuid);
+
+    if (!benef) throw new Error('Beneficiary not found!');
+    // 1. Archive the beneficiary
+    const rData = await this.archiveBeneficiary(uuid);
 
     const logData: any = {
       createdBy: userUUID,

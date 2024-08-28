@@ -16,13 +16,15 @@ import {
   QUEUE_RETRY_OPTIONS,
 } from '../../constants';
 import {
+  BENEF_UNIQUE_FIELDS,
   formatEnumFieldValues,
+  resolveUniqueFields,
   validateSchemaFields,
 } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
 import { paginate } from '../utils/paginate';
-import { Enums } from '@rahataid/community-tool-sdk';
+import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class SourceService {
@@ -33,43 +35,66 @@ export class SourceService {
   ) {}
 
   async fetchExistingBeneficiaries() {
-    const res = await this.prisma.beneficiary.findMany({
+    return this.prisma.beneficiary.findMany({
       select: {
         phone: true,
         govtIDNumber: true,
+        walletAddress: true,
+        email: true,
       },
     });
-    return res;
   }
 
-  async checkDuplicateBeneficiary(payload: any) {
+  async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
     const existing = await this.fetchExistingBeneficiaries();
-    return this.compareDuplicateBeneficiary(payload, existing);
+    return this.compareDuplicateBeneficiary(payload, existing, uniqueFields);
   }
 
-  // TODO: Compare duplicate based on settings
-  async compareDuplicateBeneficiary(payload: any, existingData: any) {
+  async compareDuplicateBeneficiary(
+    payload: any,
+    existingData: any,
+    uniqueFields: string[],
+  ) {
     let result = [];
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+      resolveUniqueFields(uniqueFields);
     for (let p of payload) {
-      if (p.phone) {
-        const found = existingData.find(
-          (f) =>
-            allowOnlyAlphabetAndNumbers(f.phone) ===
-            allowOnlyAlphabetAndNumbers(p.phone),
-        );
-        if (found) p.isDuplicate = true;
+      if (hasPhone) {
+        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.PHONE, existingData);
       }
-      if (p.govtIDNumber) {
-        const found = existingData.find(
-          (f) =>
-            allowOnlyAlphabetAndNumbers(f.govtIDNumber) ===
-            allowOnlyAlphabetAndNumbers(p.govtIDNumber),
-        );
-        if (found) p.isDuplicate = true;
+      if (hasEmail) {
+        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.EMAIL, existingData);
       }
+      if (hasGovtID) {
+        p = this.attachIsDuplicate(
+          p,
+          BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
+          existingData,
+        );
+      }
+      if (hasWalletAddress) {
+        p = this.attachIsDuplicate(
+          p,
+          BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
+          existingData,
+        );
+      }
+
       result.push(p);
     }
     return result;
+  }
+
+  attachIsDuplicate(p: any, fieldName: string, existingData: any) {
+    if (p[fieldName]) {
+      const found = existingData.find(
+        (f) =>
+          allowOnlyAlphabetAndNumbers(f[fieldName]) ===
+          allowOnlyAlphabetAndNumbers(p[fieldName]),
+      );
+      if (found) p.isDuplicate = true;
+    }
+    return p;
   }
 
   // 1. Validate required fields
@@ -83,29 +108,29 @@ export class SourceService {
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
 
+    const uniqueFields = await this.getUniqueFieldSettings();
+    this.validateUniqueFields(uniqueFields);
+
+    const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+
     let payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
       const formatted = formatEnumFieldValues(d);
+      const uid = hasUUID ? d[EXTERNAL_UUID_FIELD] : uuid();
       return {
         ...formatted,
-        uuid: uuid(),
+        uuid: uid,
       };
     });
     const extraFields = await this.listExtraFields();
-    console.log('Extra Fields', extraFields);
-    const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
-    if (hasUUID) {
-      payloadWithUUID = data.map((d: any) => {
-        return { ...d, uuid: d[EXTERNAL_UUID_FIELD] };
-      });
-    }
 
     if (action === IMPORT_ACTION.VALIDATE)
       return this.ValidateBeneficiaryImort({
         data: payloadWithUUID,
         extraFields,
         hasUUID,
+        uniqueFields,
       });
 
     if (action === IMPORT_ACTION.IMPORT) {
@@ -113,6 +138,7 @@ export class SourceService {
         payloadWithUUID,
         extraFields,
         hasUUID,
+        uniqueFields,
       );
 
       if (allValidationErrors.length)
@@ -123,16 +149,25 @@ export class SourceService {
     }
   }
 
+  async getUniqueFieldSettings() {
+    const row: any = await this.prisma.setting.findFirst({
+      where: {
+        name: SETTINGS_NAMES.UNIQUE_FIELDS,
+      },
+    });
+    if (!row || !row.value)
+      throw new Error('Please setup unique fields from settings!');
+    return row.value?.DATA.split(',');
+  }
+
   async getMappingsByImportId(importId: string) {
-    const res: any = await this.prisma.source.findUnique({
+    return this.prisma.source.findUnique({
       where: { importId },
     });
-    if (!res) return null;
-    return res;
   }
 
   async listExtraFields() {
-    const fd = await this.fdService.listActive();
+    const fd = await this.fdService.listActiveSecondary();
     if (!fd.length) return [];
 
     return fd.map((item: any) => {
@@ -144,19 +179,35 @@ export class SourceService {
     });
   }
 
-  // TODO: Fetch org. import settings
-  // Eg: phone,govtIDNumber, walletAddress,email required & unique
-  // Make phone and govtIDNumber default required and unique
-  async ValidateBeneficiaryImort({ data, extraFields, hasUUID }) {
-    // 1. Pass here
+  validateUniqueFields(fields: string[]) {
+    const allowedFields = [
+      BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
+      BENEF_UNIQUE_FIELDS.PHONE,
+      BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
+      BENEF_UNIQUE_FIELDS.EMAIL,
+    ];
+    if (fields.some((field) => !allowedFields.includes(field))) {
+      throw new Error(
+        `Allowed unique fields are: [${allowedFields.join(
+          ', ',
+        )}]. Please check your settings!`,
+      );
+    }
+    return true;
+  }
+
+  async ValidateBeneficiaryImort({ data, extraFields, hasUUID, uniqueFields }) {
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
       hasUUID,
+      uniqueFields,
     );
 
-    // 2. Pass here
-    const duplicates = await this.checkDuplicateBeneficiary(processedData);
+    const duplicates = await this.checkDuplicateBeneficiary(
+      processedData,
+      uniqueFields,
+    );
 
     const dateParsedDuplicates = duplicates.map((d) => {
       let item = { ...d };

@@ -59,7 +59,8 @@ export class GroupService {
       conditions = { AND: AND_CONDITIONS };
     }
 
-    if (query.hasOwnProperty('autoCreated')) {
+    // Error can be reduce using below code for hasOwnProperty error in ts
+    if (Object.prototype.hasOwnProperty.call(query, 'autoCreated')) {
       AND_CONDITIONS.push({
         autoCreated: query.autoCreated,
       });
@@ -214,15 +215,6 @@ export class GroupService {
     );
 
     const excelData = generateExcelData(formattedData);
-    // res.setHeader(
-    //   'Content-Type',
-    //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    // );
-    // res.setHeader(
-    //   'Content-Disposition',
-    //   'attachment; filename=beneficiaries.xlsx',
-    // );
-    // return res.send(excelBuffer);
 
     return excelData;
   }
@@ -248,46 +240,43 @@ export class GroupService {
   async purgeGroup(groupUuid: string, beneficiaryUuid: string[]) {
     const group = await this.findUnique(groupUuid);
     if (!group) throw new Error('Group not found');
-    group.uuid &&
-      (await this.prisma.$transaction(async (prisma) => {
-        for (const item of beneficiaryUuid) {
-          // Delete from the group table (tbl_beneficiary_groups)
-          await prisma.beneficiaryGroup.deleteMany({
-            where: {
-              beneficiaryUID: item,
-            },
-          });
+    await this.prisma.$transaction(async (prisma) => {
+      for (const item of beneficiaryUuid) {
+        // 1. Delete from beneficiaryGroup
+        await prisma.beneficiaryGroup.deleteMany({
+          where: {
+            beneficiaryUID: item,
+          },
+        });
 
-          // Remove benef from targetResult
-          await prisma.targetResult.deleteMany({
-            where: {
-              benefUuid: item,
-            },
-          });
+        // 2. Delete from targetResult
+        await prisma.targetResult.deleteMany({
+          where: {
+            benefUuid: item,
+          },
+        });
 
-          // Delete beneficiary from the beneficiary source (tbl_beneficiary_source)
+        // 3. Delete from beneficiarySource
+        await prisma.beneficiarySource.deleteMany({
+          where: {
+            beneficiaryUID: item,
+          },
+        });
 
-          await prisma.beneficiarySource.deleteMany({
-            where: {
-              beneficiaryUID: item,
-            },
-          });
-          // delete beneficiary from the beneficiary table (tbl_beneficiaries)
-          const deletedBeneficiary = await prisma.beneficiary.delete({
-            where: {
-              uuid: item,
-            },
-          });
+        // 4. Delete from beneficiary
+        const deletedBeneficiary = await prisma.beneficiary.delete({
+          where: {
+            uuid: item,
+          },
+        });
 
-          // add to archive beneficiary table (tbl_archive_beneficiaries)
-
-          await this.archiveDeletedBeneficiary(
-            deletedBeneficiary,
-            ArchiveType.DELETED,
-          );
-        }
-      }));
-
+        // 5. Archive deleted beneficiary
+        await this.archiveDeletedBeneficiary(
+          deletedBeneficiary,
+          ArchiveType.DELETED,
+        );
+      }
+    });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
     return 'Group purged successfully!';
   }
