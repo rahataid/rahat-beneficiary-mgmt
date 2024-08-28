@@ -10,7 +10,7 @@ play
 prisma/reset_db.ts
 prisma/seed.prod.ts
 .env*
-
+prisma/duplicate-data.json
 # dependencies
 node_modules/
 
