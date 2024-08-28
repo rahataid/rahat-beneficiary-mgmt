@@ -59,7 +59,8 @@ export class GroupService {
       conditions = { AND: AND_CONDITIONS };
     }
 
-    if (query.hasOwnProperty('autoCreated')) {
+    // Error can be reduce using below code for hasOwnProperty error in ts
+    if (Object.prototype.hasOwnProperty.call(query, 'autoCreated')) {
       AND_CONDITIONS.push({
         autoCreated: query.autoCreated,
       });
@@ -214,15 +215,6 @@ export class GroupService {
     );
 
     const excelData = generateExcelData(formattedData);
-    // res.setHeader(
-    //   'Content-Type',
-    //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    // );
-    // res.setHeader(
-    //   'Content-Disposition',
-    //   'attachment; filename=beneficiaries.xlsx',
-    // );
-    // return res.send(excelBuffer);
 
     return excelData;
   }

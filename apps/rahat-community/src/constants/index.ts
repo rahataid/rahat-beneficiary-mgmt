@@ -29,6 +29,7 @@ export const JOBS = {
     EXPORT: 'job.beneficiary.export',
   },
   OTP: 'otp',
+  CREATE_BENEF_GROUP: 'job.create.benef.group',
 };
 
 export const EVENTS = {
@@ -40,6 +41,7 @@ export const EVENTS = {
   EMIT_TARGET_RESULT: 'emit_target_result',
   TARGETING_COMPLETED: 'beneficiary.targeting.completed',
   BENEF_EXPORT: 'beneficiary.export',
+  CREATE_BENEF_GROUP: 'create.benef.group',
 };
 
 export const APP = {
@@ -65,3 +67,8 @@ export enum GenderEnum {
 export const EXTERNAL_UUID_FIELD = 'uuid';
 
 export const DEFAULT_GROUP = 'default';
+
+export const CONST_DATA = {
+  KOBOTOOL: 'KOBOTOOL',
+  TYPE: 'TYPE',
+};

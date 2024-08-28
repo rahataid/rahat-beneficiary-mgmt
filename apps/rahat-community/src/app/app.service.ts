@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import {
-  FilterBeneficiaryByLocationDto,
-  ListSettingDto,
-  UpdateSettngsDto,
-} from '@rahataid/community-tool-extensions';
+import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
 import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsService } from '@rumsan/settings';
 import axios from 'axios';
-import { KOBO_URL } from '../constants';
+import { KOBO_URL, CONST_DATA } from '../constants';
 import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
 import {
   calculateBankStats,
@@ -23,8 +19,6 @@ import {
   calculateVulnerabilityStatus,
   totalVulnerableHH,
 } from './beneficiaries/helpers';
-import { paginate } from './utils/paginate';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AppService {
@@ -136,15 +130,14 @@ export class AppService {
     });
   }
 
-  // TODO: Cleanup hardcoded values
   async findKobotoolSettings() {
     const res: any[] = await this.prisma.setting.findMany({
       where: {
         AND: [
           {
             value: {
-              path: ['TYPE'],
-              string_contains: 'KOBOTOOL',
+              path: [CONST_DATA.TYPE],
+              string_contains: CONST_DATA.KOBOTOOL,
             },
           },
         ],
