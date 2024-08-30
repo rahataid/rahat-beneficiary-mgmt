@@ -59,4 +59,12 @@ export class CreateFieldDefinitionDto {
   })
   @IsOptional()
   variations?: string[];
+
+  @ApiProperty({
+    type: 'string',
+    example: 'value1,value2',
+  })
+  @IsString()
+  @IsOptional()
+  dropdownPopulates?: string;
 }

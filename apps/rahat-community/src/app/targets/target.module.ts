@@ -15,7 +15,8 @@ import { GroupModule } from '../groups/group.module';
     BullModule.registerQueue({ name: QUEUE.TARGETING }),
     BullModule.registerQueue({ name: QUEUE.BENEFICIARY }),
     BullModule.registerQueue({ name: BQUEUE.COMMUNITY_BENEFICIARY }),
-    GroupModule
+
+    GroupModule,
   ],
   controllers: [TargetController],
   providers: [

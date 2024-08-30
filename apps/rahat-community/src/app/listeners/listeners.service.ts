@@ -7,12 +7,18 @@ import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-impo
 import { TargetService } from '../targets/target.service';
 import { SourceCreatedDto } from './listeners.dto';
 import { EmailService } from './mail.service';
+import {
+  CreateBeneficiaryGroupDto,
+  ExportTargetBeneficiaryDto,
+} from '@rahataid/community-tool-extensions';
+import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 @Injectable()
 export class ListenerService {
   constructor(
     private targetService: TargetService,
     private benefImport: BeneficiaryImportService,
     private emailService: EmailService,
+    private benefGroupService: BeneficiaryGroupService,
     private readonly benStats: BeneficiaryStatService,
   ) {}
   @OnEvent(EVENTS.CREATE_TARGET_RESULT)
@@ -50,6 +56,15 @@ export class ListenerService {
     return this.benefImport.importBySourceUUID(data.sourceUUID);
   }
 
+  @OnEvent(EVENTS.BENEF_EXPORT)
+  async exportBeneficiaries(data: ExportTargetBeneficiaryDto) {
+    return this.targetService.processExportTarget(data);
+  }
+
+  @OnEvent(EVENTS.CREATE_BENEF_GROUP)
+  async createBenefGroup(data: CreateBeneficiaryGroupDto) {
+    return this.benefGroupService.createBeneficiaryGroup(data);
+  }
   @OnEvent(BeneficiaryEvents.BENEFICIARY_CREATED)
   @OnEvent(BeneficiaryEvents.BENEFICIARY_UPDATED)
   @OnEvent(BeneficiaryEvents.BENEFICIARY_REMOVED)

@@ -23,11 +23,13 @@ export const QUEUE = {
 
 export const JOBS = {
   TARGET_BENEFICIARY: 'target_beneficiary',
+  SOCKET_EMIT: 'socket_emit',
   BENEFICIARY: {
     IMPORT: 'job.beneficiary.import',
     EXPORT: 'job.beneficiary.export',
   },
   OTP: 'otp',
+  CREATE_BENEF_GROUP: 'job.create.benef.group',
 };
 
 export const EVENTS = {
@@ -36,6 +38,10 @@ export const EVENTS = {
   BENEF_SOURCE_CREATED: 'benef.source.created',
   CHALLENGE_CREATED: 'rsu.challenge_created',
   OTP_CREATED: 'rsu.otp_created',
+  EMIT_TARGET_RESULT: 'emit_target_result',
+  TARGETING_COMPLETED: 'beneficiary.targeting.completed',
+  BENEF_EXPORT: 'beneficiary.export',
+  CREATE_BENEF_GROUP: 'create.benef.group',
 };
 
 export const APP = {
@@ -61,3 +67,8 @@ export enum GenderEnum {
 export const EXTERNAL_UUID_FIELD = 'uuid';
 
 export const DEFAULT_GROUP = 'default';
+
+export const CONST_DATA = {
+  KOBOTOOL: 'KOBOTOOL',
+  TYPE: 'TYPE',
+};

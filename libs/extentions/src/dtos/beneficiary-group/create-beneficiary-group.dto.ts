@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { UUID } from 'crypto';
 
 export class CreateBeneficiaryGroupDto {
@@ -20,4 +20,19 @@ export class CreateBeneficiaryGroupDto {
   })
   @IsString()
   groupUID!: UUID;
+}
+
+export class ListBeneficiaryGroupDto {
+  @ApiProperty({ example: 1 })
+  @IsString()
+  @IsOptional()
+  sort!: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  page!: number;
+
+  @ApiProperty({ example: '10' })
+  @IsNumber()
+  perPage!: number;
 }
