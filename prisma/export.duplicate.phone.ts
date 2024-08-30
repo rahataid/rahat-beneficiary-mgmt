@@ -64,7 +64,7 @@ async function saveDuplicatesAsJson(duplicates: any[]) {
   const finalData = spreadExtrasData(duplicates);
   if (!finalData.length) throw new Error('No data to save');
   const jsonData = JSON.stringify(finalData, null, 2);
-  const filePath = path.join(__dirname, 'duplicate-data.json');
+  const filePath = path.join(__dirname, 'duplicate-phone.json');
 
   // Write JSON data to the file
   fs.writeFile(filePath, jsonData, (err) => {
