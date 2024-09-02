@@ -47,9 +47,50 @@ export class SourceService {
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
     const existing = await this.fetchExistingBeneficiaries();
-    return this.compareDuplicateBeneficiary(payload, existing, uniqueFields);
+    const payloadDups = this.markDuplicates(payload, uniqueFields);
+    return this.compareDuplicateBeneficiary(
+      payloadDups,
+      existing,
+      uniqueFields,
+    );
   }
 
+  markDuplicates(data: any[], uniqueFields: string[]) {
+    // Create a map to store occurrences of each unique field value
+    const fieldOccurrences = {};
+
+    // Initialize the fieldOccurrences map
+    uniqueFields.forEach((field) => {
+      fieldOccurrences[field] = new Map();
+    });
+
+    // Count occurance of each required field
+    data.forEach((item) => {
+      uniqueFields.forEach((field) => {
+        const value = item[field];
+        if (!fieldOccurrences[field].has(value)) {
+          fieldOccurrences[field].set(value, 0);
+        }
+        fieldOccurrences[field].set(
+          value,
+          fieldOccurrences[field].get(value) + 1,
+        );
+      });
+    });
+
+    // Mark duplicate if field value occurs more than once
+    data.forEach((item) => {
+      uniqueFields.forEach((field) => {
+        if (fieldOccurrences[field].get(item[field]) > 1) {
+          item.isDuplicate = true;
+        }
+      });
+    });
+
+    return data;
+  }
+
+  // TODO Remove this code block
   async compareDuplicateBeneficiary(
     payload: any,
     existingData: any,
