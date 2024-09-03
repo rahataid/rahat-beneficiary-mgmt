@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Enums } from '@rahataid/community-tool-sdk';
 import {
   IsBoolean,
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -82,6 +83,7 @@ export class CreateBeneficiaryDto {
     example: '0x9EED8BdfEfabC54B68Fe62da2e09b7B62E0dF846',
   })
   @IsAlphaString()
+  @MinLength(40)
   walletAddress?: string;
 
   @ApiProperty({
@@ -99,6 +101,7 @@ export class CreateBeneficiaryDto {
   })
   @IsString()
   @IsOptional()
+  @IsEmail()
   email?: string;
 
   @ApiProperty({

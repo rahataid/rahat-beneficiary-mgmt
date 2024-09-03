@@ -5,11 +5,37 @@ import * as path from 'path';
 const prisma = new PrismaClient();
 const BATCH_SIZE = 50;
 
+function findRepeatedPhones(arr: any[]) {
+  const phoneCount = {};
+  const duplicateData = [];
+
+  // Count the occurrences of each phone number
+  arr.forEach((item) => {
+    if (phoneCount[item.phone]) {
+      phoneCount[item.phone].push(item);
+    } else {
+      phoneCount[item.phone] = [item];
+    }
+  });
+
+  // Find phones that are repeated
+  for (const phone in phoneCount) {
+    if (phoneCount[phone].length > 1) {
+      duplicateData.push(...phoneCount[phone]);
+    }
+  }
+
+  return duplicateData;
+}
+
 async function main() {
   const rows = await prisma.beneficiary.findMany({});
 
   const duplicates = [];
   const seenPhones = new Set();
+
+  const dups = findRepeatedPhones(rows);
+  console.log('DUPS:', dups.length);
 
   for (let r of rows) {
     const { phone } = r;
@@ -20,32 +46,32 @@ async function main() {
     }
   }
 
-  if (!duplicates.length) throw new Error('No duplicates found!');
+  if (!dups.length) throw new Error('No duplicates found!');
 
   // Run cleanup in Batch
-  for (let i = 0; i < duplicates.length; i += BATCH_SIZE) {
-    const batch = duplicates.slice(i, i + BATCH_SIZE);
-    await prisma.$transaction(async (txn) => {
-      await cleanupBatch(txn, batch);
-      console.log('Cleaned up batch:', i);
-    });
-  }
+  // for (let i = 0; i < duplicates.length; i += BATCH_SIZE) {
+  //   const batch = duplicates.slice(i, i + BATCH_SIZE);
+  //   await prisma.$transaction(async (txn) => {
+  //     await cleanupBatch(txn, batch);
+  //     console.log('Cleaned up batch:', i);
+  //   });
+  // }
   // Export duplicates to excel
-  saveDuplicatesAsJson(duplicates);
+  saveDuplicatesAsJson(dups);
 }
 
 async function saveDuplicatesAsJson(duplicates: any[]) {
   const finalData = spreadExtrasData(duplicates);
   if (!finalData.length) throw new Error('No data to save');
   const jsonData = JSON.stringify(finalData, null, 2);
-  const filePath = path.join(__dirname, 'duplicate-data.json');
+  const filePath = path.join(__dirname, 'duplicate-phone.json');
 
   // Write JSON data to the file
   fs.writeFile(filePath, jsonData, (err) => {
     if (err) {
       console.error('Error writing file:', err);
     } else {
-      console.log('Duplicate Files have been saved successfully!');
+      console.log(`${duplicates.length} beneficiaries saved successfully!`);
     }
   });
 }
@@ -53,10 +79,8 @@ async function saveDuplicatesAsJson(duplicates: any[]) {
 function spreadExtrasData(duplicates: any[]) {
   const final = [];
   for (let d of duplicates) {
-    delete d.id;
     delete d.createdAt;
     delete d.updatedAt;
-    delete d?.createdBy;
     const { extras, ...rest } = d;
     const newData = { ...rest, ...extras };
     delete newData?._uuid;
