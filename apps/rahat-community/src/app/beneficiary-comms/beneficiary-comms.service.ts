@@ -1,20 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CreateBeneficiaryCommDto,
   ListBeneficiaryCommDto,
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
+import { CommsClient } from '../comms/comms.service';
+import { TriggerType } from '@rumsan/connect/src/types';
 
 @Injectable()
 export class BeneficiaryCommsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('COMMS_CLIENT')
+    private commsClient: CommsClient,
+  ) {}
 
-  async triggerMsgSend(uuid: string) {
+  async triggerCommunication(uuid: string) {
     // Get communication details
     // Create transport payload
     // Initiate send message
-    return uuid;
+    // console.log('Client=>', this.commsClient);
+
+    const sessionData = await this.commsClient.broadcast.create({
+      addresses: [],
+      maxAttempts: 3,
+      message: {
+        content: 'Helllo',
+        meta: {
+          subject: 'INFO',
+        },
+      },
+      options: {},
+      transport: '',
+      trigger: TriggerType.IMMEDIATE,
+    });
+    // Update comms info
+    return sessionData.data;
   }
 
   create(dto: CreateBeneficiaryCommDto) {

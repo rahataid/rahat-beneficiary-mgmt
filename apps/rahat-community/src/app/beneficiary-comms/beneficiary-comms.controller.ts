@@ -50,7 +50,7 @@ export class BeneficiaryCommsController {
     subject: SUBJECTS.BENEFICIARY_GROUP,
   })
   trigger(@Param('uuid') uuid: string) {
-    return this.beneficiaryCommsService.triggerMsgSend(uuid);
+    return this.beneficiaryCommsService.triggerCommunication(uuid);
   }
 
   @Get(':uuid')
