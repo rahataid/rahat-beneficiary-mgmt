@@ -2,6 +2,7 @@ import { DynamicModule, Global, Module } from '@nestjs/common';
 import { CommsService } from './comms.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
+// TODO: remove CORE_CLIENT
 @Global()
 @Module({})
 export class CommsModule {

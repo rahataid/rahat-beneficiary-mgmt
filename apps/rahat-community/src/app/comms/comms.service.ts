@@ -27,6 +27,7 @@ export class CommsService {
 
   async init() {
     const settings = await this.fetchCommSettings();
+    console.log('settings=>', settings);
     if (!settings) {
       this.logger.error('Communication settings not found');
       return;

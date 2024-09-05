@@ -21,6 +21,7 @@ export class BeneficiaryCommsService {
     // Create transport payload
     // Initiate send message
     // console.log('Client=>', this.commsClient);
+    console.log({ uuid });
 
     const sessionData = await this.commsClient.broadcast.create({
       addresses: [],
