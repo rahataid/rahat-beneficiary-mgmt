@@ -17,6 +17,7 @@ import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group
 import { generateExcelData } from '../utils/export-to-excel';
 import { paginate } from '../utils/paginate';
 import { VerificationService } from '../beneficiaries/verification.service';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class GroupService {
@@ -27,6 +28,36 @@ export class GroupService {
     private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
   ) {}
+
+  async beneficiariesByGroup(groupUID: UUID) {
+    const rows = await this.prisma.beneficiaryGroup.findMany({
+      where: {
+        groupUID,
+      },
+      include: {
+        beneficiary: {
+          select: {
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+    if (!rows.length) throw new Error('No beneficiaries found in the group');
+    const beneficiaries = rows.map((row) => row.beneficiary);
+    return beneficiaries;
+  }
+
+  // GroupUID, message, transportType
+  async broadcastMessages(groupUID: UUID) {
+    // List beneficiaries in the group
+    const beneficiaries = await this.beneficiariesByGroup(groupUID);
+
+    // Select only email,and phone
+    // Broadcas message a/c transport type (email, sms)
+    return beneficiaries;
+  }
+
   async create(dto: CreateGroupDto) {
     return await this.prisma.group.create({
       data: dto,
