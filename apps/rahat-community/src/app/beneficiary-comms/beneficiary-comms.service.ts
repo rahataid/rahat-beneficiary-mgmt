@@ -23,6 +23,7 @@ export class BeneficiaryCommsService {
       return {
         cuid: row.cuid,
         name: row.name,
+        type: row.type,
       };
     });
   }
