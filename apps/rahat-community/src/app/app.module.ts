@@ -30,6 +30,8 @@ import { ScheduleService } from './schedulers/schedule.provider';
 import { SourceModule } from './sources/source.module';
 import { TargetModule } from './targets/target.module';
 import { SocketGateway } from './gateway/socket.gateway';
+import { BeneficiaryCommsModule } from './beneficiary-comms/beneficiary-comms.module';
+import { CommsModule } from './comms/comms.module';
 
 @Module({
   imports: [
@@ -60,6 +62,8 @@ import { SocketGateway } from './gateway/socket.gateway';
     TargetModule,
     ListenersModule,
     SettingsModule,
+    BeneficiaryCommsModule,
+    CommsModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [
