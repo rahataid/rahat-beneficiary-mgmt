@@ -51,12 +51,6 @@ export class BeneficiaryCommsService {
     else return beneficiaries.map((b) => b.phone);
   }
 
-  // TODO: Implement this
-  sanitizeMsgContent(msg: any, type: string) {
-    if (type === TransportType.VOICE) return msg.mediaURL;
-    else return msg;
-  }
-
   async triggerCommunication(uuid: string) {
     const comm = await this.findOne(uuid);
     if (!comm) throw new Error('Communication not found');
@@ -69,11 +63,10 @@ export class BeneficiaryCommsService {
       transport.data?.type,
     );
     if (!addresses.length) throw new Error('No valid addresses found!');
-    const msgContent = this.sanitizeMsgContent(message, transport.data?.type);
     return this.broadcastMessages({
       uuid,
       addresses,
-      msgContent,
+      msgContent: message,
       transportId,
     });
   }
