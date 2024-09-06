@@ -16,6 +16,17 @@ export class BeneficiaryCommsService {
     private commsClient: CommsClient,
   ) {}
 
+  async listTransports() {
+    const rows = await this.commsClient.transport.list();
+    if (!rows?.data.length) return [];
+    return rows.data.map((row) => {
+      return {
+        cuid: row.cuid,
+        name: row.name,
+      };
+    });
+  }
+
   async triggerCommunication(uuid: string) {
     // Get communication details
     // Create transport payload

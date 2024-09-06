@@ -35,6 +35,15 @@ export class BeneficiaryCommsController {
     return this.beneficiaryCommsService.create(dto);
   }
 
+  @Get('transports')
+  @CheckAbilities({
+    actions: ACTIONS.READ,
+    subject: SUBJECTS.BENEFICIARY_GROUP,
+  })
+  listTransports() {
+    return this.beneficiaryCommsService.listTransports();
+  }
+
   @Get()
   @CheckAbilities({
     actions: ACTIONS.READ,
