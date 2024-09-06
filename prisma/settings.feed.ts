@@ -1,6 +1,6 @@
 import { PrismaClient, SettingDataType } from '@prisma/client';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { SETTINGS_NAMES } from './seed-data';
+import { SETTINGS_NAMES } from './seed.data';
 
 const privateKey = generatePrivateKey();
 const identity = privateKeyToAccount(privateKey);
