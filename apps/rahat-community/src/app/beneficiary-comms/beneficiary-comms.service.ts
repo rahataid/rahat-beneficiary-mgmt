@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
 import { CommsClient } from '../comms/comms.service';
-import { TriggerType } from '@rumsan/connect/src/types';
+import { TransportType, TriggerType } from '@rumsan/connect/src/types';
 
 @Injectable()
 export class BeneficiaryCommsService {
@@ -28,28 +28,74 @@ export class BeneficiaryCommsService {
     });
   }
 
-  async triggerCommunication(uuid: string) {
-    // Get communication details
-    // Create transport payload
-    // Initiate send message
-    // console.log('Client=>', this.commsClient);
-    console.log({ uuid });
+  async listBenefByGroup(groupUID: string) {
+    const rows = await this.prisma.beneficiaryGroup.findMany({
+      where: {
+        groupUID,
+      },
+      include: {
+        beneficiary: {
+          select: {
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+    if (!rows.length) throw new Error('No beneficiaries found in the group');
+    return rows.map((row) => row.beneficiary);
+  }
 
+  pickPhoneOrEmail(beneficiaries: any[], type: string) {
+    if (type === TransportType.SMTP) return beneficiaries.map((b) => b.email);
+    else return beneficiaries.map((b) => b.phone);
+  }
+
+  async triggerCommunication(uuid: string) {
+    const comm = await this.findOne(uuid);
+    if (!comm) throw new Error('Communication not found');
+    const { transportId, groupUID, message } = comm;
+    const transport = await this.commsClient.transport.get(transportId);
+    if (!transport) throw new Error('Transport not found');
+    const beneficiaries = await this.listBenefByGroup(groupUID);
+    const addresses = this.pickPhoneOrEmail(
+      beneficiaries,
+      transport.data?.type,
+    );
+    if (!addresses.length) throw new Error('No valid addresses found!');
+    return this.broadcastMessages({
+      uuid,
+      addresses,
+      msgContent: message,
+      transportId,
+    });
+  }
+
+  async broadcastMessages({ uuid, addresses, msgContent, transportId }) {
     const sessionData = await this.commsClient.broadcast.create({
-      addresses: [],
+      addresses: addresses,
       maxAttempts: 3,
       message: {
-        content: 'Helllo',
+        content: msgContent,
         meta: {
           subject: 'INFO',
         },
       },
       options: {},
-      transport: '',
+      transport: transportId,
       trigger: TriggerType.IMMEDIATE,
     });
-    // Update comms info
-    return sessionData.data;
+    const session = sessionData.data;
+    return this.updateCommSession(uuid, session.cuid);
+  }
+
+  async updateCommSession(uuid: string, sessionId: string) {
+    return this.prisma.beneficiaryComm.update({
+      where: { uuid },
+      data: {
+        sessionId,
+      },
+    });
   }
 
   create(dto: CreateBeneficiaryCommDto) {
