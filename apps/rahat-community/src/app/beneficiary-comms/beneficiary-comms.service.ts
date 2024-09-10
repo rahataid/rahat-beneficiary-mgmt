@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   CreateBeneficiaryCommDto,
   ListBeneficiaryCommDto,
+  ListSessionLogsDto,
 } from '@rahataid/community-tool-extensions';
 import { PrismaService } from '@rumsan/prisma';
 import { paginate } from '../utils/paginate';
@@ -15,6 +16,16 @@ export class BeneficiaryCommsService {
     @Inject('COMMS_CLIENT')
     private commsClient: CommsClient,
   ) {}
+
+  async listSessionLogs(uuid: string, dto: ListSessionLogsDto) {
+    const comm = await this.findOne(uuid);
+    if (!comm) throw new Error('Communication not found');
+    const { sessionId } = comm;
+    if (!sessionId) throw new Error('Session not found');
+    return this.commsClient.session.listBroadcasts(sessionId, {
+      params: dto,
+    });
+  }
 
   async listTransports() {
     const rows = await this.commsClient.transport.list();
@@ -54,7 +65,8 @@ export class BeneficiaryCommsService {
   async triggerCommunication(uuid: string) {
     const comm = await this.findOne(uuid);
     if (!comm) throw new Error('Communication not found');
-    const { transportId, groupUID, message } = comm;
+    const { sessionId, transportId, groupUID, message } = comm;
+    if (sessionId) throw new Error('Communication already triggered');
     const transport = await this.commsClient.transport.get(transportId);
     if (!transport) throw new Error('Transport not found');
     const beneficiaries = await this.listBenefByGroup(groupUID);

@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CreateBeneficiaryCommDto,
   ListBeneficiaryCommDto,
+  ListSessionLogsDto,
 } from '@rahataid/community-tool-extensions';
 import { ACTIONS, SUBJECTS } from '@rahataid/community-tool-sdk';
 import { AbilitiesGuard, CheckAbilities, JwtGuard } from '@rumsan/user';
@@ -52,6 +53,15 @@ export class BeneficiaryCommsController {
   })
   findAll(@Query() query: ListBeneficiaryCommDto) {
     return this.beneficiaryCommsService.findAll(query);
+  }
+
+  @Get(':uuid/logs')
+  @CheckAbilities({
+    actions: ACTIONS.READ,
+    subject: SUBJECTS.BENEFICIARY_GROUP,
+  })
+  sessionLogs(@Param('uuid') uuid: string, @Query() query: ListSessionLogsDto) {
+    return this.beneficiaryCommsService.listSessionLogs(uuid, query);
   }
 
   @Get(':uuid/trigger')

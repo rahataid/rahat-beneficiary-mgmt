@@ -82,3 +82,13 @@ export class ListBeneficiaryCommDto {
   @IsOptional()
   name?: string;
 }
+
+export class ListSessionLogsDto {
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  page!: number;
+
+  @ApiProperty({ example: '10' })
+  @IsNumber()
+  limit!: number;
+}
