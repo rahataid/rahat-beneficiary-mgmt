@@ -1,6 +1,9 @@
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { BenefCommsClient } from '../types/beneficiaryComms.clients.types';
-import { CreateBenefComm } from '../beneficiaryComms/beneficiaryComms.types';
+import {
+  CreateBenefComm,
+  LogsPaginations,
+} from '../beneficiaryComms/beneficiaryComms.types';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
 
@@ -39,6 +42,17 @@ export const getBeneficiaryCommsClient = (
         `/beneficiary-comms/${uuid}/trigger`,
         config,
       );
+      return formatResponse<any>(response);
+    },
+    listCommunicationLogsByCampignId: async (
+      uuid: string,
+      data?: LogsPaginations,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.get(`beneficiary-comms/${uuid}/logs`, {
+        params: data,
+        ...config,
+      });
       return formatResponse<any>(response);
     },
   };
