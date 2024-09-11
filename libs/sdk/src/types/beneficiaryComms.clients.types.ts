@@ -1,6 +1,9 @@
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import { CreateBenefComm } from '../beneficiaryComms/beneficiaryComms.types';
+import {
+  CreateBenefComm,
+  LogsPaginations,
+} from '../beneficiaryComms/beneficiaryComms.types';
 import { Pagination } from '@rumsan/sdk/types';
 
 export type BenefCommsClient = {
@@ -25,6 +28,12 @@ export type BenefCommsClient = {
 
   listBenefCommsByID: (
     uuid: string,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
+  listCommunicationLogsByCampignId: (
+    // { uuid, data }: { uuid?: string; data?: LogsPaginations },
+    uuid: string,
+    data?: LogsPaginations,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 };

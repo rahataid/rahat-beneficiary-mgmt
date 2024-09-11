@@ -14,3 +14,8 @@ export type ListBenefComm = {
   perPage: number;
   name?: string;
 };
+
+export type LogsPaginations = {
+  page?: number;
+  limit?: number;
+};

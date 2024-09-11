@@ -22,9 +22,16 @@ export class BeneficiaryCommsService {
     if (!comm) throw new Error('Communication not found');
     const { sessionId } = comm;
     if (!sessionId) throw new Error('Session not found');
-    return this.commsClient.session.listBroadcasts(sessionId, {
+
+    const k = await this.commsClient.session.listBroadcasts(sessionId, {
       params: dto,
     });
+
+    const data = {
+      ...k,
+      meta: k.response.meta,
+    };
+    return data;
   }
 
   async listTransports() {
