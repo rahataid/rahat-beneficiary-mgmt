@@ -36,6 +36,7 @@ export class BeneficiaryCommsService {
 
   async listTransports() {
     const rows = await this.commsClient.transport.list();
+    console.log('Rows=>', rows);
     if (!rows?.data.length) return [];
     return rows.data.map((row) => {
       return {
