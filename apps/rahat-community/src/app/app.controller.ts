@@ -70,8 +70,8 @@ export class AppController {
     const mimeType = file.mimetype;
     const fileName = file.originalname.replace(/\s/g, '-');
 
-    const folderName = 'comms_audio';
-    const rootFolderName = 'ct';
+    const folderName = process.env.AWS_FOLDER_NAME;
+    const rootFolderName = process.env.AWS_ROOT_FOLDER_NAME;
 
     return await this.appService.uploadFile(
       buffer,
