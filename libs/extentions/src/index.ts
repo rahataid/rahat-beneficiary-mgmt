@@ -7,3 +7,4 @@ export * from './dtos/source';
 export * from './dtos/targets';
 export * from './dtos/settings';
 export * from './dtos/beneficiary-comm';
+export * from './dtos/app';
