@@ -31,6 +31,7 @@ try {
     '@prisma/client': '^5.1.0',
     lodash: '^4.17.21',
     '@types/lodash': '^4.14.202',
+    'rs-asset-uploader': "^1.0.5",
   };
 
   packageData.prisma = {
