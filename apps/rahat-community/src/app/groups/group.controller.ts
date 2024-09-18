@@ -11,7 +11,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   CreateGroupDto,
   ListGroupDto,
@@ -27,6 +27,7 @@ import {
   JwtGuard,
 } from '@rumsan/user';
 import { GroupService } from './group.service';
+import { UUID } from 'crypto';
 
 @Controller('group')
 @ApiTags('Group')
@@ -90,5 +91,12 @@ export class GroupController {
   @CheckAbilities({ actions: ACTIONS.DELETE, subject: SUBJECTS.GROUP })
   deleteGroup(@Param('uuid') uuid: string) {
     return this.groupService.deleteGroup(uuid);
+  }
+
+  @Post(':uuid/broadcast')
+  @ApiParam({ name: 'uuid', required: true })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.GROUP })
+  broadcastMsg(@Param('uuid') uuid: UUID) {
+    return this.groupService.broadcastMessages(uuid);
   }
 }
