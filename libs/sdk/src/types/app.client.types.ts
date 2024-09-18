@@ -28,4 +28,9 @@ export type AppClient = {
     { name, data }: { name?: string; data?: Pagination },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
+
+  uploadCommsAudio: (
+    file: any,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<any>>;
 };
