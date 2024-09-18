@@ -16,7 +16,7 @@ const {
   TYPES_OF_SSA_TO_BE_RECEIVED,
 } = REPORTING_FIELD;
 
-const PHONE_NUMBER_PATTERN = '99900';
+const PHONE_NUMBER_PATTERN = '999';
 
 const LABEL_MAPPING = {
   no_of_female: 'Female',
