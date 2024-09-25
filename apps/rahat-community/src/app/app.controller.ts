@@ -1,7 +1,19 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FilterBeneficiaryByLocationDto } from '@rahataid/community-tool-extensions';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  FileUploadDto,
+  FilterBeneficiaryByLocationDto,
+} from '@rahataid/community-tool-extensions';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -10,6 +22,8 @@ import {
   SUBJECTS,
 } from '@rumsan/user';
 import { AppService } from './app.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 @Controller('app')
 @ApiTags('APP')
@@ -40,5 +54,31 @@ export class AppController {
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   filterSettingByType() {
     return this.appService.findKobotoolSettings();
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload file',
+    type: FileUploadDto,
+  })
+  @Post('file')
+  @ApiBearerAuth('JWT')
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.PUBLIC })
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    const buffer = file.buffer;
+    const mimeType = file.mimetype;
+    const fileName = file.originalname.replace(/\s/g, '-');
+
+    const folderName = process.env.AWS_FOLDER_NAME;
+    const rootFolderName = process.env.AWS_ROOT_FOLDER_NAME;
+
+    return await this.appService.uploadFile(
+      buffer,
+      mimeType,
+      fileName,
+      folderName,
+      rootFolderName,
+    );
   }
 }

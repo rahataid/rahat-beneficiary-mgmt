@@ -151,9 +151,31 @@ model Group {
   createdBy String?
   user      User?     @relation(fields: [createdBy], references: [uuid])
 
+  BeneficiaryComm BeneficiaryComm[]
+
   @@map("tbl_groups")
 }
 
+model BeneficiaryComm {
+  id           Int     @id @default(autoincrement()) @db.Integer()
+  uuid         String  @unique @default(uuid()) @db.Uuid()
+  name         String
+  groupUID     String  @db.Uuid()
+  message      String
+  transportId  String
+  sessionId    String?
+
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime? @updatedAt()
+
+  createdBy    String?
+  user         User?     @relation(fields: [createdBy], references: [uuid])
+  group        Group     @relation(fields: [groupUID], references: [uuid])
+
+  @@map("tbl_beneficiary_comms")
+}
+   
 model BeneficiaryGroup {
   id             Int         @id @default(autoincrement()) @db.Integer()
   uuid           String      @unique @default(uuid()) @db.Uuid()
@@ -288,6 +310,7 @@ model User {
   createdBy       Int?
   updatedBy       Int?
   Log             Log[]
+  BeneficiaryComm BeneficiaryComm[]
   Beneficiary     Beneficiary[]
   Source          Source[]
   FieldDefinition FieldDefinition[]
