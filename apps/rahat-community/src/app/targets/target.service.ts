@@ -265,6 +265,7 @@ export class TargetService {
 
   async createManySearchResult(result: any, target: string) {
     if (!result.length) return;
+    console.log('FOUND:', result.length);
     const mapped = result.map((r: any) => {
       return {
         targetUuid: target,
