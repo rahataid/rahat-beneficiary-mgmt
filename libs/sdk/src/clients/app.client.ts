@@ -40,5 +40,10 @@ export const getAppClient = (client: AxiosInstance): AppClient => {
       });
       return formatResponse<any>(response);
     },
+
+    uploadCommsAudio: async (file: any, config?: AxiosRequestConfig) => {
+      const response = await client.post('/app/file', file, config);
+      return formatResponse<any>(response);
+    },
   };
 };

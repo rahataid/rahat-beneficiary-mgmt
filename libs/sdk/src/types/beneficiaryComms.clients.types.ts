@@ -1,36 +1,39 @@
-import { Pagination } from '@rumsan/sdk/types';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { AxiosRequestConfig } from 'axios';
-import { FilterStatsDto } from '../app';
+import {
+  CreateBenefComm,
+  LogsPaginations,
+} from '../beneficiaryComms/beneficiaryComms.types';
+import { Pagination } from '@rumsan/sdk/types';
 
-export type AppClient = {
-  koboImportByForm: (
-    name?: string,
+export type BenefCommsClient = {
+  create: (
+    data: CreateBenefComm,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 
-  listKoboSettings: (
+  listBenefComms: (
     data?: Pagination,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 
-  getAppStats: (
-    data?: FilterStatsDto,
+  listTransport: (
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 
-  listBySettingName: (
-    name?: string,
+  triggerCommunication: (
+    uuid?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 
-  listByConstantName: (
-    { name, data }: { name?: string; data?: Pagination },
+  listBenefCommsByID: (
+    uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
-
-  uploadCommsAudio: (
-    file: any,
+  listCommunicationLogsByCampignId: (
+    // { uuid, data }: { uuid?: string; data?: LogsPaginations },
+    uuid: string,
+    data?: LogsPaginations,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
 };

@@ -57,8 +57,8 @@ export class TargetService {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
+    console.log('Targeting data:', data);
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
-
     return target;
   }
 
@@ -265,13 +265,13 @@ export class TargetService {
 
   async createManySearchResult(result: any, target: string) {
     if (!result.length) return;
-    for (let d of result) {
-      const payload = {
+    const mapped = result.map((r: any) => {
+      return {
         targetUuid: target,
-        benefUuid: d.uuid,
+        benefUuid: r.uuid,
       };
-      await this.prismaService.targetResult.create({ data: payload });
-    }
+    });
+    return this.prismaService.targetResult.createMany({ data: mapped });
   }
 
   async findByTargetUUID(targetUuid: string, query?: ListTargetUIDDto) {

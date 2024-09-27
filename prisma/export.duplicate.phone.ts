@@ -5,6 +5,13 @@ import * as path from 'path';
 const prisma = new PrismaClient();
 const BATCH_SIZE = 50;
 
+function generateRandomPhone() {
+  const timestamp = Date.now(); // Get the current timestamp
+  const randomPart = Math.floor(Math.random() * 1000000); // Generate a random number between 0 and 999999
+  const sevenDigitNumber = ((timestamp + randomPart) % 9000000) + 1000000; // Ensure it's a 7-digit number
+  return `999${sevenDigitNumber}`;
+}
+
 function findRepeatedPhones(arr: any[]) {
   const phoneCount = {};
   const duplicateData = [];
@@ -31,22 +38,19 @@ function findRepeatedPhones(arr: any[]) {
 async function main() {
   const rows = await prisma.beneficiary.findMany({});
 
-  const duplicates = [];
-  const seenPhones = new Set();
+  // const duplicates = [];
+  // const seenPhones = new Set();
 
   const dups = findRepeatedPhones(rows);
-  console.log('DUPS:', dups.length);
 
-  for (let r of rows) {
-    const { phone } = r;
-    if (seenPhones.has(phone)) {
-      duplicates.push(r);
-    } else {
-      seenPhones.add(phone);
-    }
-  }
-
-  if (!dups.length) throw new Error('No duplicates found!');
+  // for (let r of rows) {
+  //   const { phone } = r;
+  //   if (seenPhones.has(phone)) {
+  //     duplicates.push(r);
+  //   } else {
+  //     seenPhones.add(phone);
+  //   }
+  // }
 
   // Run cleanup in Batch
   // for (let i = 0; i < duplicates.length; i += BATCH_SIZE) {
@@ -57,7 +61,53 @@ async function main() {
   //   });
   // }
   // Export duplicates to excel
-  saveDuplicatesAsJson(dups);
+
+  console.log('Duplicates:', dups.length);
+}
+
+async function updateBeneficiary(data: any[]) {
+  const filePath = path.join(__dirname, 'updatedPhone.json');
+  const existingData = await readJsonFile(filePath);
+  let updatedIds = [];
+  // Read existing phone numbers
+  for (const d of data) {
+    const ben: any = d;
+    const found = await searchPhoneByUniqueId(
+      existingData,
+      d?.extras?.unique_id,
+    );
+    const updated = await prisma.beneficiary.update({
+      where: {
+        uuid: ben.uuid,
+      },
+      data: {
+        phone: found ? found.pii?.phone : generateRandomPhone(),
+      },
+    });
+    updatedIds.push(updated.id);
+  }
+  console.log('Updated!', updatedIds.length);
+  return saveArrayAsJson(updatedIds);
+}
+
+async function saveArrayAsJson(data: any[]) {
+  const jsonData = JSON.stringify(data, null, 2);
+  const filePath = path.join(__dirname, 'updatedBenIds.json');
+
+  // Write JSON data to the file
+  fs.writeFileSync(filePath, jsonData);
+}
+
+async function searchPhoneByUniqueId(data: [], uniqueId: string) {
+  const found = data.find((d: any) => d?.extras?.unique_id === uniqueId);
+  if (!found) return null;
+  return found;
+}
+
+async function readJsonFile(filePath: string) {
+  const data = fs.readFileSync(filePath, 'utf8');
+  const jsonData = JSON.parse(data);
+  return jsonData;
 }
 
 async function saveDuplicatesAsJson(duplicates: any[]) {
