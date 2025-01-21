@@ -32,6 +32,8 @@ import { TargetModule } from './targets/target.module';
 import { SocketGateway } from './gateway/socket.gateway';
 import { BeneficiaryCommsModule } from './beneficiary-comms/beneficiary-comms.module';
 import { CommsModule } from './comms/comms.module';
+import { RabbitMQModule } from '@rumsan/rabbitmq';
+import { queueOptions, RABBIT_MQ } from '../constants';
 
 @Module({
   imports: [
@@ -44,6 +46,11 @@ import { CommsModule } from './comms/comms.module';
         port: parseInt(process.env.REDIS_PORT),
         password: process.env.REDIS_PASSWORD,
       },
+    }),
+    RabbitMQModule.register({
+      ampqProviderName: RABBIT_MQ.AMQP_CONNECTION,
+      urls: [process.env.RABBIT_MQ_URL],
+      queues: queueOptions,
     }),
 
     EventEmitterModule.forRoot({ maxListeners: 10, ignoreErrors: false }),

@@ -39,6 +39,7 @@ import {
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RabbitMQService } from '@rumsan/rabbitmq';
 
 const EXPORT_BATCH_SIZE = 500;
 
@@ -51,6 +52,7 @@ export class TargetService {
     private prismaService: PrismaService,
     private benefService: BeneficiariesService,
     private groupService: GroupService,
+    private readonly rabbitMQService: RabbitMQService,
   ) {}
 
   async create(dto: CreateTargetQueryDto) {
@@ -257,12 +259,30 @@ export class TargetService {
     const beneficiaries = rows.map((r: any) => r.beneficiary);
 
     await this.benefQueue.add(JOBS.BENEFICIARY.EXPORT, { groupUUID, appURL });
+
+    return {
+      success: true,
+      message: `${beneficiaries.length} beneficiaries will be exported shortly!`,
+    };
+    return 'export';
+  }
+
+  async exportGroupedBeneficiaries(dto: ExportTargetBeneficiaryDto) {
+    const group = await this.groupService.findUnique(dto.groupUUID);
+    if (!group) throw new Error('Group not found');
+    const rows = await this.findBenefByGroup(group.uuid);
+    const beneficiaries = rows.map((r: any) => r.beneficiary);
+    const payload = {
+      groupName: group.name,
+      beneficiaries: beneficiaries,
+    };
+    console.log('published processed');
+    await this.rabbitMQService.publishBatchToQueue(dto.appURL, [payload], 100);
     return {
       success: true,
       message: `${beneficiaries.length} beneficiaries will be exported shortly!`,
     };
   }
-
   async createManySearchResult(result: any, target: string) {
     if (!result.length) return;
     console.log('FOUND:', result.length);

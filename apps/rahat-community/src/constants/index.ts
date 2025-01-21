@@ -1,3 +1,5 @@
+import { RabbitMQModuleOptions } from '@rumsan/rabbitmq';
+
 export const DB_MODELS = {
   TBL_BENEFICIARY: 'tbl_beneficiaries',
 };
@@ -19,6 +21,11 @@ export const TARGET_QUERY_STATUS = {
 export const QUEUE = {
   TARGETING: 'targeting',
   BENEFICIARY: 'beneficiary',
+};
+
+export const RABBIT_MQ = {
+  AMQP_CONNECTION: 'AMQP_CONNECTION',
+  CT_BENEFICIARY_EXPORT: 'CT_BENEFICIARY_EXPORT',
 };
 
 export const JOBS = {
@@ -72,3 +79,11 @@ export const CONST_DATA = {
   KOBOTOOL: 'KOBOTOOL',
   TYPE: 'TYPE',
 };
+
+export const queueOptions: RabbitMQModuleOptions['queues'] = [
+  {
+    name: RABBIT_MQ.CT_BENEFICIARY_EXPORT,
+    durable: true,
+    options: {},
+  },
+];
