@@ -58,7 +58,7 @@ export class TargetController {
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)
   exportBeneficiaries(@Body() dto: ExportTargetBeneficiaryDto) {
-    return this.targetService.exportTargetBeneficiaries(dto);
+    return this.targetService.exportGroupedBeneficiaries(dto);
   }
 
   @Post('search')
