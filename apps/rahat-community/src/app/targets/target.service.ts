@@ -264,7 +264,6 @@ export class TargetService {
       success: true,
       message: `${beneficiaries.length} beneficiaries will be exported shortly!`,
     };
-    return 'export';
   }
 
   async exportGroupedBeneficiaries(dto: ExportTargetBeneficiaryDto) {
@@ -277,7 +276,7 @@ export class TargetService {
       beneficiaries: beneficiaries,
     };
     console.log('published processed');
-    await this.rabbitMQService.publishBatchToQueue(dto.appURL, [payload], 100);
+    await this.rabbitMQService.publishBatchToQueue(dto.appURL, [payload], 100); // dto.appUrl is queue name
     return {
       success: true,
       message: `${beneficiaries.length} beneficiaries will be exported shortly!`,

@@ -55,7 +55,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@rumsan/connect": "1.0.0",
-    "@rumsan/core": "3.0.1",
+    "@rumsan/core": "3.0.116",
     "@rumsan/extensions": "0.0.28",
     "@rumsan/prisma": "^1.0.125",
     "@rumsan/rabbitmq": "^0.0.1",
