@@ -54,6 +54,6 @@ jobs:
           file: Dockerfile.rahat-community
           push: ${{ github.event_name == 'workflow_dispatch' }}
           tags: |
-            esatya/rahat-beneficiary-mgmt-rahat-community:main:release
-            esatya/rahat-beneficiary-mgmt-rahat-community:main:release-${{ env.VERSION }}
-            esatya/rahat-beneficiary-mgmt-rahat-community:main:release-${{ env.VERSION }}-${{ env.timestamp }}
+            esatya/rahat-beneficiary-mgmt-rahat-community:release
+            esatya/rahat-beneficiary-mgmt-rahat-community:release-${{ env.VERSION }}
+            esatya/rahat-beneficiary-mgmt-rahat-community:release-${{ env.VERSION }}-${{ env.timestamp }}
