@@ -342,6 +342,18 @@ function isValidDateFormat(dateString: string) {
 }
 
 export const formatEnumFieldValues = (item: any) => {
+  if (item.phone && !item.phoneStatus) {
+    item.phoneStatus = 'SMART_PHONE';
+  }
+
+  if (
+    item.bank_name &&
+    item.bank_ac_number &&
+    item.bank_ac_name &&
+    !item.bankedStatus
+  ) {
+    item.bankedStatus = 'BANKED';
+  }
   if (item.gender) item.gender = item.gender.toUpperCase();
   if (item.phoneStatus) item.phoneStatus = item.phoneStatus.toUpperCase();
   if (item.bankedStatus) item.bankedStatus = item.bankedStatus.toUpperCase();
