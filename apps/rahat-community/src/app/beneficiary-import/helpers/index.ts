@@ -342,7 +342,8 @@ function isValidDateFormat(dateString: string) {
 }
 
 export const formatEnumFieldValues = (item: any) => {
-  if (item.phone && !item.phoneStatus) {
+  //Ensures that phoneStatus is set to SMART_PHONE and bankedStatus is set to BANKED if they are UNKNOWN or empty before saving to the database.
+  if (item.phone && (!item.phoneStatus || item.phoneStatus === 'UNKNOWN')) {
     item.phoneStatus = 'SMART_PHONE';
   }
 
@@ -350,7 +351,7 @@ export const formatEnumFieldValues = (item: any) => {
     item.bank_name &&
     item.bank_ac_number &&
     item.bank_ac_name &&
-    !item.bankedStatus
+    (!item.bankedStatus || item.bankedStatus === 'UNKNOWN')
   ) {
     item.bankedStatus = 'BANKED';
   }
