@@ -166,6 +166,7 @@ model BeneficiaryComm {
   sessionId    String?
 
   isActive     Boolean @default(true)
+  isIvr        Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime? @updatedAt()
 

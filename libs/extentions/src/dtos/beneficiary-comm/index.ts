@@ -1,6 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateBeneficiaryCommDto {
   constructor() {
@@ -56,6 +62,13 @@ export class CreateBeneficiaryCommDto {
   @IsString()
   @IsOptional()
   createdBy?: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsBoolean()
+  @IsOptional()
+  isIvr?: boolean;
 }
 
 export class ListBeneficiaryCommDto {

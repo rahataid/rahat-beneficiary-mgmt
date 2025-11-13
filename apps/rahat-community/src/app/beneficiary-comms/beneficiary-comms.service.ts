@@ -73,7 +73,7 @@ export class BeneficiaryCommsService {
   async triggerCommunication(uuid: string) {
     const comm = await this.findOne(uuid);
     if (!comm) throw new Error('Communication not found');
-    const { sessionId, transportId, groupUID, message } = comm;
+    const { sessionId, transportId, groupUID, message, isIvr } = comm;
     if (sessionId) throw new Error('Communication already triggered');
     const transport = await this.commsClient.transport.get(transportId);
     if (!transport) throw new Error('Transport not found');
@@ -88,10 +88,11 @@ export class BeneficiaryCommsService {
       addresses,
       msgContent: message,
       transportId,
+      isIvr: isIvr,
     });
   }
 
-  async broadcastMessages({ uuid, addresses, msgContent, transportId }) {
+  async broadcastMessages({ uuid, addresses, msgContent, transportId, isIvr }) {
     const sessionData = await this.commsClient.broadcast.create({
       addresses: addresses,
       maxAttempts: 3,
@@ -99,6 +100,7 @@ export class BeneficiaryCommsService {
         content: msgContent,
         meta: {
           subject: 'INFO',
+          type: isIvr ? 'new-ivr' : 'other',
         },
       },
       options: {},
