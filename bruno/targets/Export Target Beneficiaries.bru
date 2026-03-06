@@ -1,0 +1,22 @@
+meta {
+  name: Export Target Beneficiaries
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/targets/export-v2
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "groupUUID": "8d5cbf5b-0af1-4daf-9d86-25f79b6f183d",
+    "appURL": "http://localhost:5500/v1/beneficiaries/import-tools"
+  }
+}

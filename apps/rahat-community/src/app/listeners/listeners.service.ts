@@ -61,6 +61,11 @@ export class ListenerService {
     return this.targetService.processExportTarget(data);
   }
 
+  @OnEvent(EVENTS.BENEF_EXPORT_V2)
+  async exportBeneficiariesV2(data: ExportTargetBeneficiaryDto) {
+    return this.targetService.processExportTargetV2(data);
+  }
+
   @OnEvent(EVENTS.CREATE_BENEF_GROUP)
   async createBenefGroup(data: CreateBeneficiaryGroupDto) {
     return this.benefGroupService.createBeneficiaryGroup(data);

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "rahat-beneficiary-mgmt",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
