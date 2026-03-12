@@ -29,6 +29,7 @@ import { BeneficiaryProcessor, TargetProcessor } from './processors';
 import { ScheduleService } from './schedulers/schedule.provider';
 import { SourceModule } from './sources/source.module';
 import { TargetModule } from './targets/target.module';
+import { ExportModule } from './export/export.module';
 import { SocketGateway } from './gateway/socket.gateway';
 import { BeneficiaryCommsModule } from './beneficiary-comms/beneficiary-comms.module';
 import { CommsModule } from './comms/comms.module';
@@ -60,6 +61,7 @@ import { CommsModule } from './comms/comms.module';
     BeneficiaryImportModule,
     BeneficiarySourceModule,
     TargetModule,
+    ExportModule,
     ListenersModule,
     SettingsModule,
     BeneficiaryCommsModule,

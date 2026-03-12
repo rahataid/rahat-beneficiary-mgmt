@@ -61,14 +61,6 @@ export class TargetController {
     return this.targetService.exportTargetBeneficiaries(dto);
   }
 
-  @Post('export-v2')
-  @HttpCode(HttpStatus.OK)
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
-  @UseGuards(JwtGuard, AbilitiesGuard)
-  exportBeneficiariesV2(@Body() dto: ExportTargetBeneficiaryDto) {
-    return this.targetService.exportTargetBeneficiariesV2(dto);
-  }
-
   @Post('search')
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.TARGET })
   @UseGuards(JwtGuard, AbilitiesGuard)

@@ -1,0 +1,23 @@
+meta {
+  name: Export Beneficiaries CSV
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/exports/beneficiaries/csv
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "groupUUID": "4837585a-d0e8-43c3-9382-ad29495a60d2",
+    "startDate": "2025-01-01",
+    "endDate": "2026-12-31"
+  }
+}

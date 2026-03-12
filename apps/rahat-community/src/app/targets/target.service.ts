@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import { Prisma } from '@prisma/client';
@@ -27,17 +27,14 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { calculateNumberOfDays, getBaseUrl } from '../utils';
-import { generateExcelData } from '../utils/export-to-excel';
-import { generateCsvBuffer } from '../utils/generateCsv';
-import { uploadToR2 } from '../utils/r2Upload';
+import { generateExcelData } from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import {
   checkPublicKey,
-  createFinalResult,
-  createPrimaryAndExtraQuery,
   exportBulkBeneficiary,
   generateSignature,
-} from './helpers';
+} from '../export/helpers/signed-callback.helper';
+import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -46,7 +43,6 @@ const EXPORT_BATCH_SIZE = 500;
 
 @Injectable()
 export class TargetService {
-  private logger = new Logger(TargetService.name);
   constructor(
     @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
@@ -264,81 +260,6 @@ export class TargetService {
       success: true,
       message: `${beneficiaries.length} beneficiaries will be exported shortly!`,
     };
-  }
-
-  async exportTargetBeneficiariesV2(dto: ExportTargetBeneficiaryDto) {
-    await this.verifyPublicKey(dto.appURL);
-    const { groupUUID, appURL } = dto;
-    const group = await this.groupService.findUnique(groupUUID);
-    if (!group) throw new Error('Group not found');
-    const rows = await this.findBenefByGroup(group.uuid);
-    if (!rows.length) throw new Error('No beneficiaries found for this group');
-
-    await this.benefQueue.add(
-      JOBS.BENEFICIARY.EXPORT_V2,
-      { groupUUID, appURL },
-      QUEUE_RETRY_OPTIONS,
-    );
-
-    return {
-      success: true,
-      message: `${rows.length} beneficiaries will be exported (v2) shortly!`,
-    };
-  }
-
-  async processExportTargetV2(dto: ExportTargetBeneficiaryDto) {
-    const { groupUUID, appURL } = dto;
-    const verified = await this.verifyPublicKey(appURL);
-    const group = await this.groupService.findUnique(groupUUID);
-    if (!group) throw new Error('Group not found');
-    const rows = await this.findBenefByGroup(group.uuid);
-    if (!rows.length) throw new Error('No beneficiaries found for this group');
-    const beneficiaries = rows.map((r: any) => r.beneficiary);
-    this.logger.log(
-      `Fetched ${beneficiaries.length} beneficiaries for export!`,
-    );
-    const csvBuffer = generateCsvBuffer(beneficiaries);
-
-    const timestamp = Date.now();
-    const r2Key = `exports/${group.uuid}/${timestamp}-${group.name}.csv`;
-    this.logger.log(`Uploading CSV to R2 bucket with key: ${r2Key}`);
-    const { key, url } = await uploadToR2(csvBuffer, r2Key, 'text/csv');
-
-    const signature = await generateSignature(
-      verified.nonceMessage,
-      verified.privateKey,
-    );
-    this.logger.log(`Generated signature for export payload!`);
-    console.log({
-      appUrl: appURL,
-      signature,
-      address: verified.address,
-      buffer: Buffer.from(
-        JSON.stringify({
-          r2Key: key,
-          fileUrl: url,
-          groupName: group.name,
-          groupUUID: group.uuid,
-          beneficiaryCount: beneficiaries.length,
-        }),
-      ),
-    });
-    const payload = {
-      appUrl: appURL,
-      signature,
-      address: verified.address,
-      buffer: Buffer.from(
-        JSON.stringify({
-          r2Key: key,
-          fileUrl: url,
-          groupName: group.name,
-          groupUUID: group.uuid,
-          beneficiaryCount: beneficiaries.length,
-        }),
-      ),
-    };
-
-    await exportBulkBeneficiary(payload);
   }
 
   async createManySearchResult(result: any, target: string) {

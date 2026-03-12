@@ -1,4 +1,4 @@
-import { generateExcelData } from './export-to-excel';
+import { generateExcelData } from './data-flattener.helper';
 
 export const generateCsvBuffer = (data: any[]): Buffer => {
   const flattenedData = generateExcelData(data);
