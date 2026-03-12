@@ -31,7 +31,7 @@ import { generateExcelData } from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import {
   checkPublicKey,
-  exportBulkBeneficiary,
+  exportBulkBeneficiaryBuffer,
   generateSignature,
 } from '../export/helpers/signed-callback.helper';
 import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
@@ -242,7 +242,7 @@ export class TargetService {
       // calculate size of buffer
       const size = Buffer.byteLength(JSON.stringify(payload.buffer), 'utf8');
       console.log('Buffer size:', size / (1024 * 1024), 'MB');
-      await exportBulkBeneficiary(payload);
+      await exportBulkBeneficiaryBuffer(payload);
     }
   }
 

@@ -33,9 +33,7 @@ export class BeneficiaryExportStrategy implements ExportStrategy {
     if (!rows.length) throw new Error('No beneficiaries found for this group');
 
     const beneficiaries = rows.map((r: any) => r.beneficiary);
-    this.logger.log(
-      `Fetched ${beneficiaries.length} beneficiaries for export`,
-    );
+    this.logger.log(`Fetched ${beneficiaries.length} beneficiaries for export`);
 
     return {
       data: beneficiaries,
@@ -78,15 +76,13 @@ export class BeneficiaryExportStrategy implements ExportStrategy {
       appUrl: appURL,
       signature,
       address: verified.address,
-      buffer: Buffer.from(
-        JSON.stringify({
-          r2Key: storeResult.key,
-          fileUrl: storeResult.url,
-          groupName: metadata.groupName,
-          groupUUID: metadata.groupUUID,
-          beneficiaryCount: metadata.beneficiaryCount,
-        }),
-      ),
+      data: {
+        r2Key: storeResult.key,
+        fileUrl: storeResult.url,
+        groupName: metadata.groupName,
+        groupUUID: metadata.groupUUID,
+        beneficiaryCount: metadata.beneficiaryCount,
+      },
     };
 
     this.logger.log('Sending signed callback to appURL');
