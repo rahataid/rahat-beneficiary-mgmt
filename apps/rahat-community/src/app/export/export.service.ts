@@ -38,7 +38,7 @@ export class ExportService {
 
     return {
       success: true,
-      message: `Export (${type}) queued successfully!`,
+      message: `Export initiated successfully!`,
     };
   }
 
@@ -64,7 +64,10 @@ export class ExportService {
    * Generate and return CSV buffer directly (synchronous, no queue).
    * Used for direct CSV download endpoints.
    */
-  async generateCsvExport(type: ExportType, dto: any): Promise<{ buffer: Buffer; metadata: Record<string, any> }> {
+  async generateCsvExport(
+    type: ExportType,
+    dto: any,
+  ): Promise<{ buffer: Buffer; metadata: Record<string, any> }> {
     const strategy = this.getStrategy(type);
 
     this.logger.log(`Generating CSV for ${type} export`);
