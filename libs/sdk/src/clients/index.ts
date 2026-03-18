@@ -8,3 +8,4 @@ export * from './target.client';
 export * from './settings.client';
 export * from './app.client';
 export * from './beneficiaryComms.clients';
+export * from './export.client';
