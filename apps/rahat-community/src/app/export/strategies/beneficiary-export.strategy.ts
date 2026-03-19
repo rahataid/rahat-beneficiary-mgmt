@@ -55,7 +55,7 @@ export class BeneficiaryExportStrategy implements ExportStrategy {
     metadata: Record<string, any>,
   ): Promise<{ key: string; url: string }> {
     const timestamp = Date.now();
-    const r2Key = `exports/${metadata.groupUUID}/${timestamp}-${metadata.groupName}.csv`;
+    const r2Key = `exports/${timestamp}_${metadata.groupUUID}_${metadata.groupName}.csv`;
     this.logger.log(`Uploading CSV to R2 with key: ${r2Key}`);
     return uploadToR2(buffer, r2Key, 'text/csv');
   }

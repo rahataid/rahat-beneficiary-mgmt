@@ -163,15 +163,28 @@ async function createGroup(name) {
   return uuid;
 }
 
-async function createBeneficiary(data, index, total) {
-  const result = await apiCall('POST', '/beneficiaries', data);
-  const uuid = result.data?.uuid || result.uuid;
-  console.log(
-    `  [${index + 1}/${total}] Created: ${data.firstName} ${
-      data.lastName
-    } -> ${uuid}`,
-  );
-  return uuid;
+async function createBeneficiary(data, index, total, maxRetries = 5) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await apiCall('POST', '/beneficiaries', data);
+      const uuid = result.data?.uuid || result.uuid;
+      console.log(
+        `  [${index + 1}/${total}] Created: ${data.firstName} ${
+          data.lastName
+        } -> ${uuid}`,
+      );
+      return uuid;
+    } catch (err) {
+      if (err.message.includes('Phone number already exist') && attempt < maxRetries) {
+        data.phone = randomPhone();
+        console.log(
+          `  [${index + 1}/${total}] Phone duplicate, retrying with ${data.phone}...`,
+        );
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 async function addBeneficiariesToGroup(beneficiaryUIDs, groupUID) {
