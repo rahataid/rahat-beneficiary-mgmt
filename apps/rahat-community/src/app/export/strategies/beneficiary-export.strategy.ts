@@ -57,7 +57,7 @@ export class BeneficiaryExportStrategy implements ExportStrategy {
     const timestamp = Date.now();
     const r2Key = `exports/${timestamp}_${metadata.groupUUID}_${metadata.groupName}.csv`;
     this.logger.log(`Uploading CSV to R2 with key: ${r2Key}`);
-    return uploadToR2(buffer, r2Key, 'text/csv');
+    return uploadToR2(this.prismaService, buffer, r2Key, 'text/csv');
   }
 
   async notify(
