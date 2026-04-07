@@ -10,18 +10,18 @@ const ROLES = {
 
 const FEED_USERS = {
   BINOD: {
-    name: 'Binod Chaudhary',
-    email: 'thebinod7@gmail.com',
+    name: 'Rumsan Mailinator',
+    email: 'rumsan@mailinator.com',
     role: ROLES.ADMIN,
   },
   KARUN: {
-    name: 'Karun Gyawali',
-    email: 'karun@rumsan.net',
+    name: 'rumsan manager',
+    email: 'rumsan_manager@rumsan.net',
     role: ROLES.MANAGER,
   },
   JOHN: {
     name: 'John Doe',
-    email: 'john@mailinator.com',
+    email: 'rumsan_user@mailinator.com',
     role: ROLES.USER,
   },
 };
