@@ -12,6 +12,8 @@ import {
   ExportTargetBeneficiaryDto,
 } from '@rahataid/community-tool-extensions';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
+import { ExportService } from '../export/export.service';
+
 @Injectable()
 export class ListenerService {
   constructor(
@@ -20,6 +22,7 @@ export class ListenerService {
     private emailService: EmailService,
     private benefGroupService: BeneficiaryGroupService,
     private readonly benStats: BeneficiaryStatService,
+    private readonly exportService: ExportService,
   ) {}
   @OnEvent(EVENTS.CREATE_TARGET_RESULT)
   async createTargetResult(data: any) {
@@ -59,6 +62,11 @@ export class ListenerService {
   @OnEvent(EVENTS.BENEF_EXPORT)
   async exportBeneficiaries(data: ExportTargetBeneficiaryDto) {
     return this.targetService.processExportTarget(data);
+  }
+
+  @OnEvent(EVENTS.BENEF_EXPORT_V2)
+  async exportBeneficiariesV2(data: ExportTargetBeneficiaryDto) {
+    return this.exportService.processExport('beneficiary', data);
   }
 
   @OnEvent(EVENTS.CREATE_BENEF_GROUP)

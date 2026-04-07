@@ -1,4 +1,4 @@
-import { Injectable, Req } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import { Prisma } from '@prisma/client';
@@ -27,15 +27,14 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { calculateNumberOfDays, getBaseUrl } from '../utils';
-import { generateExcelData } from '../utils/export-to-excel';
+import { generateExcelData } from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import {
   checkPublicKey,
-  createFinalResult,
-  createPrimaryAndExtraQuery,
-  exportBulkBeneficiary,
+  exportBulkBeneficiaryBuffer,
   generateSignature,
-} from './helpers';
+} from '../export/helpers/signed-callback.helper';
+import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -105,7 +104,7 @@ export class TargetService {
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
-    for (let item of filterOptions) {
+    for (const item of filterOptions) {
       const keys = Object.keys(item);
       const values = Object.values(item);
       // 1. Split primary and extra queries
@@ -243,7 +242,7 @@ export class TargetService {
       // calculate size of buffer
       const size = Buffer.byteLength(JSON.stringify(payload.buffer), 'utf8');
       console.log('Buffer size:', size / (1024 * 1024), 'MB');
-      await exportBulkBeneficiary(payload);
+      await exportBulkBeneficiaryBuffer(payload);
     }
   }
 
@@ -307,7 +306,7 @@ export class TargetService {
     let count = 0;
     const targetQueries = await this.findCompletedAndNoLabelTargetQuery();
     if (!targetQueries.length) return;
-    for (let q of targetQueries) {
+    for (const q of targetQueries) {
       const targetResults = await this.findTargetResultByQueryUID(q.uuid);
       count = await this.compareDateAndDelete(targetResults, q.uuid);
     }
@@ -317,7 +316,7 @@ export class TargetService {
   async compareDateAndDelete(targetResult: any, targetQueryUID: string) {
     let deletedCount = 0;
     if (!targetResult.length) return deletedCount;
-    for (let r of targetResult) {
+    for (const r of targetResult) {
       const days = calculateNumberOfDays(new Date(), new Date(r.createdAt));
       if (days > APP.DAYS_TO_DELETE_BENEF_TARGET) {
         await this.deleteTargetResult(r.id);
