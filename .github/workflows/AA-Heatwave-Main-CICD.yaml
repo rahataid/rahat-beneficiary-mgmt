@@ -1,4 +1,4 @@
-name: Release CI/CD
+name: AA HEATWAVE MAIN CI/CD
 on:
   workflow_dispatch:
 
