@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import {
@@ -28,6 +28,8 @@ import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 
 @Injectable()
 export class SourceService {
+  private readonly logger = new Logger(SourceService.name);
+
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY) private queueClient: Queue,
     private prisma: PrismaService,
@@ -96,7 +98,7 @@ export class SourceService {
     existingData: any,
     uniqueFields: string[],
   ) {
-    let result = [];
+    const result = [];
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
       resolveUniqueFields(uniqueFields);
     for (let p of payload) {
@@ -145,6 +147,10 @@ export class SourceService {
   // 5. Compare payload data with merged data
   // 6. Return payload data with isDuplicate flag
   async create(dto: CreateSourceDto) {
+    this.logger.log(
+      `Create source request received. importId=${dto.importId}, action=${dto.action}`,
+    );
+
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
@@ -153,8 +159,13 @@ export class SourceService {
     this.validateUniqueFields(uniqueFields);
 
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+    this.logger.debug(
+      `Preparing import payload. records=${
+        data.length
+      }, hasExternalUUID=${hasUUID}, uniqueFields=${uniqueFields.join(',')}`,
+    );
 
-    let payloadWithUUID = data.map((d: any) => {
+    const payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
       const formatted = formatEnumFieldValues(d);
@@ -165,16 +176,22 @@ export class SourceService {
       };
     });
     const extraFields = await this.listExtraFields();
+    this.logger.debug(
+      `Resolved extra field definitions. count=${extraFields.length}`,
+    );
 
-    if (action === IMPORT_ACTION.VALIDATE)
+    if (action === IMPORT_ACTION.VALIDATE) {
+      this.logger.log(`Validation flow started. importId=${dto.importId}`);
       return this.ValidateBeneficiaryImort({
         data: payloadWithUUID,
         extraFields,
         hasUUID,
         uniqueFields,
       });
+    }
 
     if (action === IMPORT_ACTION.IMPORT) {
+      this.logger.log(`Import flow started. importId=${dto.importId}`);
       const { allValidationErrors } = await validateSchemaFields(
         payloadWithUUID,
         extraFields,
@@ -182,12 +199,24 @@ export class SourceService {
         uniqueFields,
       );
 
-      if (allValidationErrors.length)
+      if (allValidationErrors.length) {
+        this.logger.debug(
+          `Import schema validation failed. importId=${dto.importId}, errorCount=${allValidationErrors.length}`,
+        );
         throw new Error('Invalid data submitted!');
+      }
+
+      this.logger.debug(
+        `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
+      );
       rest.fieldMapping.data = payloadWithUUID;
       rest.importField = Enums.ImportField.UUID;
       return this.createSourceAndAddToQueue(rest);
     }
+
+    this.logger.debug(
+      `Create source request ended without matching action. importId=${dto.importId}, action=${action}`,
+    );
   }
 
   async getUniqueFieldSettings() {
@@ -238,6 +267,10 @@ export class SourceService {
   }
 
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID, uniqueFields }) {
+    this.logger.log(
+      `Validate beneficiaries started. records=${data.length}, hasUUID=${hasUUID}`,
+    );
+
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
@@ -250,8 +283,12 @@ export class SourceService {
       uniqueFields,
     );
 
+    this.logger.debug(
+      `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
+    );
+
     const dateParsedDuplicates = duplicates.map((d) => {
-      let item = { ...d };
+      const item = { ...d };
       if (item.birthDate) {
         item.birthDate = parseIsoDateToString(item.birthDate);
       }
@@ -265,6 +302,10 @@ export class SourceService {
   }
 
   async createSourceAndAddToQueue(data: CreateSourceDto) {
+    this.logger.log(
+      `Persisting source and queueing import. importId=${data.importId}`,
+    );
+
     const row = await this.prisma.source.upsert({
       where: { importId: data.importId },
       update: { ...data, isImported: false },
@@ -275,12 +316,17 @@ export class SourceService {
       { sourceUUID: row.uuid },
       QUEUE_RETRY_OPTIONS,
     );
+
+    this.logger.debug(
+      `Source queued successfully. sourceUUID=${row.uuid}, job=${JOBS.BENEFICIARY.IMPORT}`,
+    );
+
     return { message: 'Source created and added to queue' };
   }
 
   async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
     const result = [];
-    for (let p of data) {
+    for (const p of data) {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, external_uuid);
       if (keyExist && p[external_uuid]) {
@@ -298,6 +344,12 @@ export class SourceService {
   }
 
   findAll(query: any) {
+    this.logger.debug(
+      `Listing sources. page=${query?.page ?? 1}, perPage=${
+        query?.perPage ?? 'default'
+      }`,
+    );
+
     const select = {
       fieldMapping: true,
       uuid: true,
@@ -317,10 +369,12 @@ export class SourceService {
   }
 
   findOne(uuid: string) {
+    this.logger.debug(`Fetching source by uuid=${uuid}`);
     return this.prisma.source.findUnique({ where: { uuid } });
   }
 
   update(uuid: string, dto: UpdateSourceDto) {
+    this.logger.log(`Updating source. uuid=${uuid}`);
     return this.prisma.source.update({
       where: { uuid },
       data: dto,
@@ -328,6 +382,7 @@ export class SourceService {
   }
 
   updateImportFlag(uuid: string, flag: boolean) {
+    this.logger.debug(`Updating import flag. uuid=${uuid}, flag=${flag}`);
     return this.prisma.source.update({
       where: { uuid },
       data: { isImported: flag },
@@ -335,6 +390,7 @@ export class SourceService {
   }
 
   remove(uuid: string) {
+    this.logger.log(`Removing source. uuid=${uuid}`);
     return this.prisma.source.delete({
       where: {
         uuid,

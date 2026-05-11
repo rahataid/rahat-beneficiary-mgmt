@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   BeneficiaryEvents,
@@ -17,6 +17,8 @@ const { ImportField } = Enums;
 
 @Injectable()
 export class BeneficiaryImportService {
+  private readonly logger = new Logger(BeneficiaryImportService.name);
+
   constructor(
     private sourceService: SourceService,
     private benefService: BeneficiariesService,
@@ -26,6 +28,10 @@ export class BeneficiaryImportService {
   ) {}
 
   async splitPrimaryAndExtraFields(data: any) {
+    this.logger.debug(
+      `Splitting primary and extra fields. records=${data?.length ?? 0}`,
+    );
+
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primaryFields = fields.map((f) => f.name);
 
@@ -47,6 +53,10 @@ export class BeneficiaryImportService {
   }
 
   async createDefaultAndImportGroup(createdBy: string) {
+    this.logger.debug(
+      `Ensuring default/import groups for createdBy=${createdBy}`,
+    );
+
     const defaultGroup = await this.groupService.upsertByName({
       name: DEFAULT_GROUP,
       isSystem: true,
@@ -60,6 +70,11 @@ export class BeneficiaryImportService {
       origins: [GroupOrigins.IMPORT],
       createdBy,
     });
+
+    this.logger.debug(
+      `Groups ready. defaultGroupUID=${defaultGroup.uuid}, importGroupUID=${importGroup.uuid}`,
+    );
+
     return {
       defaultGroupUID: defaultGroup.uuid,
       importGroupUID: importGroup.uuid,
@@ -67,10 +82,17 @@ export class BeneficiaryImportService {
   }
 
   async importBySourceUUID(uuid: string) {
+    this.logger.log(`Import request started for sourceUUID=${uuid}`);
+
     let upsertCount = 0;
     const source = await this.sourceService.findOne(uuid);
     if (!source) throw new Error('Source not found!');
     if (source.isImported) throw new Error('Beneficiaries  already imported!');
+
+    this.logger.debug(
+      `Source loaded for import. sourceUUID=${source.uuid}, importField=${source.importField}`,
+    );
+
     const jsonData = source.fieldMapping as {
       data: object;
     };
@@ -86,13 +108,17 @@ export class BeneficiaryImportService {
       return p;
     });
 
+    this.logger.debug(
+      `Prepared import payload. totalRecords=${appendCreatedBy.length}, sourceUUID=${source.uuid}`,
+    );
+
     const { defaultGroupUID, importGroupUID } =
       (await this.createDefaultAndImportGroup(source.createdBy)) as any;
 
     const { importField } = source;
     // Import by UUID
     if (importField === ImportField.UUID) {
-      for (let p of appendCreatedBy) {
+      for (const p of appendCreatedBy) {
         upsertCount++;
         await this.benefService.upsertByUUID({
           sourceUID: source.uuid,
@@ -101,11 +127,21 @@ export class BeneficiaryImportService {
           beneficiary: p,
         });
         // if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
+
+        if (upsertCount % 50 === 0 || upsertCount === appendCreatedBy.length) {
+          this.logger.debug(
+            `Import progress sourceUUID=${source.uuid}. processed=${upsertCount}/${appendCreatedBy.length}`,
+          );
+        }
       }
     }
 
     await this.sourceService.updateImportFlag(source.uuid, true);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+
+    this.logger.log(
+      `Import completed for sourceUUID=${source.uuid}. upserted=${upsertCount}, total=${final_payload.length}`,
+    );
 
     return {
       success: true,
@@ -115,6 +151,10 @@ export class BeneficiaryImportService {
   }
 
   async addBenefToSource(benefUID: string, sourceUID: string) {
+    this.logger.debug(
+      `Linking beneficiary to source if absent. benefUID=${benefUID}, sourceUID=${sourceUID}`,
+    );
+
     const rData = await this.prisma.beneficiarySource.findUnique({
       where: {
         benefSourceIdentifier: {

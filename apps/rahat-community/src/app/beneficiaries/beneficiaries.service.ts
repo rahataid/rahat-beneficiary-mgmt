@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import {
   BulkInsertDto,
@@ -35,6 +35,8 @@ interface IDuplicateValidation {
 
 @Injectable()
 export class BeneficiariesService {
+  private readonly logger = new Logger(BeneficiariesService.name);
+
   constructor(
     private prisma: PrismaService,
     private fieldDefService: FieldDefinitionsService,
@@ -43,6 +45,8 @@ export class BeneficiariesService {
   ) {}
 
   async findByLocation(location: string) {
+    this.logger.debug(`Finding beneficiaries by location=${location ?? 'all'}`);
+
     let query = {};
     if (location)
       query = { location: { equals: location, mode: 'insensitive' } };
@@ -63,8 +67,8 @@ export class BeneficiariesService {
   }
 
   async filterByWardNo(data: any[], ward_no: string) {
-    let final_result = [];
-    for (let d of data) {
+    const final_result = [];
+    for (const d of data) {
       if (d.extras && d.extras['ward_no'] && d.extras['ward_no'] == ward_no) {
         final_result.push(d);
       }
@@ -73,6 +77,12 @@ export class BeneficiariesService {
   }
 
   async findByPalikaAndWard(query: FilterBeneficiaryByLocationDto) {
+    this.logger.debug(
+      `Filtering beneficiaries by location/ward. location=${
+        query?.location ?? ''
+      }, ward_no=${query?.ward_no ?? ''}`,
+    );
+
     const { location = null, ward_no } = query;
     const data = await this.findByLocation(location);
     if (!data.length) return [];
@@ -137,6 +147,10 @@ export class BeneficiariesService {
     importGroupUID,
     beneficiary,
   }) {
+    this.logger.debug(
+      `Upsert beneficiary by UUID started. beneficiaryUUID=${beneficiary?.uuid}, sourceUID=${sourceUID}`,
+    );
+
     if (beneficiary.birthDate) {
       beneficiary.birthDate = convertDateToISO(beneficiary.birthDate);
     }
@@ -161,6 +175,10 @@ export class BeneficiariesService {
         defaultGroupUID,
         importGroupUID,
       });
+
+      this.logger.debug(
+        `Upsert beneficiary by UUID completed. beneficiaryUUID=${res.uuid}, sourceUID=${sourceUID}`,
+      );
 
       return this.addBenefToSource(res.uuid, sourceUID, tx);
     });
@@ -222,6 +240,12 @@ export class BeneficiariesService {
   }
 
   async create(dto: CreateBeneficiaryDto) {
+    this.logger.log(
+      `Create beneficiary requested. phone=${dto.phone ?? ''}, govtIDNumber=${
+        dto.govtIDNumber ?? ''
+      }`,
+    );
+
     const { birthDate, extras, walletAddress } = dto;
     const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
       dto.phone,
@@ -248,12 +272,19 @@ export class BeneficiariesService {
         ...dto,
       },
     });
+
+    this.logger.debug(`Beneficiary created. beneficiaryUUID=${benef.uuid}`);
+
     if (benef) await this.addBenefToDefaultGroup(benef.uuid);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
     return benef;
   }
 
   async addBenefToDefaultGroup(beneficiary: string) {
+    this.logger.debug(
+      `Adding beneficiary to default group. beneficiaryUUID=${beneficiary}`,
+    );
+
     const payload = {
       name: DEFAULT_GROUP,
     };
@@ -270,6 +301,12 @@ export class BeneficiariesService {
   }
 
   async searchTargets(filters: any) {
+    this.logger.debug(
+      `Searching beneficiaries for targets. page=${
+        +filters?.page || 1
+      }, perPage=${+filters?.perPage || TARGETS_PER_PAGE}`,
+    );
+
     const search_conditions = createSearchQuery(filters);
     return paginate(
       this.prisma.beneficiary,
@@ -362,6 +399,12 @@ export class BeneficiariesService {
   }
 
   async findAll(filters: ListBeneficiaryDto) {
+    this.logger.debug(
+      `Listing beneficiaries. page=${+filters?.page || 1}, perPage=${
+        +filters?.perPage || 'default'
+      }`,
+    );
+
     const conditions = await this.filterConditions(filters);
 
     const rData = await paginate(
@@ -472,6 +515,8 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
+    this.logger.log(`Updating beneficiary. uuid=${uuid}`);
+
     const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
       dto.phone,
       dto.govtIDNumber,
@@ -502,6 +547,9 @@ export class BeneficiariesService {
       },
       data: dto,
     });
+
+    this.logger.debug(`Beneficiary updated. uuid=${uuid}`);
+
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
 
     return beneficiaryData;
@@ -538,6 +586,8 @@ export class BeneficiariesService {
     });
   }
   async remove(uuid: string, userUUID: string) {
+    this.logger.log(`Archiving/removing beneficiary requested. uuid=${uuid}`);
+
     const benef = await this.findUnique(uuid);
 
     if (!benef) throw new Error('Beneficiary not found!');
@@ -562,32 +612,48 @@ export class BeneficiariesService {
           where: { beneficiaryUID: item.beneficiaryUID },
         });
       }
+
+      this.logger.debug(
+        `Beneficiary detached from groups/sources. uuid=${uuid}, groupsProcessed=${benef.beneficiariesGroup.length}`,
+      );
     }
 
     // 3. Create log
     await this.createLog(logData);
 
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
+    this.logger.log(`Beneficiary archived successfully. uuid=${uuid}`);
     return 'Removed Succesfullty';
   }
 
   async deletePermanently(uuid: string) {
+    this.logger.log(`Permanently deleting beneficiary. uuid=${uuid}`);
+
     const rData = await this.prisma.beneficiary.delete({
       where: {
         uuid,
       },
     });
+
+    this.logger.debug(`Beneficiary permanently deleted. uuid=${uuid}`);
+
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
     return rData;
   }
 
   addBulk(dto: BulkInsertDto) {
+    this.logger.log(
+      `Bulk beneficiary insert requested. count=${dto?.data?.length ?? 0}`,
+    );
+
     const rdata = this.prisma.beneficiary.createMany({ data: dto.data });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
     return rdata;
   }
 
   async uploadFile(file: any) {
+    this.logger.debug(`Uploading beneficiary file. path=${file?.path ?? ''}`);
+
     const workbook = XLSX.readFile(file.path);
     await deleteFileFromDisk(file.path);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -601,6 +667,8 @@ export class BeneficiariesService {
   }
 
   async findAllLocation() {
+    this.logger.debug('Listing all beneficiary locations');
+
     return await this.prisma.beneficiary.findMany({
       where: {
         location: {
