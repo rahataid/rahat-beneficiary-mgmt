@@ -29,7 +29,11 @@ import { uploadToR2 } from '../export/helpers/r2-upload.helper';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { DB_MODELS } from '../../constants';
 
-export type ImportProgressStatus = 'PENDING' | 'IN_PROGRESS' | 'DONE' | 'FAILED';
+export type ImportProgressStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'DONE'
+  | 'FAILED';
 
 export interface ImportProgress {
   total: number;
@@ -43,10 +47,28 @@ export interface ImportProgress {
 
 // Primary DB fields that belong in tbl_beneficiaries columns (not extras)
 const PRIMARY_BENEFICIARY_FIELDS = new Set<string>([
-  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
-  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
-  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
-  'createdBy', 'createdAt', 'updatedAt', 'id', 'archived', 'isVerified',
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'id',
+  'archived',
+  'isVerified',
   'extras',
 ]);
 
@@ -173,7 +195,9 @@ export class SourceService {
 
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
     this.logger.debug(
-      `Preparing import payload. records=${data.length}, hasExternalUUID=${hasUUID}, uniqueFields=${uniqueFields.join(',')}`,
+      `Preparing import payload. records=${
+        data.length
+      }, hasExternalUUID=${hasUUID}, uniqueFields=${uniqueFields.join(',')}`,
     );
 
     const payloadWithUUID = data.map((d: any) => {
@@ -278,7 +302,9 @@ export class SourceService {
     ];
     if (fields.some((field) => !allowedFields.includes(field))) {
       throw new Error(
-        `Allowed unique fields are: [${allowedFields.join(', ')}]. Please check your settings!`,
+        `Allowed unique fields are: [${allowedFields.join(
+          ', ',
+        )}]. Please check your settings!`,
       );
     }
     return true;
@@ -325,7 +351,10 @@ export class SourceService {
    * Determines which fields on a record are "extras" (not primary DB columns).
    * They get JSON-stringified into a single "extras" CSV column.
    */
-  private separateExtras(record: any): { primary: any; extras: Record<string, any> } {
+  private separateExtras(record: any): {
+    primary: any;
+    extras: Record<string, any>;
+  } {
     const primary: any = {};
     const extras: Record<string, any> = {};
 
@@ -362,10 +391,24 @@ export class SourceService {
    */
   serializeToCSV(records: any[]): Buffer {
     const COLUMNS = [
-      'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
-      'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
-      'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
-      'extras', 'createdBy',
+      'uuid',
+      'firstName',
+      'lastName',
+      'phone',
+      'email',
+      'govtIDNumber',
+      'gender',
+      'birthDate',
+      'walletAddress',
+      'location',
+      'latitude',
+      'longitude',
+      'notes',
+      'bankedStatus',
+      'internetStatus',
+      'phoneStatus',
+      'extras',
+      'createdBy',
     ];
 
     const header = COLUMNS.join(',');
@@ -386,24 +429,37 @@ export class SourceService {
 
   // ─── R2 staging ─────────────────────────────────────────────────────────────
 
-  private async uploadStagedCSV(importId: string, buffer: Buffer): Promise<string> {
+  private async uploadStagedCSV(
+    importId: string,
+    buffer: Buffer,
+  ): Promise<string> {
     const key = `imports/${importId}/${Date.now()}.csv`;
-    this.logger.debug(`Uploading staged CSV to R2. key=${key}, bytes=${buffer.length}`);
+    this.logger.debug(
+      `Uploading staged CSV to R2. key=${key}, bytes=${buffer.length}`,
+    );
     await uploadToR2(this.prisma, buffer, key, 'text/csv');
     return key;
   }
 
   // ─── Progress tracking ───────────────────────────────────────────────────────
 
-  async updateImportProgress(sourceUUID: string, patch: Partial<ImportProgress>) {
+  async updateImportProgress(
+    sourceUUID: string,
+    patch: Partial<ImportProgress>,
+  ) {
     const source = await this.prisma.source.findUnique({
       where: { uuid: sourceUUID },
       select: { importProgress: true },
     });
 
     const current = (source?.importProgress as unknown as ImportProgress) ?? {
-      total: 0, imported: 0, failed: 0,
-      status: 'PENDING', startedAt: null, completedAt: null, error: null,
+      total: 0,
+      imported: 0,
+      failed: 0,
+      status: 'PENDING',
+      startedAt: null,
+      completedAt: null,
+      error: null,
     };
 
     const updated = { ...current, ...patch };
@@ -432,7 +488,10 @@ export class SourceService {
 
   // ─── Queue ──────────────────────────────────────────────────────────────────
 
-  async createSourceAndAddToQueue(data: Omit<CreateSourceDto, 'action'>, records: any[]) {
+  async createSourceAndAddToQueue(
+    data: Omit<CreateSourceDto, 'action'>,
+    records: any[],
+  ) {
     this.logger.log(
       `Persisting source and queueing import. importId=${data.importId}`,
     );
@@ -445,10 +504,18 @@ export class SourceService {
       `Staged CSV uploaded. importId=${data.importId}, key=${stagedFileKey}, records=${records.length}`,
     );
 
-    // Store only the column mapping — not the full data blob
-    const fieldMappingToStore = {
-      columnMap: (data.fieldMapping?.sourceTargetMappings ?? []) as any[],
-    } as any;
+    // Store only the column mapping — not the full data blob.
+    // Read sourceTargetMappings as plain objects directly (avoids class-transformer
+    // serialisation quirks that would turn class instances into empty arrays).
+    const rawMappings = data.fieldMapping?.sourceTargetMappings;
+    const sourceTargetMappings = Array.isArray(rawMappings)
+      ? rawMappings.map((m: any) => ({
+          sourceField: m.sourceField ?? m['sourceField'],
+          targetField: m.targetField ?? m['targetField'],
+        }))
+      : [];
+
+    const fieldMappingToStore = { sourceTargetMappings } as any;
 
     const initialProgress: ImportProgress = {
       total: records.length,
@@ -521,7 +588,9 @@ export class SourceService {
 
   findAll(query: any) {
     this.logger.debug(
-      `Listing sources. page=${query?.page ?? 1}, perPage=${query?.perPage ?? 'default'}`,
+      `Listing sources. page=${query?.page ?? 1}, perPage=${
+        query?.perPage ?? 'default'
+      }`,
     );
 
     const select = {
@@ -563,6 +632,16 @@ export class SourceService {
     return this.prisma.source.update({
       where: { uuid },
       data: { isImported: flag },
+    });
+  }
+
+  updateStagedFileKey(uuid: string, stagedFileKey: string) {
+    this.logger.debug(
+      `Updating stagedFileKey. uuid=${uuid}, key=${stagedFileKey}`,
+    );
+    return this.prisma.source.update({
+      where: { uuid },
+      data: { stagedFileKey },
     });
   }
 

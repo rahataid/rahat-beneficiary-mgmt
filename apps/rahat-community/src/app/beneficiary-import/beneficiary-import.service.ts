@@ -12,7 +12,7 @@ import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
 import { fetchSchemaFields } from './helpers';
-import { downloadFromR2 } from '../export/helpers/r2-upload.helper';
+import { downloadFromR2, archiveInR2 } from '../export/helpers/r2-upload.helper';
 import { Readable } from 'stream';
 // csv-parser exports as a default in CommonJS — use require() to get the callable function
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -417,6 +417,21 @@ export class BeneficiaryImportService {
         error: null,
       });
       await this.sourceService.updateImportFlag(sourceUUID, true);
+
+      // Move staged CSV to archive folder in R2 — preserves the file for audit
+      try {
+        const archiveKey = await archiveInR2(this.prisma, source.stagedFileKey);
+        // Update the source row so stagedFileKey points to the new archive location
+        await this.sourceService.updateStagedFileKey(sourceUUID, archiveKey);
+        this.logger.debug(
+          `Staged CSV archived in R2. original=${source.stagedFileKey}, archive=${archiveKey}`,
+        );
+      } catch (archiveErr) {
+        // Non-fatal — log but don't fail the import
+        this.logger.warn(
+          `Failed to archive staged CSV in R2. key=${source.stagedFileKey}, error=${archiveErr.message}`,
+        );
+      }
 
       this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
 

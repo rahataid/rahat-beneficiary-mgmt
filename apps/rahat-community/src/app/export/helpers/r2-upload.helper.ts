@@ -2,6 +2,8 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
@@ -97,4 +99,53 @@ export const downloadFromR2 = async (
   }
 
   return streamToBuffer(response.Body as Readable);
+};
+
+export const deleteFromR2 = async (
+  prisma: PrismaService,
+  key: string,
+): Promise<void> => {
+  const r2Settings = await getR2Settings(prisma);
+  const r2Client = buildR2Client(r2Settings);
+
+  await r2Client.send(
+    new DeleteObjectCommand({
+      Bucket: r2Settings.BUCKET_NAME,
+      Key: key,
+    }),
+  );
+};
+
+/**
+ * Moves an R2 object to the `archive/` prefix.
+ * R2 has no native rename — this copies to `archive/<key>` then deletes the original.
+ * Returns the new archive key.
+ */
+export const archiveInR2 = async (
+  prisma: PrismaService,
+  key: string,
+): Promise<string> => {
+  const r2Settings = await getR2Settings(prisma);
+  const r2Client = buildR2Client(r2Settings);
+
+  const archiveKey = `archive/${key}`;
+
+  // Copy to archive location
+  await r2Client.send(
+    new CopyObjectCommand({
+      Bucket: r2Settings.BUCKET_NAME,
+      CopySource: `${r2Settings.BUCKET_NAME}/${key}`,
+      Key: archiveKey,
+    }),
+  );
+
+  // Delete the original
+  await r2Client.send(
+    new DeleteObjectCommand({
+      Bucket: r2Settings.BUCKET_NAME,
+      Key: key,
+    }),
+  );
+
+  return archiveKey;
 };
