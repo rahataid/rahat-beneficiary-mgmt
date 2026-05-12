@@ -342,6 +342,10 @@ export class BeneficiaryImportService {
         `;
         const imported = Number(countResult[0].count);
 
+        // Step 7 — clean up staging table now that data is safely in tbl_beneficiaries
+        await tx.$executeRaw`TRUNCATE TABLE tbl_beneficiary_staging`;
+        this.logger.debug('Staging table cleared after successful import.');
+
         return { imported, failed: 0 };
       },
       { timeout: 300_000 }, // 5-minute transaction timeout for very large imports
