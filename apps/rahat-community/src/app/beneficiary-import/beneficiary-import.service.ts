@@ -12,8 +12,29 @@ import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
 import { fetchSchemaFields } from './helpers';
+import { downloadFromR2 } from '../export/helpers/r2-upload.helper';
+import { Readable } from 'stream';
+// csv-parser exports as a default in CommonJS — use require() to get the callable function
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const csvParser = require('csv-parser') as () => NodeJS.ReadWriteStream;
 
 const { ImportField } = Enums;
+
+// Primary DB scalar fields — anything else goes into extras
+const PRIMARY_FIELDS = new Set([
+  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
+  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
+  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
+  'createdBy', 'createdAt', 'updatedAt', 'id', 'archived', 'isVerified',
+]);
+
+// All staging columns in the exact order of tbl_beneficiary_staging
+const STAGING_COLUMNS = [
+  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
+  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
+  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
+  'extras', 'createdBy',
+];
 
 @Injectable()
 export class BeneficiaryImportService {
@@ -27,30 +48,63 @@ export class BeneficiaryImportService {
     private prisma: PrismaService,
   ) {}
 
-  async splitPrimaryAndExtraFields(data: any) {
-    this.logger.debug(
-      `Splitting primary and extra fields. records=${data?.length ?? 0}`,
-    );
+  // ─── CSV parsing ─────────────────────────────────────────────────────────────
 
-    const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-    const primaryFields = fields.map((f) => f.name);
-
-    const modifiedData = data.map((item: any) => {
-      const extras = {};
-      Object.keys(item).forEach((key) => {
-        if (!primaryFields.includes(key) && key !== 'rawData') {
-          extras[key] = item[key]; // Move it to extras object
-          delete item[key]; // Delete from original object
-        }
-      });
-      // If extras has any key then add it to item
-      if (Object.keys(extras).length > 0) {
-        item.extras = extras;
-      }
-      return item;
+  private parseCsvBuffer(buffer: Buffer): Promise<Record<string, string>[]> {
+    return new Promise((resolve, reject) => {
+      const results: Record<string, string>[] = [];
+      const stream = Readable.from(buffer);
+      stream
+        .pipe(csvParser())
+        .on('data', (row) => results.push(row))
+        .on('end', () => resolve(results))
+        .on('error', reject);
     });
-    return modifiedData;
   }
+
+  // ─── Field splitting ─────────────────────────────────────────────────────────
+
+  /**
+   * Splits records coming from the CSV (all TEXT columns) into:
+   *  - primary fields that map directly to tbl_beneficiaries columns
+   *  - extras: any key that is not a primary field AND is not already in the
+   *    "extras" column (which was serialised as JSON during staging upload)
+   *
+   * The CSV "extras" column holds a JSON string — we parse it back here.
+   */
+  private splitPrimaryAndExtraFields(
+    records: Record<string, string>[],
+    createdBy: string,
+  ): any[] {
+    return records.map((row) => {
+      const primary: any = { createdBy };
+
+      // Parse the pre-serialized extras column
+      let extras: Record<string, any> = {};
+      if (row['extras']) {
+        try {
+          extras = JSON.parse(row['extras']);
+        } catch {
+          // malformed extras — treat as empty
+        }
+      }
+
+      for (const col of STAGING_COLUMNS) {
+        if (col === 'extras' || col === 'createdBy') continue;
+        if (row[col] !== undefined && row[col] !== '') {
+          primary[col] = row[col];
+        }
+      }
+
+      if (Object.keys(extras).length > 0) {
+        primary.extras = extras;
+      }
+
+      return primary;
+    });
+  }
+
+  // ─── Group creation ──────────────────────────────────────────────────────────
 
   async createDefaultAndImportGroup(createdBy: string) {
     this.logger.debug(
@@ -81,74 +135,315 @@ export class BeneficiaryImportService {
     };
   }
 
-  async importBySourceUUID(uuid: string) {
-    this.logger.log(`Import request started for sourceUUID=${uuid}`);
+  // ─── Staging SQL helpers ─────────────────────────────────────────────────────
 
-    let upsertCount = 0;
-    const source = await this.sourceService.findOne(uuid);
-    if (!source) throw new Error('Source not found!');
-    if (source.isImported) throw new Error('Beneficiaries  already imported!');
+  /**
+   * Escapes a value for safe embedding in a raw SQL string.
+   * Nulls become NULL literals; strings have single-quotes escaped.
+   */
+  private sqlEscape(value: any): string {
+    if (value === null || value === undefined || value === '') return 'NULL';
+    const str = String(value);
+    // Escape single quotes by doubling them
+    return `'${str.replace(/'/g, "''")}'`;
+  }
 
-    this.logger.debug(
-      `Source loaded for import. sourceUUID=${source.uuid}, importField=${source.importField}`,
-    );
-
-    const jsonData = source.fieldMapping as {
-      data: object;
-    };
-    const mapped_fields = jsonData.data;
-    const splittedData = await this.splitPrimaryAndExtraFields(mapped_fields);
-    const final_payload = splittedData.map((item: any) => {
-      delete item.rawData;
-      return item;
-    });
-
-    const appendCreatedBy = final_payload.map((p) => {
-      p.createdBy = source.createdBy;
-      return p;
-    });
-
-    this.logger.debug(
-      `Prepared import payload. totalRecords=${appendCreatedBy.length}, sourceUUID=${source.uuid}`,
-    );
-
-    const { defaultGroupUID, importGroupUID } =
-      (await this.createDefaultAndImportGroup(source.createdBy)) as any;
-
-    const { importField } = source;
-    // Import by UUID
-    if (importField === ImportField.UUID) {
-      for (const p of appendCreatedBy) {
-        upsertCount++;
-        await this.benefService.upsertByUUID({
-          sourceUID: source.uuid,
-          defaultGroupUID,
-          importGroupUID,
-          beneficiary: p,
-        });
-        // if (benef) await this.addBenefToSource(benef.uuid, source.uuid);
-
-        if (upsertCount % 50 === 0 || upsertCount === appendCreatedBy.length) {
-          this.logger.debug(
-            `Import progress sourceUUID=${source.uuid}. processed=${upsertCount}/${appendCreatedBy.length}`,
+  /**
+   * Builds a single multi-row INSERT statement for a chunk of records.
+   * All values go in as TEXT — the final upsert SQL casts them to the
+   * correct Postgres types.
+   */
+  private buildStagingInsertSQL(records: any[]): string {
+    const valueRows = records.map((r) => {
+      const vals = STAGING_COLUMNS.map((col) => {
+        if (col === 'extras') {
+          return this.sqlEscape(
+            r.extras ? JSON.stringify(r.extras) : null,
           );
         }
-      }
+        return this.sqlEscape(r[col]);
+      });
+      return `(${vals.join(', ')})`;
+    });
+
+    const cols = STAGING_COLUMNS.map((c) => `"${c}"`).join(', ');
+    return `INSERT INTO tbl_beneficiary_staging (${cols}) VALUES ${valueRows.join(',\n')}`;
+  }
+
+  // ─── Core COPY pipeline ──────────────────────────────────────────────────────
+
+  /**
+   * Atomically loads all records from the staging table into:
+   *   tbl_beneficiaries  (upsert on uuid)
+   *   tbl_beneficiary_groups  (default + import group memberships)
+   *   tbl_beneficiary_sources (source link)
+   *
+   * Everything runs in a single Prisma interactive transaction so a failure
+   * at any step rolls back completely.
+   */
+  private async runCopyPipeline({
+    records,
+    sourceUID,
+    defaultGroupUID,
+    importGroupUID,
+  }: {
+    records: any[];
+    sourceUID: string;
+    defaultGroupUID: string;
+    importGroupUID: string;
+  }): Promise<{ imported: number; failed: number }> {
+    const CHUNK_SIZE = 1000;
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        // Step 1 — clear staging table (safe: single-user system)
+        await tx.$executeRaw`TRUNCATE TABLE tbl_beneficiary_staging`;
+        this.logger.debug('Staging table truncated.');
+
+        // Step 2 — chunked INSERT into staging
+        for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+          const chunk = records.slice(i, i + CHUNK_SIZE);
+          const sql = this.buildStagingInsertSQL(chunk);
+          await tx.$executeRawUnsafe(sql);
+          this.logger.debug(
+            `Staging insert chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(records.length / CHUNK_SIZE)} done.`,
+          );
+        }
+
+        // Step 3 — upsert from staging → tbl_beneficiaries (single atomic statement)
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiaries (
+            uuid,
+            "firstName",
+            "lastName",
+            phone,
+            email,
+            "govtIDNumber",
+            gender,
+            "birthDate",
+            "walletAddress",
+            location,
+            latitude,
+            longitude,
+            notes,
+            "bankedStatus",
+            "internetStatus",
+            "phoneStatus",
+            extras,
+            "createdBy",
+            "createdAt"
+          )
+          SELECT
+            s.uuid::uuid,
+            s."firstName",
+            s."lastName",
+            s.phone,
+            s.email,
+            s."govtIDNumber",
+            CASE
+              WHEN s.gender IN ('MALE','FEMALE','OTHER','UNKNOWN') THEN s.gender::"Gender"
+              ELSE 'UNKNOWN'::"Gender"
+            END,
+            CASE WHEN s."birthDate" IS NOT NULL AND s."birthDate" != ''
+              THEN s."birthDate"::timestamptz ELSE NULL END,
+            COALESCE(s."walletAddress", gen_random_uuid()::text),
+            s.location,
+            CASE WHEN s.latitude IS NOT NULL AND s.latitude != ''
+              THEN s.latitude::float ELSE NULL END,
+            CASE WHEN s.longitude IS NOT NULL AND s.longitude != ''
+              THEN s.longitude::float ELSE NULL END,
+            s.notes,
+            CASE
+              WHEN s."bankedStatus" IN ('UNKNOWN','UNBANKED','BANKED','UNDER_BANKED')
+                THEN s."bankedStatus"::"BankedStatus"
+              ELSE 'UNKNOWN'::"BankedStatus"
+            END,
+            CASE
+              WHEN s."internetStatus" IN ('UNKNOWN','NO_INTERNET','HOME_INTERNET','MOBILE_INTERNET')
+                THEN s."internetStatus"::"InternetStatus"
+              ELSE 'UNKNOWN'::"InternetStatus"
+            END,
+            CASE
+              WHEN s."phoneStatus" IN ('UNKNOWN','NO_PHONE','FEATURE_PHONE','SMART_PHONE')
+                THEN s."phoneStatus"::"PhoneStatus"
+              ELSE 'UNKNOWN'::"PhoneStatus"
+            END,
+            CASE WHEN s.extras IS NOT NULL AND s.extras != ''
+              THEN s.extras::jsonb ELSE NULL END,
+            s."createdBy",
+            NOW()
+          FROM tbl_beneficiary_staging s
+          ON CONFLICT (uuid) DO UPDATE SET
+            "firstName"      = EXCLUDED."firstName",
+            "lastName"       = EXCLUDED."lastName",
+            phone            = EXCLUDED.phone,
+            email            = EXCLUDED.email,
+            "govtIDNumber"   = EXCLUDED."govtIDNumber",
+            gender           = EXCLUDED.gender,
+            "birthDate"      = EXCLUDED."birthDate",
+            "walletAddress"  = EXCLUDED."walletAddress",
+            location         = EXCLUDED.location,
+            latitude         = EXCLUDED.latitude,
+            longitude        = EXCLUDED.longitude,
+            notes            = EXCLUDED.notes,
+            "bankedStatus"   = EXCLUDED."bankedStatus",
+            "internetStatus" = EXCLUDED."internetStatus",
+            "phoneStatus"    = EXCLUDED."phoneStatus",
+            extras           = COALESCE(EXCLUDED.extras, tbl_beneficiaries.extras),
+            "updatedAt"      = NOW()
+        `;
+        this.logger.debug('Beneficiaries upserted from staging.');
+
+        // Step 4 — add to default group (INSERT...ON CONFLICT DO NOTHING)
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+          SELECT
+            gen_random_uuid(),
+            b.uuid,
+            ${defaultGroupUID}::uuid,
+            NOW()
+          FROM tbl_beneficiaries b
+          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+        `;
+        this.logger.debug('Default group memberships inserted.');
+
+        // Step 5 — add to import group
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+          SELECT
+            gen_random_uuid(),
+            b.uuid,
+            ${importGroupUID}::uuid,
+            NOW()
+          FROM tbl_beneficiaries b
+          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+        `;
+        this.logger.debug('Import group memberships inserted.');
+
+        // Step 6 — link beneficiaries to source
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiary_sources (uuid, "beneficiaryUID", "sourceUID", "createdAt")
+          SELECT
+            gen_random_uuid(),
+            b.uuid,
+            ${sourceUID}::uuid,
+            NOW()
+          FROM tbl_beneficiaries b
+          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+          ON CONFLICT ("beneficiaryUID", "sourceUID") DO NOTHING
+        `;
+        this.logger.debug('BeneficiarySource links inserted.');
+
+        // Count how many rows landed in staging (= how many were processed)
+        const countResult = await tx.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(*)::bigint AS count FROM tbl_beneficiary_staging
+        `;
+        const imported = Number(countResult[0].count);
+
+        return { imported, failed: 0 };
+      },
+      { timeout: 300_000 }, // 5-minute transaction timeout for very large imports
+    );
+  }
+
+  // ─── Main entry point ────────────────────────────────────────────────────────
+
+  async importBySourceUUID(sourceUUID: string) {
+    this.logger.log(`Import request started for sourceUUID=${sourceUUID}`);
+
+    const source = await this.sourceService.findOne(sourceUUID);
+    if (!source) throw new Error('Source not found!');
+    if (source.isImported) {
+      this.logger.warn(`Source already imported. sourceUUID=${sourceUUID}`);
+      throw new Error('Beneficiaries already imported!');
     }
 
-    await this.sourceService.updateImportFlag(source.uuid, true);
-    this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+    if (!source.stagedFileKey) {
+      throw new Error(
+        `Source has no staged CSV file. sourceUUID=${sourceUUID}. ` +
+        `This source may have been created before the R2 pipeline was introduced. ` +
+        `Please re-submit the import.`,
+      );
+    }
 
-    this.logger.log(
-      `Import completed for sourceUUID=${source.uuid}. upserted=${upsertCount}, total=${final_payload.length}`,
-    );
+    // Mark as in-progress before doing any heavy work
+    await this.sourceService.updateImportProgress(sourceUUID, {
+      status: 'IN_PROGRESS',
+      startedAt: new Date().toISOString(),
+    });
 
-    return {
-      success: true,
-      status: 200,
-      message: `${upsertCount} out of ${final_payload.length} Beneficiaries updated!`,
-    };
+    try {
+      // 1. Download staged CSV from R2
+      this.logger.debug(
+        `Downloading staged CSV from R2. key=${source.stagedFileKey}`,
+      );
+      const csvBuffer = await downloadFromR2(this.prisma, source.stagedFileKey);
+
+      // 2. Parse CSV back to records
+      const rawRecords = await this.parseCsvBuffer(csvBuffer);
+      this.logger.debug(
+        `Parsed CSV. records=${rawRecords.length}, sourceUUID=${sourceUUID}`,
+      );
+
+      // 3. Resolve primary vs extras fields
+      const records = this.splitPrimaryAndExtraFields(
+        rawRecords,
+        source.createdBy,
+      );
+
+      // 4. Create groups
+      const { defaultGroupUID, importGroupUID } =
+        await this.createDefaultAndImportGroup(source.createdBy);
+
+      // 5. Run the atomic COPY pipeline
+      this.logger.log(
+        `Running COPY pipeline. records=${records.length}, sourceUUID=${sourceUUID}`,
+      );
+      const { imported, failed } = await this.runCopyPipeline({
+        records,
+        sourceUID: source.uuid,
+        defaultGroupUID,
+        importGroupUID,
+      });
+
+      // 6. Mark source as done
+      await this.sourceService.updateImportProgress(sourceUUID, {
+        status: 'DONE',
+        imported,
+        failed,
+        completedAt: new Date().toISOString(),
+        error: null,
+      });
+      await this.sourceService.updateImportFlag(sourceUUID, true);
+
+      this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED);
+
+      this.logger.log(
+        `Import completed. sourceUUID=${sourceUUID}, imported=${imported}, failed=${failed}`,
+      );
+
+      return {
+        success: true,
+        status: 200,
+        message: `${imported} beneficiaries imported successfully.`,
+      };
+    } catch (err) {
+      this.logger.error(
+        `Import failed. sourceUUID=${sourceUUID}, error=${err.message}`,
+      );
+      await this.sourceService.updateImportProgress(sourceUUID, {
+        status: 'FAILED',
+        error: err.message,
+        completedAt: new Date().toISOString(),
+      });
+      // Re-throw so Bull can retry the job
+      throw err;
+    }
   }
+
+  // ─── Legacy manual re-trigger (kept for backward compat) ─────────────────────
 
   async addBenefToSource(benefUID: string, sourceUID: string) {
     this.logger.debug(

@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { PrismaService } from '@rumsan/prisma';
 import { QUEUE } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
 import { BeneficiarySourceService } from '../beneficiary-sources/beneficiary-source.service';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { SourceService } from '../sources/source.service';
@@ -31,7 +30,6 @@ import { ExportModule } from '../export/export.module';
     PrismaService,
     BeneficiariesService,
     FieldDefinitionsService,
-    BeneficiaryImportService,
     BeneficiarySourceService,
     SourceService,
     EmailService,

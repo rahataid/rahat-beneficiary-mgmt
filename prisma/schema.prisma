@@ -79,13 +79,15 @@ model Beneficiary {
 }
 
 model Source {
-  id           Int         @id @default(autoincrement()) @db.Integer()
-  uuid         String      @unique @default(uuid()) @db.Uuid()
-  name         String
-  importId     String      @unique
-  importField  ImportField @default(UUID)
-  isImported   Boolean     @default(false)
-  fieldMapping Json
+  id             Int         @id @default(autoincrement()) @db.Integer()
+  uuid           String      @unique @default(uuid()) @db.Uuid()
+  name           String
+  importId       String      @unique
+  importField    ImportField @default(UUID)
+  isImported     Boolean     @default(false)
+  fieldMapping   Json        // { columnMap: [{ sourceField, targetField }] }
+  stagedFileKey  String?     // R2 key: "imports/{importId}/{timestamp}.csv"
+  importProgress Json?       @db.JsonB() // { total, imported, failed, status, startedAt, completedAt, error }
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()

@@ -25,7 +25,7 @@ import { BeneficiarySourceModule } from './beneficiary-sources/beneficiary-sourc
 import { FieldDefinitionsModule } from './field-definitions/field-definitions.module';
 import { GroupModule } from './groups/group.module';
 import { ListenersModule } from './listeners/listeners.module';
-import { BeneficiaryProcessor, TargetProcessor } from './processors';
+import { TargetProcessor } from './processors';
 import { ScheduleService } from './schedulers/schedule.provider';
 import { SourceModule } from './sources/source.module';
 import { TargetModule } from './targets/target.module';
@@ -71,7 +71,6 @@ import { CommsModule } from './comms/comms.module';
   providers: [
     AppService,
     TargetProcessor,
-    BeneficiaryProcessor,
     PrismaService,
     ScheduleService,
     BeneficiaryStatService,
