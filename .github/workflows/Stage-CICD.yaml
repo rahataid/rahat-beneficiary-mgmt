@@ -57,17 +57,6 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      # # Frontend Image
-      # - name: build && push frontend
-      #   id: build-push-frontend
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: Dockerfile.frontend
-      #     push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-
-      #     tags: esatya/rahat-beneficiary-mgmt-frontend:stage
-
       # Rahat Image
       - name: build && push rahat
         id: build-push-rahat
@@ -110,7 +99,6 @@ jobs:
       - name: Update Image Tag in Manifest
         run: |
           sed -i "s|image: esatya/rahat-beneficiary-mgmt-rahat-community:.*|image: esatya/rahat-beneficiary-mgmt-rahat-community:stage-${{ needs.deploy.outputs.sha_short }}-${{ needs.deploy.outputs.run_id_short }}|" ${{ env.MANIFEST_FILE }}
-
 
       # Commit and push changes using SSH
       - name: Commit and Push Changes
