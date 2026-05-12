@@ -10,10 +10,10 @@ import {
 
 export class SourceTargetMapping {
   @ApiProperty({ example: 'First Name' })
-  sourceField: string;
+  sourceField!: string;
 
   @ApiProperty({ example: 'firstName' })
-  targetField: string;
+  targetField!: string;
 }
 
 export class FieldMappingDto {
@@ -21,7 +21,7 @@ export class FieldMappingDto {
     description: 'Pre-mapped beneficiary records from the Excel sheet',
     type: 'array',
   })
-  data: Record<string, any>[];
+  data!: Record<string, any>[];
 
   @ApiProperty({
     description:
