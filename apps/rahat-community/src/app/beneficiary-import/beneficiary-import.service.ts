@@ -12,7 +12,10 @@ import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
 import { fetchSchemaFields } from './helpers';
-import { downloadFromR2, archiveInR2 } from '../export/helpers/r2-upload.helper';
+import {
+  downloadFromR2,
+  archiveInR2,
+} from '../export/helpers/r2-upload.helper';
 import { Readable } from 'stream';
 // csv-parser exports as a default in CommonJS — use require() to get the callable function
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -22,18 +25,50 @@ const { ImportField } = Enums;
 
 // Primary DB scalar fields — anything else goes into extras
 const PRIMARY_FIELDS = new Set([
-  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
-  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
-  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
-  'createdBy', 'createdAt', 'updatedAt', 'id', 'archived', 'isVerified',
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'id',
+  'archived',
+  'isVerified',
 ]);
 
 // All staging columns in the exact order of tbl_beneficiary_staging
 const STAGING_COLUMNS = [
-  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
-  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
-  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
-  'extras', 'createdBy',
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'extras',
+  'createdBy',
 ];
 
 @Injectable()
@@ -157,9 +192,7 @@ export class BeneficiaryImportService {
     const valueRows = records.map((r) => {
       const vals = STAGING_COLUMNS.map((col) => {
         if (col === 'extras') {
-          return this.sqlEscape(
-            r.extras ? JSON.stringify(r.extras) : null,
-          );
+          return this.sqlEscape(r.extras ? JSON.stringify(r.extras) : null);
         }
         return this.sqlEscape(r[col]);
       });
@@ -167,7 +200,9 @@ export class BeneficiaryImportService {
     });
 
     const cols = STAGING_COLUMNS.map((c) => `"${c}"`).join(', ');
-    return `INSERT INTO tbl_beneficiary_staging (${cols}) VALUES ${valueRows.join(',\n')}`;
+    return `INSERT INTO tbl_beneficiary_staging (${cols}) VALUES ${valueRows.join(
+      ',\n',
+    )}`;
   }
 
   // ─── Core COPY pipeline ──────────────────────────────────────────────────────
@@ -206,7 +241,9 @@ export class BeneficiaryImportService {
           const sql = this.buildStagingInsertSQL(chunk);
           await tx.$executeRawUnsafe(sql);
           this.logger.debug(
-            `Staging insert chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(records.length / CHUNK_SIZE)} done.`,
+            `Staging insert chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(
+              records.length / CHUNK_SIZE,
+            )} done.`,
           );
         }
 
@@ -246,7 +283,7 @@ export class BeneficiaryImportService {
             END,
             CASE WHEN s."birthDate" IS NOT NULL AND s."birthDate" != ''
               THEN s."birthDate"::timestamptz ELSE NULL END,
-            COALESCE(s."walletAddress", gen_random_uuid()::text),
+            s."walletAddress",
             s.location,
             CASE WHEN s.latitude IS NOT NULL AND s.latitude != ''
               THEN s.latitude::float ELSE NULL END,
@@ -367,8 +404,8 @@ export class BeneficiaryImportService {
     if (!source.stagedFileKey) {
       throw new Error(
         `Source has no staged CSV file. sourceUUID=${sourceUUID}. ` +
-        `This source may have been created before the R2 pipeline was introduced. ` +
-        `Please re-submit the import.`,
+          `This source may have been created before the R2 pipeline was introduced. ` +
+          `Please re-submit the import.`,
       );
     }
 
