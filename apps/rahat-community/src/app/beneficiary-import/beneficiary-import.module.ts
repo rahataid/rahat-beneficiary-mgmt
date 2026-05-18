@@ -12,6 +12,7 @@ import { BQUEUE } from '@rahataid/community-tool-sdk';
 import { GroupService } from '../groups/group.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { VerificationService } from '../beneficiaries/verification.service';
+import { BeneficiaryProcessor } from '../processors/beneficiary.processor';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { VerificationService } from '../beneficiaries/verification.service';
     GroupService,
     BeneficiaryGroupService,
     VerificationService,
+    BeneficiaryProcessor,
   ],
+  exports: [BeneficiaryImportService],
 })
 export class BeneficiaryImportModule {}

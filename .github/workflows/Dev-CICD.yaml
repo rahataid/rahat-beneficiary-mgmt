@@ -55,16 +55,6 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      # Frontend Image
-      # - name: build && push frontend
-      #   id: build-push-frontend
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: Dockerfile.frontend
-      #     push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-      #     tags: esatya/rahat-beneficiary-mgmt-frontend:dev
-
       # Rahat Image
       - name: build && push rahat
         id: build-push-rahat

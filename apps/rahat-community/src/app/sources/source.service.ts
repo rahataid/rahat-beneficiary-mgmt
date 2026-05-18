@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import {
@@ -25,9 +25,57 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
 import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
+import { uploadToR2 } from '../export/helpers/r2-upload.helper';
+import { fetchSchemaFields } from '../beneficiary-import/helpers';
+import { DB_MODELS } from '../../constants';
+
+export type ImportProgressStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'DONE'
+  | 'FAILED';
+
+export interface ImportProgress {
+  total: number;
+  imported: number;
+  failed: number;
+  status: ImportProgressStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  error: string | null;
+}
+
+// Primary DB fields that belong in tbl_beneficiaries columns (not extras)
+const PRIMARY_BENEFICIARY_FIELDS = new Set<string>([
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'id',
+  'archived',
+  'isVerified',
+  'extras',
+]);
 
 @Injectable()
 export class SourceService {
+  private readonly logger = new Logger(SourceService.name);
+
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY) private queueClient: Queue,
     private prisma: PrismaService,
@@ -56,15 +104,12 @@ export class SourceService {
   }
 
   markDuplicates(data: any[], uniqueFields: string[]) {
-    // Create a map to store occurrences of each unique field value
-    const fieldOccurrences = {};
+    const fieldOccurrences: Record<string, Map<string, number>> = {};
 
-    // Initialize the fieldOccurrences map
     uniqueFields.forEach((field) => {
       fieldOccurrences[field] = new Map();
     });
 
-    // Count occurance of each required field
     data.forEach((item) => {
       uniqueFields.forEach((field) => {
         const value = item[field];
@@ -78,7 +123,6 @@ export class SourceService {
       });
     });
 
-    // Mark duplicate if field value occurs more than once
     data.forEach((item) => {
       uniqueFields.forEach((field) => {
         if (fieldOccurrences[field].get(item[field]) > 1) {
@@ -90,13 +134,12 @@ export class SourceService {
     return data;
   }
 
-  // TODO Remove this code block
   async compareDuplicateBeneficiary(
     payload: any,
     existingData: any,
     uniqueFields: string[],
   ) {
-    let result = [];
+    const result = [];
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
       resolveUniqueFields(uniqueFields);
     for (let p of payload) {
@@ -138,13 +181,11 @@ export class SourceService {
     return p;
   }
 
-  // 1. Validate required fields
-  // 2. Fetch data from tbl_beneficiary with govtIDNumber and phone number
-  // 3. Sanitize phone and govtIDNumber as alphanumeric
-  // 4. Merge data with tbl_beneficiary and payload data
-  // 5. Compare payload data with merged data
-  // 6. Return payload data with isDuplicate flag
   async create(dto: CreateSourceDto) {
+    this.logger.log(
+      `Create source request received. importId=${dto.importId}, action=${dto.action}`,
+    );
+
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
@@ -153,8 +194,13 @@ export class SourceService {
     this.validateUniqueFields(uniqueFields);
 
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
+    this.logger.debug(
+      `Preparing import payload. records=${
+        data.length
+      }, hasExternalUUID=${hasUUID}, uniqueFields=${uniqueFields.join(',')}`,
+    );
 
-    let payloadWithUUID = data.map((d: any) => {
+    const payloadWithUUID = data.map((d: any) => {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
       const formatted = formatEnumFieldValues(d);
@@ -165,16 +211,22 @@ export class SourceService {
       };
     });
     const extraFields = await this.listExtraFields();
+    this.logger.debug(
+      `Resolved extra field definitions. count=${extraFields.length}`,
+    );
 
-    if (action === IMPORT_ACTION.VALIDATE)
+    if (action === IMPORT_ACTION.VALIDATE) {
+      this.logger.log(`Validation flow started. importId=${dto.importId}`);
       return this.ValidateBeneficiaryImort({
         data: payloadWithUUID,
         extraFields,
         hasUUID,
         uniqueFields,
       });
+    }
 
     if (action === IMPORT_ACTION.IMPORT) {
+      this.logger.log(`Import flow started. importId=${dto.importId}`);
       const { allValidationErrors } = await validateSchemaFields(
         payloadWithUUID,
         extraFields,
@@ -182,12 +234,24 @@ export class SourceService {
         uniqueFields,
       );
 
-      if (allValidationErrors.length)
+      if (allValidationErrors.length) {
+        this.logger.debug(
+          `Import schema validation failed. importId=${dto.importId}, errorCount=${allValidationErrors.length}`,
+        );
         throw new Error('Invalid data submitted!');
-      rest.fieldMapping.data = payloadWithUUID;
+      }
+
+      this.logger.debug(
+        `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
+      );
+
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest);
+      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
     }
+
+    this.logger.debug(
+      `Create source request ended without matching action. importId=${dto.importId}, action=${action}`,
+    );
   }
 
   async getUniqueFieldSettings() {
@@ -204,6 +268,15 @@ export class SourceService {
   async getMappingsByImportId(importId: string) {
     return this.prisma.source.findUnique({
       where: { importId },
+      select: {
+        uuid: true,
+        importId: true,
+        name: true,
+        fieldMapping: true,
+        isImported: true,
+        importProgress: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -238,6 +311,10 @@ export class SourceService {
   }
 
   async ValidateBeneficiaryImort({ data, extraFields, hasUUID, uniqueFields }) {
+    this.logger.log(
+      `Validate beneficiaries started. records=${data.length}, hasUUID=${hasUUID}`,
+    );
+
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
       extraFields,
@@ -250,8 +327,12 @@ export class SourceService {
       uniqueFields,
     );
 
+    this.logger.debug(
+      `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
+    );
+
     const dateParsedDuplicates = duplicates.map((d) => {
-      let item = { ...d };
+      const item = { ...d };
       if (item.birthDate) {
         item.birthDate = parseIsoDateToString(item.birthDate);
       }
@@ -264,23 +345,231 @@ export class SourceService {
     };
   }
 
-  async createSourceAndAddToQueue(data: CreateSourceDto) {
+  // ─── CSV serialization ──────────────────────────────────────────────────────
+
+  /**
+   * Determines which fields on a record are "extras" (not primary DB columns).
+   * They get JSON-stringified into a single "extras" CSV column.
+   */
+  private separateExtras(record: any): {
+    primary: any;
+    extras: Record<string, any>;
+  } {
+    const primary: any = {};
+    const extras: Record<string, any> = {};
+
+    for (const key of Object.keys(record)) {
+      // Skip rawData — it's only needed for the UI mapping step
+      if (key === 'rawData') continue;
+      if (PRIMARY_BENEFICIARY_FIELDS.has(key)) {
+        primary[key] = record[key];
+      } else {
+        extras[key] = record[key];
+      }
+    }
+
+    return { primary, extras };
+  }
+
+  /**
+   * Escapes a value for CSV: wraps in double-quotes and escapes internal quotes.
+   */
+  private escapeCsvValue(value: any): string {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    // If the string contains comma, newline, or double-quote — wrap in quotes
+    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  /**
+   * Serialises the validated + UUID-assigned records to a CSV Buffer.
+   * rawData is stripped. Extra (non-primary) fields are JSON-stringified
+   * into the "extras" column.
+   */
+  serializeToCSV(records: any[]): Buffer {
+    const COLUMNS = [
+      'uuid',
+      'firstName',
+      'lastName',
+      'phone',
+      'email',
+      'govtIDNumber',
+      'gender',
+      'birthDate',
+      'walletAddress',
+      'location',
+      'latitude',
+      'longitude',
+      'notes',
+      'bankedStatus',
+      'internetStatus',
+      'phoneStatus',
+      'extras',
+      'createdBy',
+    ];
+
+    const header = COLUMNS.join(',');
+    const rows = records.map((record) => {
+      const { primary, extras } = this.separateExtras(record);
+      const extrasJson = Object.keys(extras).length
+        ? JSON.stringify(extras)
+        : '';
+
+      return COLUMNS.map((col) => {
+        if (col === 'extras') return this.escapeCsvValue(extrasJson);
+        return this.escapeCsvValue(primary[col]);
+      }).join(',');
+    });
+
+    return Buffer.from([header, ...rows].join('\n'), 'utf-8');
+  }
+
+  // ─── R2 staging ─────────────────────────────────────────────────────────────
+
+  private async uploadStagedCSV(
+    importId: string,
+    buffer: Buffer,
+  ): Promise<string> {
+    const key = `imports/${importId}/${Date.now()}.csv`;
+    this.logger.debug(
+      `Uploading staged CSV to R2. key=${key}, bytes=${buffer.length}`,
+    );
+    await uploadToR2(this.prisma, buffer, key, 'text/csv');
+    return key;
+  }
+
+  // ─── Progress tracking ───────────────────────────────────────────────────────
+
+  async updateImportProgress(
+    sourceUUID: string,
+    patch: Partial<ImportProgress>,
+  ) {
+    const source = await this.prisma.source.findUnique({
+      where: { uuid: sourceUUID },
+      select: { importProgress: true },
+    });
+
+    const current = (source?.importProgress as unknown as ImportProgress) ?? {
+      total: 0,
+      imported: 0,
+      failed: 0,
+      status: 'PENDING',
+      startedAt: null,
+      completedAt: null,
+      error: null,
+    };
+
+    const updated = { ...current, ...patch };
+
+    return this.prisma.source.update({
+      where: { uuid: sourceUUID },
+      data: { importProgress: updated },
+    });
+  }
+
+  async getImportStatus(uuid: string) {
+    const source = await this.prisma.source.findUnique({
+      where: { uuid },
+      select: {
+        uuid: true,
+        importId: true,
+        name: true,
+        isImported: true,
+        importProgress: true,
+        stagedFileKey: true,
+      },
+    });
+    if (!source) throw new Error(`Source not found: ${uuid}`);
+    return source;
+  }
+
+  // ─── Queue ──────────────────────────────────────────────────────────────────
+
+  async createSourceAndAddToQueue(
+    data: Omit<CreateSourceDto, 'action'>,
+    records: any[],
+  ) {
+    this.logger.log(
+      `Persisting source and queueing import. importId=${data.importId}`,
+    );
+
+    // 1. Serialize validated records to CSV and upload to R2
+    const csvBuffer = this.serializeToCSV(records);
+    const stagedFileKey = await this.uploadStagedCSV(data.importId, csvBuffer);
+
+    this.logger.debug(
+      `Staged CSV uploaded. importId=${data.importId}, key=${stagedFileKey}, records=${records.length}`,
+    );
+
+    // Store only the column mapping — not the full data blob.
+    // Read sourceTargetMappings as plain objects directly (avoids class-transformer
+    // serialisation quirks that would turn class instances into empty arrays).
+    const rawMappings = data.fieldMapping?.sourceTargetMappings;
+    const sourceTargetMappings = Array.isArray(rawMappings)
+      ? rawMappings.map((m: any) => ({
+          sourceField: m.sourceField ?? m['sourceField'],
+          targetField: m.targetField ?? m['targetField'],
+        }))
+      : [];
+
+    const fieldMappingToStore = { sourceTargetMappings } as any;
+
+    const initialProgress: ImportProgress = {
+      total: records.length,
+      imported: 0,
+      failed: 0,
+      status: 'PENDING',
+      startedAt: null,
+      completedAt: null,
+      error: null,
+    };
+
+    // 3. Upsert source row (idempotent on importId)
     const row = await this.prisma.source.upsert({
       where: { importId: data.importId },
-      update: { ...data, isImported: false },
-      create: data,
+      update: {
+        name: data.name,
+        importField: data.importField,
+        createdBy: data.createdBy,
+        fieldMapping: fieldMappingToStore,
+        stagedFileKey,
+        isImported: false,
+        importProgress: initialProgress as any,
+      },
+      create: {
+        name: data.name,
+        importId: data.importId,
+        importField: data.importField,
+        createdBy: data.createdBy,
+        fieldMapping: fieldMappingToStore,
+        stagedFileKey,
+        isImported: false,
+        importProgress: initialProgress as any,
+      },
     });
-    this.queueClient.add(
+
+    // 4. Enqueue the import job
+    await this.queueClient.add(
       JOBS.BENEFICIARY.IMPORT,
       { sourceUUID: row.uuid },
       QUEUE_RETRY_OPTIONS,
     );
-    return { message: 'Source created and added to queue' };
+
+    this.logger.debug(
+      `Source queued successfully. sourceUUID=${row.uuid}, job=${JOBS.BENEFICIARY.IMPORT}`,
+    );
+
+    return { message: 'Import queued successfully', sourceUUID: row.uuid };
   }
+
+  // ─── Misc ────────────────────────────────────────────────────────────────────
 
   async checkDuplicateByExternalUUID(data: any, external_uuid: string) {
     const result = [];
-    for (let p of data) {
+    for (const p of data) {
       p.isDuplicate = false;
       const keyExist = Object.hasOwnProperty.call(p, external_uuid);
       if (keyExist && p[external_uuid]) {
@@ -298,11 +587,20 @@ export class SourceService {
   }
 
   findAll(query: any) {
+    this.logger.debug(
+      `Listing sources. page=${query?.page ?? 1}, perPage=${
+        query?.perPage ?? 'default'
+      }`,
+    );
+
     const select = {
-      fieldMapping: true,
       uuid: true,
       id: true,
       name: true,
+      importId: true,
+      isImported: true,
+      importProgress: true,
+      fieldMapping: true,
       createdAt: true,
     };
 
@@ -317,28 +615,40 @@ export class SourceService {
   }
 
   findOne(uuid: string) {
+    this.logger.debug(`Fetching source by uuid=${uuid}`);
     return this.prisma.source.findUnique({ where: { uuid } });
   }
 
   update(uuid: string, dto: UpdateSourceDto) {
+    this.logger.log(`Updating source. uuid=${uuid}`);
     return this.prisma.source.update({
       where: { uuid },
-      data: dto,
+      data: dto as any,
     });
   }
 
   updateImportFlag(uuid: string, flag: boolean) {
+    this.logger.debug(`Updating import flag. uuid=${uuid}, flag=${flag}`);
     return this.prisma.source.update({
       where: { uuid },
       data: { isImported: flag },
     });
   }
 
+  updateStagedFileKey(uuid: string, stagedFileKey: string) {
+    this.logger.debug(
+      `Updating stagedFileKey. uuid=${uuid}, key=${stagedFileKey}`,
+    );
+    return this.prisma.source.update({
+      where: { uuid },
+      data: { stagedFileKey },
+    });
+  }
+
   remove(uuid: string) {
+    this.logger.log(`Removing source. uuid=${uuid}`);
     return this.prisma.source.delete({
-      where: {
-        uuid,
-      },
+      where: { uuid },
     });
   }
 }

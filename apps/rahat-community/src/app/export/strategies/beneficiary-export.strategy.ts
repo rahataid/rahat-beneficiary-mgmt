@@ -22,7 +22,9 @@ export class BeneficiaryExportStrategy implements ExportStrategy {
   ) {}
 
   async prepare(params: { groupUUID: string; appURL: string }) {
-    const { groupUUID } = params;
+    const { groupUUID, appURL } = params;
+    await this.verifyPublicKey(appURL);
+
     const group = await this.groupService.findUnique(groupUUID);
     if (!group) throw new Error('Group not found');
 
