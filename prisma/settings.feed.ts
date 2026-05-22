@@ -18,6 +18,17 @@ const settingsData = [
       ADDRESS: identity.address,
     },
   },
+
+  {
+    name: SETTINGS_NAMES.UNIQUE_FIELDS,
+    dataType: SettingDataType.OBJECT,
+    requiredFields: ['DATA'],
+    value: {
+      DATA: 'phone',
+    },
+    isPrivate: false,
+    isReadOnly: false,
+  },
 ];
 
 const prisma = new PrismaClient();

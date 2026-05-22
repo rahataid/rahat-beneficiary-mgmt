@@ -8,6 +8,30 @@ import {
   IsString,
 } from 'class-validator';
 
+export class SourceTargetMapping {
+  @ApiProperty({ example: 'First Name' })
+  sourceField!: string;
+
+  @ApiProperty({ example: 'firstName' })
+  targetField!: string;
+}
+
+export class FieldMappingDto {
+  @ApiProperty({
+    description: 'Pre-mapped beneficiary records from the Excel sheet',
+    type: 'array',
+  })
+  data!: Record<string, any>[];
+
+  @ApiProperty({
+    description:
+      'Column mapping from Excel headers to field definition names. Persisted so users do not need to re-map the same file.',
+    type: [SourceTargetMapping],
+    required: false,
+  })
+  sourceTargetMappings?: SourceTargetMapping[];
+}
+
 export class CreateSourceDto {
   @ApiProperty({
     example: 'Kobotool',
@@ -39,7 +63,7 @@ export class CreateSourceDto {
 
   @IsOptional()
   @IsNotEmptyObject()
-  fieldMapping!: any;
+  fieldMapping!: FieldMappingDto;
 
   @ApiProperty({
     type: 'string',

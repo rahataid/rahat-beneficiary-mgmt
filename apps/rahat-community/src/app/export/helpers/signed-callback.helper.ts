@@ -100,9 +100,16 @@ export const exportBulkBeneficiary = async (
 
 export const checkPublicKey = (apiUrl: string) => {
   return new Promise((resolve, reject) => {
-    axios.get(apiUrl).then(async (response) => {
-      resolve(response.data);
-    });
+    axios
+      .get(apiUrl)
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        const message =
+          error?.response?.data?.message || 'Failed to verify public key';
+        reject(new Error(message));
+      });
   });
 };
 

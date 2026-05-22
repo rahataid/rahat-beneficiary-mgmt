@@ -9,14 +9,14 @@ const ROLES = {
 };
 
 const FEED_USERS = {
-  BINOD: {
-    name: 'Rumsan Mailinator',
+  rumsan: {
+    name: 'Rumsan Mail Admin',
     email: 'rumsan@mailinator.com',
     role: ROLES.ADMIN,
   },
-  KARUN: {
-    name: 'rumsan manager',
-    email: 'rumsan_manager@rumsan.net',
+  MANAGER: {
+    name: 'Rumsan Manager',
+    email: 'rumsan.manager@mailinator.com',
     role: ROLES.MANAGER,
   },
   JOHN: {
@@ -73,18 +73,18 @@ export const permissions: Array<{
 // 1. Map User details
 export const users: Array<{ name?: string; email?: string; wallet?: string }> =
   [
-    { name: FEED_USERS.BINOD.name, email: FEED_USERS.BINOD.email },
+    { name: FEED_USERS.rumsan.name, email: FEED_USERS.rumsan.email },
     {
-      name: FEED_USERS.KARUN.name,
-      email: FEED_USERS.KARUN.email,
+      name: FEED_USERS.MANAGER.name,
+      email: FEED_USERS.MANAGER.email,
     },
     { name: FEED_USERS.JOHN.name, email: FEED_USERS.JOHN.email },
   ];
 
 // 2. Map UserRole with user name
 export const userRoles: Array<{ name: string; roleName: string }> = [
-  { name: FEED_USERS.BINOD.name, roleName: FEED_USERS.BINOD.role },
-  { name: FEED_USERS.KARUN.name, roleName: FEED_USERS.KARUN.role },
+  { name: FEED_USERS.rumsan.name, roleName: FEED_USERS.rumsan.role },
+  { name: FEED_USERS.MANAGER.name, roleName: FEED_USERS.MANAGER.role },
   { name: FEED_USERS.JOHN.name, roleName: FEED_USERS.JOHN.role },
 ];
 
@@ -95,14 +95,14 @@ export const auths: Array<{
   serviceId: string;
 }> = [
   {
-    name: FEED_USERS.BINOD.name,
+    name: FEED_USERS.rumsan.name,
     service: Service.EMAIL,
-    serviceId: FEED_USERS.BINOD.email,
+    serviceId: FEED_USERS.rumsan.email,
   },
   {
-    name: FEED_USERS.KARUN.name,
+    name: FEED_USERS.MANAGER.name,
     service: Service.EMAIL,
-    serviceId: FEED_USERS.KARUN.email,
+    serviceId: FEED_USERS.MANAGER.email,
   },
   {
     name: FEED_USERS.JOHN.name,

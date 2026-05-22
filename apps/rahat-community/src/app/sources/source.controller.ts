@@ -58,6 +58,14 @@ export class SourceController {
     return this.sourceService.getMappingsByImportId(importId);
   }
 
+  @Get(':uuid/import-status')
+  @HttpCode(HttpStatus.OK)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.SOURCE })
+  @UseGuards(JwtGuard, AbilitiesGuard)
+  getImportStatus(@Param('uuid') uuid: string) {
+    return this.sourceService.getImportStatus(uuid);
+  }
+
   @Get(':uuid')
   @HttpCode(HttpStatus.OK)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.SOURCE })

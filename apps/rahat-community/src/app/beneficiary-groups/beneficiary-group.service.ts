@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   CreateBeneficiaryGroupDto,
   ListBeneficiaryGroupDto,
@@ -17,6 +17,8 @@ const BATCH_SIZE = 50;
 
 @Injectable()
 export class BeneficiaryGroupService {
+  private readonly logger = new Logger(BeneficiaryGroupService.name);
+
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
     private prisma: PrismaService,
@@ -27,6 +29,10 @@ export class BeneficiaryGroupService {
   }
 
   async create(dto: CreateBeneficiaryGroupDto) {
+    this.logger.log(
+      `Create beneficiary-group assignment requested. groupUID=${dto.groupUID}, beneficiaries=${dto.beneficiaryUID.length}`,
+    );
+
     const currentGroup = await this.findGroupByUUID(dto.groupUID);
 
     const totalBeneficiaries = dto.beneficiaryUID.length;
@@ -35,12 +41,20 @@ export class BeneficiaryGroupService {
       ...dto,
     });
 
+    this.logger.debug(
+      `Queued beneficiary-group assignment job. groupUID=${dto.groupUID}, job=${JOBS.CREATE_BENEF_GROUP}`,
+    );
+
     return {
       finalMessage: `${totalBeneficiaries} beneficiaries assigned to ${currentGroup.name} group`,
     };
   }
 
   async createBeneficiaryGroup(dto: CreateBeneficiaryGroupDto) {
+    this.logger.log(
+      `Processing beneficiary-group assignment. groupUID=${dto.groupUID}, beneficiaries=${dto.beneficiaryUID.length}`,
+    );
+
     const totalBeneficiaries = dto.beneficiaryUID.length;
     for (let i = 0; i < totalBeneficiaries; i += BATCH_SIZE) {
       const currentBatch = dto.beneficiaryUID.slice(i, i + BATCH_SIZE);
@@ -63,6 +77,15 @@ export class BeneficiaryGroupService {
           },
         });
       }
+
+      this.logger.debug(
+        `Beneficiary-group batch completed. groupUID=${
+          dto.groupUID
+        }, processed=${Math.min(
+          i + BATCH_SIZE,
+          totalBeneficiaries,
+        )}/${totalBeneficiaries}`,
+      );
     }
   }
 
@@ -79,6 +102,12 @@ export class BeneficiaryGroupService {
   }
 
   async findAll(filters: ListBeneficiaryGroupDto) {
+    this.logger.debug(
+      `Listing beneficiary-group links. page=${+filters?.page || 1}, perPage=${
+        +filters?.perPage || 'default'
+      }`,
+    );
+
     return paginate(
       this.prisma.beneficiaryGroup,
       { where: {} },
@@ -90,6 +119,7 @@ export class BeneficiaryGroupService {
   }
 
   async findOne(uuid: string) {
+    this.logger.debug(`Fetching beneficiary-group link by uuid=${uuid}`);
     return await this.prisma.beneficiaryGroup.findUnique({
       where: {
         uuid,
@@ -125,6 +155,8 @@ export class BeneficiaryGroupService {
   }
 
   async remove(uuid: string) {
+    this.logger.log(`Removing beneficiary-group link. uuid=${uuid}`);
+
     const findBenefGroup = await this.prisma.beneficiaryGroup.findUnique({
       where: {
         uuid,
@@ -148,6 +180,10 @@ export class BeneficiaryGroupService {
   }
 
   async removeBeneficiaryFromGroup(benefUID: string, uuid: string) {
+    this.logger.debug(
+      `Removing beneficiary from group. beneficiaryUID=${benefUID}, groupUID=${uuid}`,
+    );
+
     return this.prisma.beneficiaryGroup.deleteMany({
       where: {
         groupUID: uuid,
@@ -157,6 +193,10 @@ export class BeneficiaryGroupService {
   }
 
   async removeBenefFromMultipleGroups(benefUID: string) {
+    this.logger.debug(
+      `Removing beneficiary from all groups. beneficiaryUID=${benefUID}`,
+    );
+
     return this.prisma.beneficiaryGroup.deleteMany({
       where: {
         beneficiaryUID: benefUID,
@@ -165,6 +205,10 @@ export class BeneficiaryGroupService {
   }
 
   upsertBeneficiaryGroup(beneficiary: string, group: string) {
+    this.logger.debug(
+      `Upserting beneficiary-group link. beneficiaryUID=${beneficiary}, groupUID=${group}`,
+    );
+
     const payload = {
       beneficiaryUID: beneficiary,
       groupUID: group,
