@@ -21,7 +21,7 @@ const FEED_USERS = {
   },
   JOHN: {
     name: 'John Doe',
-    email: 'john@mailinator.com',
+    email: 'rumsan_user@mailinator.com',
     role: ROLES.USER,
   },
 };
