@@ -1,5 +1,10 @@
 import { Logger } from '@nestjs/common';
-import { OnQueueCompleted, OnQueueFailed, Process, Processor } from '@nestjs/bull';
+import {
+  OnQueueCompleted,
+  OnQueueFailed,
+  Process,
+  Processor,
+} from '@nestjs/bull';
 import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -21,11 +26,16 @@ export class BeneficiaryProcessor {
    * trigger a retry rather than silently completing the job.
    */
   @Process(JOBS.BENEFICIARY.IMPORT)
-  async importBeneficiary(job: Job<{ sourceUUID: string }>) {
+  async importBeneficiary(
+    job: Job<{ sourceUUID: string; groupName?: string }>,
+  ) {
     this.logger.log(
-      `Processing import job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}`,
+      `Processing import job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}, groupName=${job.data.groupName}`,
     );
-    await this.benefImportService.importBySourceUUID(job.data.sourceUUID);
+    await this.benefImportService.importBySourceUUID(
+      job.data.sourceUUID,
+      job.data.groupName,
+    );
   }
 
   @Process(JOBS.BENEFICIARY.EXPORT)

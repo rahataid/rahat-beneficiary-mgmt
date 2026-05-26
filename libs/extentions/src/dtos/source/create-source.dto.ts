@@ -71,4 +71,8 @@ export class CreateSourceDto {
   })
   @IsOptional()
   createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  groupName?:string;
 }

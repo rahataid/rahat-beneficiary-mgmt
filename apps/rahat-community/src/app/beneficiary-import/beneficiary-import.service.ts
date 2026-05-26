@@ -141,7 +141,7 @@ export class BeneficiaryImportService {
 
   // ─── Group creation ──────────────────────────────────────────────────────────
 
-  async createDefaultAndImportGroup(createdBy: string) {
+  async createDefaultAndImportGroup(createdBy: string, groupName?: string) {
     this.logger.debug(
       `Ensuring default/import groups for createdBy=${createdBy}`,
     );
@@ -154,7 +154,7 @@ export class BeneficiaryImportService {
       createdBy,
     });
     const importGroup = await this.groupService.upsertByName({
-      name: `import_${formatDateAndTime(new Date())}`,
+      name: groupName ? groupName : `import_${formatDateAndTime(new Date())}`,
       autoCreated: true,
       origins: [GroupOrigins.IMPORT],
       createdBy,
@@ -391,7 +391,7 @@ export class BeneficiaryImportService {
 
   // ─── Main entry point ────────────────────────────────────────────────────────
 
-  async importBySourceUUID(sourceUUID: string) {
+  async importBySourceUUID(sourceUUID: string, groupName?: string) {
     this.logger.log(`Import request started for sourceUUID=${sourceUUID}`);
 
     const source = await this.sourceService.findOne(sourceUUID);
@@ -436,7 +436,7 @@ export class BeneficiaryImportService {
 
       // 4. Create groups
       const { defaultGroupUID, importGroupUID } =
-        await this.createDefaultAndImportGroup(source.createdBy);
+        await this.createDefaultAndImportGroup(source.createdBy, groupName);
 
       // 5. Run the atomic COPY pipeline
       this.logger.log(

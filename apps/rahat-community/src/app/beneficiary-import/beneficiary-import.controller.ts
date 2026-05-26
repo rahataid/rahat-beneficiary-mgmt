@@ -2,12 +2,13 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
 import { BeneficiaryImportService } from './beneficiary-import.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -27,11 +28,12 @@ export class BeneficiaryImportController {
 
   @Get(':source_uuid/import')
   @HttpCode(HttpStatus.OK)
+  @ApiQuery({ name: 'groupName', required: false, description: 'Optional group name for import' })
   @CheckAbilities({
     actions: ACTIONS.CREATE,
     subject: SUBJECTS.BENEFICIARY,
   })
-  importBySourceUUID(@Param('source_uuid') uuid: string) {
-    return this.beneficiaryImportService.importBySourceUUID(uuid);
+  importBySourceUUID(@Param('source_uuid') uuid: string, @Query('groupName') groupName?: string) {
+    return this.beneficiaryImportService.importBySourceUUID(uuid, groupName);
   }
 }

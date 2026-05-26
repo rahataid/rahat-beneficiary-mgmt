@@ -28,6 +28,7 @@ import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { uploadToR2 } from '../export/helpers/r2-upload.helper';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { DB_MODELS } from '../../constants';
+import { group } from 'console';
 
 export type ImportProgressStatus =
   | 'PENDING'
@@ -554,7 +555,7 @@ export class SourceService {
     // 4. Enqueue the import job
     await this.queueClient.add(
       JOBS.BENEFICIARY.IMPORT,
-      { sourceUUID: row.uuid },
+      { sourceUUID: row.uuid, groupName: data.groupName },
       QUEUE_RETRY_OPTIONS,
     );
 
