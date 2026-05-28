@@ -9,7 +9,9 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
+  IsPhoneNumber,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 import {
@@ -88,11 +90,14 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: '9785623749',
+    example: '+9779785623749',
   })
+@Matches(/^\+\d{1,4}\d+$/, {
+  message: 'Phone number must include country code',
+})
+
   @IsString()
   @IsOptional()
-  @MinLength(10)
   phone?: string;
 
   @ApiProperty({
