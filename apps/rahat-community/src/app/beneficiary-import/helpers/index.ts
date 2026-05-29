@@ -9,6 +9,13 @@ import {
 } from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
+function generateInvalidPhoneNumber(): string {
+  const invalidPrefixes = ['99', '88', '77', '66'];
+  const prefix = invalidPrefixes[Math.floor(Math.random() * invalidPrefixes.length)];
+  const suffix = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+  return `+977${prefix}${suffix}`;
+}
+
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName',
@@ -186,7 +193,19 @@ const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
     emptyFields.forEach((field) => {
-      newObj[field] = newObj[field] || ''; //
+      // Initialize empty fields with empty string if missing
+      newObj[field] = newObj[field] || '';
+      // If the field is phone and still empty, generate a random Nepali phone number
+      if (field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
+        try {
+          // generateInvalidPhoneNumber returns an intentionally invalid Nepali phone number
+          const generated = generateInvalidPhoneNumber();
+          newObj[field] = generated;
+        } catch (e) {
+          // Fallback to empty string if generation fails
+          newObj[field] = '';
+        }
+      }
     });
     return newObj;
   });
