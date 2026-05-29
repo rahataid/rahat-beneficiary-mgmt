@@ -18,7 +18,7 @@ import {
   IsValidDate,
   IsValidLongitude,
 } from '../../validators';
-import { IsValidPhone } from './valid-phone.decorator';
+import { IsValidPhone } from './is-valid-phone.decorator';
 
 export class BulkInsertDto {
   @ApiProperty({
