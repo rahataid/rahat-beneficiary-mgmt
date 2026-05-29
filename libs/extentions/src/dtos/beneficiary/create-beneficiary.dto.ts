@@ -9,9 +9,7 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
-  IsPhoneNumber,
   IsString,
-  Matches,
   MinLength,
 } from 'class-validator';
 import {
@@ -20,6 +18,7 @@ import {
   IsValidDate,
   IsValidLongitude,
 } from '../../validators';
+import { IsValidPhone } from './valid-phone.decorator';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -92,12 +91,8 @@ export class CreateBeneficiaryDto {
     type: 'string',
     example: '+9779785623749',
   })
-@Matches(/^\+\d{1,4}\d+$/, {
-  message: 'Phone number must include country code',
-})
-
-  @IsString()
   @IsOptional()
+  @IsValidPhone()
   phone?: string;
 
   @ApiProperty({
