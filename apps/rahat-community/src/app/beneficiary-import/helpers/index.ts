@@ -9,11 +9,14 @@ import {
 } from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
+
+
+
 function generateInvalidPhoneNumber(): string {
-  const invalidPrefixes = ['99', '88', '77', '66'];
-  const prefix = invalidPrefixes[Math.floor(Math.random() * invalidPrefixes.length)];
-  const suffix = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-  return `+977${prefix}${suffix}`;
+  const INVALID_PREFIXES = ['99', '88', '77', '66'] 
+  const prefix = INVALID_PREFIXES[Math.floor(Math.random() * INVALID_PREFIXES.length)];
+  const uniquePart = uuid().replace(/-/g, '').slice(0, 10);
+  return `+977${prefix}${uniquePart}`;
 }
 
 export const BENEFICIARY_REQ_FIELDS = {
@@ -161,6 +164,10 @@ const validatePrimaryFields = async (
     const errors = await validate(beneficiaryDto);
     if (errors.length) {
       for (let e of errors) {
+        // Skip validation error if the property is phone and its value is empty/falsy
+        if (e.property === BENEF_UNIQUE_FIELDS.PHONE && (!item[BENEF_UNIQUE_FIELDS.PHONE] || item[BENEF_UNIQUE_FIELDS.PHONE] === '')) {
+          continue;
+        }
         primaryErrors.push({
           uuid: item.uuid,
           fieldName: e.property,
@@ -174,13 +181,16 @@ const validatePrimaryFields = async (
     for (let f of requiredFields) {
       if (!item[f]) {
         emptyFields.push(f);
-        primaryErrors.push({
-          uuid: item.uuid,
-          fieldName: f,
-          value: '',
-          isNull: true,
-          message: 'Required field is missing',
-        });
+        // Skip validation error for phone field; it will be generated later
+        if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
+          primaryErrors.push({
+            uuid: item.uuid,
+            fieldName: f,
+            value: '',
+            isNull: true,
+            message: 'Required field is missing',
+          });
+        }
       }
     }
   }
