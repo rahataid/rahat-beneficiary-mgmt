@@ -13,11 +13,12 @@ import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 
 
 function generateInvalidPhoneNumber(): string {
-  const INVALID_PREFIXES = ['99', '88', '77', '66'] 
-  const prefix = INVALID_PREFIXES[Math.floor(Math.random() * INVALID_PREFIXES.length)];
-  const uniquePart = uuid().replace(/-/g, '').slice(0, 10);
-  return `+977${prefix}${uniquePart}`;
+  
+  const timeHash = Date.now().toString(36).padStart(4, '0').slice(-4); // e.g., "k9fh"
+  const uuidPart = uuid().replace(/-/g, '').slice(-6); // 6 hex chars for extra entropy
+  return `${timeHash}${uuidPart}`;
 }
+
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
