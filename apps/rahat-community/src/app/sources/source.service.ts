@@ -95,6 +95,7 @@ export class SourceService {
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
     const existing = await this.fetchExistingBeneficiaries();
+
     const payloadDups = this.markDuplicates(payload, uniqueFields);
     return this.compareDuplicateBeneficiary(
       payloadDups,
@@ -113,6 +114,7 @@ export class SourceService {
     data.forEach((item) => {
       uniqueFields.forEach((field) => {
         const value = item[field];
+        if (!value) return;
         if (!fieldOccurrences[field].has(value)) {
           fieldOccurrences[field].set(value, 0);
         }
@@ -210,6 +212,7 @@ export class SourceService {
         uuid: uid,
       };
     });
+ 
     const extraFields = await this.listExtraFields();
     this.logger.debug(
       `Resolved extra field definitions. count=${extraFields.length}`,
@@ -227,7 +230,7 @@ export class SourceService {
 
     if (action === IMPORT_ACTION.IMPORT) {
       this.logger.log(`Import flow started. importId=${dto.importId}`);
-      const { allValidationErrors } = await validateSchemaFields(
+      const { allValidationErrors, processedData } = await validateSchemaFields(
         payloadWithUUID,
         extraFields,
         hasUUID,
@@ -242,11 +245,11 @@ export class SourceService {
       }
 
       this.logger.debug(
-        `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
+        `Import schema validation passed. importId=${dto.importId}, records=${processedData.length}`,
       );
 
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
+      return this.createSourceAndAddToQueue(rest, processedData);
     }
 
     this.logger.debug(
@@ -319,13 +322,17 @@ export class SourceService {
       data,
       extraFields,
       hasUUID,
-      uniqueFields,
+      uniqueFields,  
+      false
+      
     );
+  
 
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
       uniqueFields,
     );
+
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
@@ -492,6 +499,7 @@ export class SourceService {
     data: Omit<CreateSourceDto, 'action'>,
     records: any[],
   ) {
+    
     this.logger.log(
       `Persisting source and queueing import. importId=${data.importId}`,
     );

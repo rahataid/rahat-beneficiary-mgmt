@@ -15,8 +15,8 @@ import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
 function generateInvalidPhoneNumber(): string {
   
   const timeHash = Date.now().toString(36).padStart(4, '0').slice(-4); // e.g., "k9fh"
-  const uuidPart = uuid().replace(/-/g, '').slice(-6); // 6 hex chars for extra entropy
-  return `${timeHash}${uuidPart}`;
+  const uuidPart = uuid().replace(/-/g, '').slice(-6); 
+  return `+977${timeHash}${uuidPart}`;
 }
 
 
@@ -61,6 +61,7 @@ export const validateSchemaFields = async (
   extraFields: IExtraField[],
   hasUUID: boolean,
   uniqueFields: string[],
+  generatePhone:boolean=true
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
@@ -72,8 +73,12 @@ export const validateSchemaFields = async (
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
+    generatePhone
   );
+
   const secondaryErrors = await validateSecondaryFields(payload, extraFields);
+
+
 
   const allValidationErrors = [...primaryErrors, ...secondaryErrors];
   return { allValidationErrors, processedData };
@@ -156,6 +161,7 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
+  generatePhone :boolean=true
 ) => {
   let emptyFields = [];
   const primaryErrors = [];
@@ -196,32 +202,30 @@ const validatePrimaryFields = async (
     }
   }
 
-  const processedData = addEmptyFieldsToPayload(payload, emptyFields);
+
+   const processedData = generatePhone
+    ? addEmptyFieldsToPayload(payload, emptyFields, true)
+    : payload; // skip phone generation when flag is false
+
   return { primaryErrors, processedData };
 };
 
-const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
+const addEmptyFieldsToPayload = (payload: any, emptyFields: string[], generatePhone: boolean = true) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
     emptyFields.forEach((field) => {
-      // Initialize empty fields with empty string if missing
       newObj[field] = newObj[field] || '';
-      // If the field is phone and still empty, generate a random Nepali phone number
-      if (field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
-        try {
-          // generateInvalidPhoneNumber returns an intentionally invalid Nepali phone number
-          const generated = generateInvalidPhoneNumber();
-          newObj[field] = generated;
-        } catch (e) {
-          // Fallback to empty string if generation fails
-          newObj[field] = '';
-        }
+      if (generatePhone && field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
+        const generated = generateInvalidPhoneNumber();
+         newObj[field] = generated;
+        if (newObj.rawData) newObj.rawData[BENEF_UNIQUE_FIELDS.PHONE] = generated;
       }
     });
     return newObj;
   });
   return result;
 };
+
 
 export const fetchSchemaFields = (dbModelName: string) => {
   const dbModels = Prisma.dmmf.datamodel.models;
