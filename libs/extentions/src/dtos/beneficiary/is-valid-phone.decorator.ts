@@ -1,5 +1,5 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
-import { parsePhoneNumber } from 'libphonenumber-js';
+import {parsePhoneNumberFromString}  from 'libphonenumber-js';
 
 export function IsValidPhone(validationOptions?: ValidationOptions) {
   return function (object: any, propertyName: string) {
@@ -13,7 +13,7 @@ export function IsValidPhone(validationOptions?: ValidationOptions) {
           if (typeof value !== 'string') return false;
 
           try {
-            const phoneNumber = parsePhoneNumber(value);
+            const phoneNumber = parsePhoneNumberFromString(value);
             return phoneNumber?.isValid() || false;
           } catch {
             return false;

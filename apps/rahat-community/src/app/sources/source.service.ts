@@ -113,6 +113,7 @@ export class SourceService {
     data.forEach((item) => {
       uniqueFields.forEach((field) => {
         const value = item[field];
+        if(!value) return;
         if (!fieldOccurrences[field].has(value)) {
           fieldOccurrences[field].set(value, 0);
         }
@@ -227,7 +228,7 @@ export class SourceService {
 
     if (action === IMPORT_ACTION.IMPORT) {
       this.logger.log(`Import flow started. importId=${dto.importId}`);
-      const { allValidationErrors } = await validateSchemaFields(
+      const { allValidationErrors, processedData } = await validateSchemaFields(
         payloadWithUUID,
         extraFields,
         hasUUID,
@@ -246,7 +247,7 @@ export class SourceService {
       );
 
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
+      return this.createSourceAndAddToQueue(rest, processedData);
     }
 
     this.logger.debug(
@@ -320,6 +321,7 @@ export class SourceService {
       extraFields,
       hasUUID,
       uniqueFields,
+      false
     );
 
     const duplicates = await this.checkDuplicateBeneficiary(
