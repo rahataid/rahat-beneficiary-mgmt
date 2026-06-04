@@ -270,7 +270,9 @@ const addEmptyFieldsToPayload = (payload: any, emptyFields: string[], generatePh
       newObj[field] = newObj[field] || '';
       if (generatePhone && field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
         const generated = generateInvalidPhoneNumber();
-         newObj[field] = generated;
+        newObj[field] = generated;
+        // Mark that a random phone number was generated for this record
+        newObj.numberGenerated = true;
         if (newObj.rawData) newObj.rawData[BENEF_UNIQUE_FIELDS.PHONE] = generated;
       }
     });
