@@ -153,53 +153,6 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
   return values;
 }
 
-// const validatePrimaryFields = async (
-//   payload: any,
-//   requiredFields: string[],
-//   generatePhone:boolean=true
-// ) => {
-//   let emptyFields = [];
-//   const primaryErrors = [];
-
-//   for (let item of payload) {
-//     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
-//     const errors = await validate(beneficiaryDto);
-//     if (errors.length) {
-
-//       for (let e of errors) {
-//          // Skip validation error if the property is phone and its value is empty/falsy
-//         if (e.property === BENEF_UNIQUE_FIELDS.PHONE && (!item[BENEF_UNIQUE_FIELDS.PHONE] || item[BENEF_UNIQUE_FIELDS.PHONE] === '')) {
-//           continue;
-//         }
-//         primaryErrors.push({
-//           uuid: item.uuid,
-//           fieldName: e.property,
-//           value: item[e.property],
-//           message: "Invalid value for field '" + e.property + "'",
-//         });
-//       }
-//     }
-
-//     // Required fields validation
-//     for (let f of requiredFields) {
-//       if (!item[f]) {
-
-//         emptyFields.push(f);
-
-//         primaryErrors.push({
-//           uuid: item.uuid,
-//           fieldName: f,
-//           value: '',
-//           isNull: true,
-//           message: 'Required field is missing',
-//         });
-//       }
-//     }
-//   }
-
-//   const processedData = addEmptyFieldsToPayload(payload, emptyFields);
-//   return { primaryErrors, processedData };
-// };
 
 const validatePrimaryFields = async (
   payload: any,
@@ -246,23 +199,12 @@ const validatePrimaryFields = async (
   }
 
 
-   const processedData = generatePhone
-    ? addEmptyFieldsToPayload(payload, emptyFields, true)
-    : payload; // skip phone generation when flag is false
+    const processedData = addEmptyFieldsToPayload(payload, emptyFields, generatePhone);
+
 
   return { primaryErrors, processedData };
 };
 
-// const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
-//   const result = payload.map((obj) => {
-//     const newObj = { ...obj };
-//     emptyFields.forEach((field) => {
-//       newObj[field] = newObj[field] || ''; //
-//     });
-//     return newObj;
-//   });
-//   return result;
-// };
 const addEmptyFieldsToPayload = (payload: any, emptyFields: string[], generatePhone: boolean = true) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
