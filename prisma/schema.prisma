@@ -306,7 +306,7 @@ model User {
   UserRole UserRole[]
   Signup   Signup[]
 
-  bdAt       DateTime          @default(now())
+  createdAt      DateTime          @default(now())
   updatedAt       DateTime?         @updatedAt()
   deletedAt       DateTime?
   createdBy       Int?
