@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 import {
   BulkInsertDto,
@@ -21,7 +23,7 @@ import {
   BeneficiaryEvents,
   generateRandomWallet,
 } from '@rahataid/community-tool-sdk';
-import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
+import { DB_MODELS, DEFAULT_GROUP, QUEUE, JOBS } from '../../constants';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { convertDateToISO } from '../utils';
@@ -42,6 +44,7 @@ export class BeneficiariesService {
     private fieldDefService: FieldDefinitionsService,
     private eventEmitter: EventEmitter2,
     private beneficiaryGroupService: BeneficiaryGroupService,
+    @InjectQueue(QUEUE.BENEFICIARY) private queueClient: Queue,
   ) {}
 
   async findByLocation(location: string) {
@@ -665,6 +668,162 @@ export class BeneficiariesService {
 
     return data;
   }
+async processBulkUpdateJob(rows: any[]) {
+  this.logger.debug(`Processing bulk update job. rows=${rows.length}`);
+
+  const standardFields = [
+    'firstName',
+    'lastName',
+    'phone',
+    'email',
+    'govtIDNumber',
+    'gender',
+    'birthDate',
+    'walletAddress',
+    'location',
+    'latitude',
+    'longitude',
+    'notes',
+    'bankedStatus',
+    'internetStatus',
+    'phoneStatus',
+  ];
+
+  let successCount = 0;
+  let failCount = 0;
+
+  const uuids = rows
+    .map((r) => r.uuid)
+    .filter(Boolean);
+
+  // ✅ Bulk fetch existing beneficiaries (IMPORTANT OPTIMIZATION)
+  const existingRecords = await this.prisma.beneficiary.findMany({
+    where: { uuid: { in: uuids } },
+  });
+
+  const existingMap = new Map(
+    existingRecords.map((item) => [item.uuid, item]),
+  );
+
+  for (const row of rows) {
+    if (!row.uuid) {
+      failCount++;
+      continue;
+    }
+
+    const exist = existingMap.get(row.uuid);
+
+    if (!exist) {
+      failCount++;
+      continue;
+    }
+
+    try {
+      const updateData: any = {};
+      const newExtras: any = {};
+
+      for (const [key, value] of Object.entries(row)) {
+        if (key === 'uuid') continue;
+
+        if (standardFields.includes(key)) {
+          updateData[key] = value;
+        } else {
+          newExtras[key] = value;
+        }
+      }
+
+      // merge extras safely
+      if (Object.keys(newExtras).length > 0) {
+        const existExtras =
+          exist.extras
+            ? typeof exist.extras === 'string'
+              ? JSON.parse(exist.extras)
+              : exist.extras
+            : {};
+
+        updateData.extras = {
+          ...existExtras,
+          ...newExtras,
+        };
+      }
+
+      await this.prisma.beneficiary.update({
+        where: { uuid: row.uuid },
+        data: updateData,
+      });
+
+      successCount++;
+    } catch (err) {
+      this.logger.error(
+        `Failed to update beneficiary ${row.uuid}: ${err.message}`,
+      );
+      failCount++;
+    }
+  }
+
+  this.logger.log(
+    `Bulk update job completed. success=${successCount}, failed=${failCount}`,
+  );
+
+  this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
+
+  return {
+    successCount,
+    failCount,
+  };
+}
+ 
+async bulkUpdateFromFile(file: any) {
+  this.logger.debug(`Queueing bulk update from file. path=${file?.path ?? ''}`);
+
+  const workbook = XLSX.readFile(file.path);
+  await deleteFileFromDisk(file.path);
+
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+  if (!rows || rows.length === 0) {
+    throw new Error('File is empty or invalid.');
+  }
+
+  const headers = Object.keys(rows[0]);
+  if (!headers.includes('uuid')) {
+    throw new Error('Excel file must contain a "uuid" column for updating.');
+  }
+
+  const CHUNK_SIZE = 1000;
+
+  let chunkCount = 0;
+
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+
+    await this.queueClient.add(
+      JOBS.BENEFICIARY.BULK_UPDATE,
+      { rows: chunk },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      },
+    );
+
+    chunkCount++;
+  }
+
+  this.logger.debug(
+    `Bulk update queued. totalRows=${rows.length}, chunks=${chunkCount}`,
+  );
+
+  return {
+    message: 'Bulk update queued successfully',
+    totalRows: rows.length,
+    chunks: chunkCount,
+  };
+}
+
 
   async findAllLocation() {
     this.logger.debug('Listing all beneficiary locations');

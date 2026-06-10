@@ -4,6 +4,7 @@ import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 
 @Processor(QUEUE.BENEFICIARY)
 export class BeneficiaryProcessor {
@@ -12,6 +13,7 @@ export class BeneficiaryProcessor {
   constructor(
     private eventEmitter: EventEmitter2,
     private benefImportService: BeneficiaryImportService,
+    private beneficiariesService: BeneficiariesService,
   ) {}
 
   /**
@@ -20,6 +22,12 @@ export class BeneficiaryProcessor {
    * This means Bull's retry logic works correctly — a crash or error will
    * trigger a retry rather than silently completing the job.
    */
+  @Process(JOBS.BENEFICIARY.BULK_UPDATE)
+  async bulkUpdateBeneficiary(job: Job<{ rows: any[] }>) {
+    this.logger.log(`Processing bulk update job. jobId=${job.id}, rows=${job.data.rows.length}`);
+    await this.beneficiariesService.processBulkUpdateJob(job.data.rows);
+  }
+
   @Process(JOBS.BENEFICIARY.IMPORT)
   async importBeneficiary(job: Job<{ sourceUUID: string }>) {
     this.logger.log(

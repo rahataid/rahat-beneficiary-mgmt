@@ -5,6 +5,7 @@ import { PrismaService } from '@rumsan/prisma';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
 import { BullModule } from '@nestjs/bull';
 import { BQUEUE } from '@rahataid/community-tool-sdk';
+import { QUEUE } from '../../constants';
 import { StatsModule } from '@rahataid/community-tool-stats';
 import { BeneficiaryStatService } from './beneficiaryStats.service';
 import { BeneficiaryGroupModule } from '../beneficiary-groups/beneficiary-group.module';
@@ -20,6 +21,9 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
   imports: [
     BullModule.registerQueue({
       name: BQUEUE.COMMUNITY_BENEFICIARY,
+    }),
+    BullModule.registerQueue({
+      name: QUEUE.BENEFICIARY,
     }),
     StatsModule,
     BeneficiaryGroupModule,
