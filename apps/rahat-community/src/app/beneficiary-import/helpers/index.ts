@@ -59,7 +59,6 @@ export const validateSchemaFields = async (
   extraFields: IExtraField[],
   hasUUID: boolean,
   uniqueFields: string[],
-  generatePhone:boolean=true
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
@@ -71,7 +70,6 @@ export const validateSchemaFields = async (
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
-    generatePhone
   );
   const secondaryErrors = await validateSecondaryFields(payload, extraFields);
 
@@ -157,7 +155,6 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
-  generatePhone :boolean=true
 ) => {
   let emptyFields = [];
   const primaryErrors = [];
@@ -199,24 +196,17 @@ const validatePrimaryFields = async (
   }
 
 
-    const processedData = addEmptyFieldsToPayload(payload, emptyFields, generatePhone);
+    const processedData = addEmptyFieldsToPayload(payload, emptyFields);
 
 
   return { primaryErrors, processedData };
 };
 
-const addEmptyFieldsToPayload = (payload: any, emptyFields: string[], generatePhone: boolean = true) => {
+const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
     emptyFields.forEach((field) => {
-      newObj[field] = newObj[field] || '';
-      if (generatePhone && field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
-        const generated = generateInvalidPhoneNumber();
-        newObj[field] = generated;
-        // Mark that a random phone number was generated for this record
-        newObj.numberGenerated = true;
-        if (newObj.rawData) newObj.rawData[BENEF_UNIQUE_FIELDS.PHONE] = generated;
-      }
+      newObj[field] = newObj[field] || ''; //
     });
     return newObj;
   });

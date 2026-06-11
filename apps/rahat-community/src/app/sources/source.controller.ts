@@ -39,6 +39,7 @@ export class SourceController {
   @UseGuards(JwtGuard, AbilitiesGuard)
   create(@Body() dto: CreateSourceDto, @Req() req: any) {
     dto.createdBy = req?.user?.uuid || '';
+    console.log(dto.createdBy , 'creator')
     return this.sourceService.create(dto);
   }
 

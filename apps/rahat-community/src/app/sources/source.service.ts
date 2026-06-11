@@ -247,7 +247,7 @@ export class SourceService {
       );
 
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest, processedData);
+      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
     }
 
     this.logger.debug(
@@ -320,8 +320,7 @@ export class SourceService {
       data,
       extraFields,
       hasUUID,
-      uniqueFields,
-      false
+      uniqueFields
     );
 
     const duplicates = await this.checkDuplicateBeneficiary(
@@ -516,6 +515,8 @@ export class SourceService {
           targetField: m.targetField ?? m['targetField'],
         }))
       : [];
+    console.log(sourceTargetMappings, 'sourceTargetMappings')
+   console.log(data, 'data---------------')
 
     const fieldMappingToStore = { sourceTargetMappings } as any;
 
