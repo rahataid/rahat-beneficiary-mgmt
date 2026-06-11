@@ -33,15 +33,6 @@ interface IExtraField {
   type: string;
 }
 
-
-
-function generateInvalidPhoneNumber(): string {
-  const timeHash = Date.now().toString(36).padStart(4, '0').slice(-4); // e.g., "k9fh"
-  const uuidPart = uuid().replace(/-/g, '').slice(-6); 
-  return `+977${timeHash}${uuidPart}`;
-}
-
-
 export const injectCustomID = (customUniqueField: string, payload: any) => {
   const final = [];
   for (let p of payload) {
