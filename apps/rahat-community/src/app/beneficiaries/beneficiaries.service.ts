@@ -780,7 +780,31 @@ async bulkUpdateFromFile(file: any) {
   await deleteFileFromDisk(file.path);
 
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+let rows = XLSX.utils.sheet_to_json(sheet, {
+  raw: false,
+  defval: '',
+});
+console.log(rows, 'rowsss of updateddd')
+  //   // Normalize phone numbers: keep them as strings and prepend country code if a separate column exists
+  // rows = rows.map((row) => {
+  //   if (row.phone !== undefined) {
+  //     // Convert numeric phone to string to preserve digits
+  //     if (typeof row.phone === 'number') {
+  //       row.phone = row.phone.toString();
+  //     }
+  //     // If phone does not start with '+' and a countryCode column is present, prepend it
+  //     if (typeof row.phone === 'string' && !row.phone.startsWith('+') && row.countryCode) {
+  //       const cc = typeof row.countryCode === 'number' ? row.countryCode.toString() : row.countryCode;
+  //       row.phone = `+${cc}${row.phone}`;
+  //     }
+  //   }
+  //   // Convert numeric govtIDNumber to string (Prisma expects String)
+  //   if (row.govtIDNumber !== undefined && typeof row.govtIDNumber === 'number') {
+  //     row.govtIDNumber = row.govtIDNumber.toString();
+  //   }
+  //   return row;
+  // });
+console.log(rows, 'rows')
 
   if (!rows || rows.length === 0) {
     throw new Error('File is empty or invalid.');
