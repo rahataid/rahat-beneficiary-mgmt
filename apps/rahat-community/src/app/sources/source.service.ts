@@ -320,8 +320,7 @@ export class SourceService {
       data,
       extraFields,
       hasUUID,
-      uniqueFields,
-      false
+      uniqueFields
     );
 
     const duplicates = await this.checkDuplicateBeneficiary(

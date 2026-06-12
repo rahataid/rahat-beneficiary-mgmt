@@ -33,15 +33,6 @@ interface IExtraField {
   type: string;
 }
 
-
-
-function generateInvalidPhoneNumber(): string {
-  const timeHash = Date.now().toString(36).padStart(4, '0').slice(-4); // e.g., "k9fh"
-  const uuidPart = uuid().replace(/-/g, '').slice(-6); 
-  return `+977${timeHash}${uuidPart}`;
-}
-
-
 export const injectCustomID = (customUniqueField: string, payload: any) => {
   const final = [];
   for (let p of payload) {
@@ -59,7 +50,6 @@ export const validateSchemaFields = async (
   extraFields: IExtraField[],
   hasUUID: boolean,
   uniqueFields: string[],
-  generatePhone:boolean=true
 ) => {
   let requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
@@ -71,7 +61,6 @@ export const validateSchemaFields = async (
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
-    generatePhone
   );
   const secondaryErrors = await validateSecondaryFields(payload, extraFields);
 
@@ -153,11 +142,9 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
   return values;
 }
 
-
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
-  generatePhone :boolean=true
 ) => {
   let emptyFields = [];
   const primaryErrors = [];
@@ -168,9 +155,14 @@ const validatePrimaryFields = async (
     if (errors.length) {
       for (let e of errors) {
         // Skip validation error if the property is phone and its value is empty/falsy
-        if (e.property === BENEF_UNIQUE_FIELDS.PHONE && (!item[BENEF_UNIQUE_FIELDS.PHONE] || item[BENEF_UNIQUE_FIELDS.PHONE] === '')) {
+        if (
+          e.property === BENEF_UNIQUE_FIELDS.PHONE &&
+          (!item[BENEF_UNIQUE_FIELDS.PHONE] ||
+            item[BENEF_UNIQUE_FIELDS.PHONE] === '')
+        ) {
           continue;
         }
+
         primaryErrors.push({
           uuid: item.uuid,
           fieldName: e.property,
@@ -186,43 +178,32 @@ const validatePrimaryFields = async (
         emptyFields.push(f);
         // Skip validation error for phone field; it will be generated later
         if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
-          primaryErrors.push({
-            uuid: item.uuid,
-            fieldName: f,
-            value: '',
-            isNull: true,
-            message: 'Required field is missing',
-          });
-        }
+        primaryErrors.push({
+          uuid: item.uuid,
+          fieldName: f,
+          value: '',
+          isNull: true,
+          message: 'Required field is missing',
+        });
+         }
       }
     }
   }
 
-
-    const processedData = addEmptyFieldsToPayload(payload, emptyFields, generatePhone);
-
-
+  const processedData = addEmptyFieldsToPayload(payload, emptyFields);
   return { primaryErrors, processedData };
 };
 
-const addEmptyFieldsToPayload = (payload: any, emptyFields: string[], generatePhone: boolean = true) => {
+const addEmptyFieldsToPayload = (payload: any, emptyFields: string[]) => {
   const result = payload.map((obj) => {
     const newObj = { ...obj };
     emptyFields.forEach((field) => {
-      newObj[field] = newObj[field] || '';
-      if (generatePhone && field === BENEF_UNIQUE_FIELDS.PHONE && (!newObj[field] || newObj[field] === '')) {
-        const generated = generateInvalidPhoneNumber();
-        newObj[field] = generated;
-        // Mark that a random phone number was generated for this record
-        newObj.numberGenerated = true;
-        if (newObj.rawData) newObj.rawData[BENEF_UNIQUE_FIELDS.PHONE] = generated;
-      }
+      newObj[field] = newObj[field] || ''; //
     });
     return newObj;
   });
   return result;
 };
-
 
 export const fetchSchemaFields = (dbModelName: string) => {
   const dbModels = Prisma.dmmf.datamodel.models;
