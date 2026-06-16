@@ -668,110 +668,110 @@ export class BeneficiariesService {
 
     return data;
   }
-async processBulkUpdateJob(rows: any[]) {
-  this.logger.debug(`Processing bulk update job. rows=${rows.length}`);
+// async processBulkUpdateJob(rows: any[]) {
+//   this.logger.debug(`Processing bulk update job. rows=${rows.length}`);
 
-  const standardFields = [
-    'firstName',
-    'lastName',
-    'phone',
-    'email',
-    'govtIDNumber',
-    'gender',
-    'birthDate',
-    'walletAddress',
-    'location',
-    'latitude',
-    'longitude',
-    'notes',
-    'bankedStatus',
-    'internetStatus',
-    'phoneStatus',
-  ];
+//   const standardFields = [
+//     'firstName',
+//     'lastName',
+//     'phone',
+//     'email',
+//     'govtIDNumber',
+//     'gender',
+//     'birthDate',
+//     'walletAddress',
+//     'location',
+//     'latitude',
+//     'longitude',
+//     'notes',
+//     'bankedStatus',
+//     'internetStatus',
+//     'phoneStatus',
+//   ];
 
-  let successCount = 0;
-  let failCount = 0;
+//   let successCount = 0;
+//   let failCount = 0;
 
-  const uuids = rows
-    .map((r) => r.uuid)
-    .filter(Boolean);
+//   const uuids = rows
+//     .map((r) => r.uuid)
+//     .filter(Boolean);
 
-  // ✅ Bulk fetch existing beneficiaries (IMPORTANT OPTIMIZATION)
-  const existingRecords = await this.prisma.beneficiary.findMany({
-    where: { uuid: { in: uuids } },
-  });
+//   // ✅ Bulk fetch existing beneficiaries (IMPORTANT OPTIMIZATION)
+//   const existingRecords = await this.prisma.beneficiary.findMany({
+//     where: { uuid: { in: uuids } },
+//   });
 
-  const existingMap = new Map(
-    existingRecords.map((item) => [item.uuid, item]),
-  );
+//   const existingMap = new Map(
+//     existingRecords.map((item) => [item.uuid, item]),
+//   );
 
-  for (const row of rows) {
-    if (!row.uuid) {
-      failCount++;
-      continue;
-    }
+//   for (const row of rows) {
+//     if (!row.uuid) {
+//       failCount++;
+//       continue;
+//     }
 
-    const exist = existingMap.get(row.uuid);
+//     const exist = existingMap.get(row.uuid);
 
-    if (!exist) {
-      failCount++;
-      continue;
-    }
+//     if (!exist) {
+//       failCount++;
+//       continue;
+//     }
 
-    try {
-      const updateData: any = {};
-      const newExtras: any = {};
+//     try {
+//       const updateData: any = {};
+//       const newExtras: any = {};
 
-      for (const [key, value] of Object.entries(row)) {
-        if (key === 'uuid') continue;
+//       for (const [key, value] of Object.entries(row)) {
+//         if (key === 'uuid') continue;
 
-        if (standardFields.includes(key)) {
-          updateData[key] = value;
-        } else {
-          newExtras[key] = value;
-        }
-      }
+//         if (standardFields.includes(key)) {
+//           updateData[key] = value;
+//         } else {
+//           newExtras[key] = value;
+//         }
+//       }
 
-      // merge extras safely
-      if (Object.keys(newExtras).length > 0) {
-        const existExtras =
-          exist.extras
-            ? typeof exist.extras === 'string'
-              ? JSON.parse(exist.extras)
-              : exist.extras
-            : {};
+//       // merge extras safely
+//       if (Object.keys(newExtras).length > 0) {
+//         const existExtras =
+//           exist.extras
+//             ? typeof exist.extras === 'string'
+//               ? JSON.parse(exist.extras)
+//               : exist.extras
+//             : {};
 
-        updateData.extras = {
-          ...existExtras,
-          ...newExtras,
-        };
-      }
+//         updateData.extras = {
+//           ...existExtras,
+//           ...newExtras,
+//         };
+//       }
 
-      await this.prisma.beneficiary.update({
-        where: { uuid: row.uuid },
-        data: updateData,
-      });
+//       await this.prisma.beneficiary.update({
+//         where: { uuid: row.uuid },
+//         data: updateData,
+//       });
 
-      successCount++;
-    } catch (err) {
-      this.logger.error(
-        `Failed to update beneficiary ${row.uuid}: ${err.message}`,
-      );
-      failCount++;
-    }
-  }
+//       successCount++;
+//     } catch (err) {
+//       this.logger.error(
+//         `Failed to update beneficiary ${row.uuid}: ${err.message}`,
+//       );
+//       failCount++;
+//     }
+//   }
 
-  this.logger.log(
-    `Bulk update job completed. success=${successCount}, failed=${failCount}`,
-  );
+//   this.logger.log(
+//     `Bulk update job completed. success=${successCount}, failed=${failCount}`,
+//   );
 
-  this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
+//   this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
 
-  return {
-    successCount,
-    failCount,
-  };
-}
+//   return {
+//     successCount,
+//     failCount,
+//   };
+// }
  
 async bulkUpdateFromFile(file: any) {
   this.logger.debug(`Queueing bulk update from file. path=${file?.path ?? ''}`);

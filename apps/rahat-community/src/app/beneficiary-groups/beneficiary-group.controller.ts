@@ -10,9 +10,14 @@ import {
   HttpStatus,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  Req,
 } from '@nestjs/common';
 import { BeneficiaryGroupService } from './beneficiary-group.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
   ACTIONS,
   AbilitiesGuard,
@@ -25,6 +30,9 @@ import {
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
 import { SUBJECTS } from '@rahataid/community-tool-sdk';
+import { multerOptions } from '../utils/multer';
+import { FileInterceptor } from '@nestjs/platform-express';
+const MAX_FILE_SIZE = 10000000000;
 
 @Controller('beneficiary-group')
 @ApiTags('BeneficiaryGroup')
@@ -80,6 +88,26 @@ export class BeneficiaryGroupController {
   ) {
     return this.beneficiaryGroupService.update(uuid, updateBeneficiaryGroupDto);
   }
+
+   @UseGuards(JwtGuard, AbilitiesGuard)
+    @Post('bulk-update/:groupUUID')
+    @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.BENEFICIARY })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file', multerOptions))
+    async  bulkUpate(
+      @Req() req: any,
+       @Param('groupUUID') groupUUID: string,
+      @UploadedFile(
+        new ParseFilePipe({
+          validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
+        }),
+      )
+      file: //@ts-ignore
+      Express.Multer.file,
+    ) {
+     // return this.beneficiariesService.uploadFile(file);
+      return this.beneficiaryGroupService.bulkUpdateFromFile(req.user.uuid,groupUUID,file);
+    }
 
   @Delete(':uuid')
   @CheckAbilities({

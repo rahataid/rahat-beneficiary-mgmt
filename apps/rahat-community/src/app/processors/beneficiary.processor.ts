@@ -4,7 +4,8 @@ import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
-import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+
+
 
 @Processor(QUEUE.BENEFICIARY)
 export class BeneficiaryProcessor {
@@ -13,7 +14,7 @@ export class BeneficiaryProcessor {
   constructor(
     private eventEmitter: EventEmitter2,
     private benefImportService: BeneficiaryImportService,
-    private beneficiariesService: BeneficiariesService,
+  
   ) {}
 
   /**
@@ -23,10 +24,10 @@ export class BeneficiaryProcessor {
    * trigger a retry rather than silently completing the job.
    */
   @Process(JOBS.BENEFICIARY.BULK_UPDATE)
-  async bulkUpdateBeneficiary(job: Job<{ rows: any[] }>) {
-    this.logger.log(`Processing bulk update job. jobId=${job.id}, rows=${job.data.rows.length}`);
-    await this.beneficiariesService.processBulkUpdateJob(job.data.rows);
-  }
+  async bulkUpdateBeneficiary(job: Job<{ sourceUUID:string , groupUUID:string}>) {
+    this.logger.log(`Processing bulk update job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}`);
+    await this.benefImportService.processBulkUpdateJob(job.data.sourceUUID,job.data.groupUUID);
+  } 
 
   @Process(JOBS.BENEFICIARY.IMPORT)
   async importBeneficiary(job: Job<{ sourceUUID: string }>) {

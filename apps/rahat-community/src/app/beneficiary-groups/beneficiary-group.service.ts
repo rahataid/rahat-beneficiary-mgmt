@@ -4,14 +4,19 @@ import {
   ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { GroupOrigins } from '@rahataid/community-tool-sdk';
+import { Enums, GroupOrigins } from '@rahataid/community-tool-sdk';
 import { RSError } from '@rumsan/core';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { paginate } from '../utils/paginate';
 import { InjectQueue } from '@nestjs/bull';
-import { JOBS, QUEUE } from '../../constants';
+import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 import { Queue } from 'bull';
+import XLSX from 'xlsx';
+import { deleteFileFromDisk } from '../utils/multer';
+import { SourceService } from '../sources/source.service';
+import { uuid } from 'uuidv4';
+import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
 
 const BATCH_SIZE = 50;
 
@@ -22,6 +27,7 @@ export class BeneficiaryGroupService {
   constructor(
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
     private prisma: PrismaService,
+
   ) {}
 
   hasOrigins(arr: any) {
@@ -154,6 +160,46 @@ export class BeneficiaryGroupService {
     });
   }
 
+  async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
+    console.log(userUUID, 'userId')
+     this.logger.debug(`Queueing bulk update from file. path=${file?.path ?? ''}`);
+    
+      const workbook = XLSX.readFile(file.path);
+      await deleteFileFromDisk(file.path);
+    
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    let rows = XLSX.utils.sheet_to_json(sheet, {
+      raw: false,
+      defval: '',
+    });
+  
+  
+
+  // const source = await this.prisma.source.create({
+  //   data: {
+  //     name: `Bulk update ${groupUUID}`,
+  //     importId: `bulk-${uuid()}`,
+  //     importField: Enums.ImportField.UUID,
+  //     stagedFileKey: stagedKey,
+  //     isImported: false,
+  //     importProgress: {}, 
+  //     createdBy: userUUID, // adjust as needed
+  //   },
+  // });
+
+   // 3️⃣ Queue the job (pass both source and target group)
+  await this.benefQueue.add(
+    JOBS.BENEFICIARY.BULK_UPDATE,
+    { sourceUUID: 'uuid' , groupUUID },
+    QUEUE_RETRY_OPTIONS,
+  );
+  return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
+
+
+
+
+  }
+
   async remove(uuid: string) {
     this.logger.log(`Removing beneficiary-group link. uuid=${uuid}`);
 
@@ -178,6 +224,9 @@ export class BeneficiaryGroupService {
       },
     });
   }
+
+  
+
 
   async removeBeneficiaryFromGroup(benefUID: string, uuid: string) {
     this.logger.debug(

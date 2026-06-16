@@ -14,5 +14,6 @@ import { FieldDefinitionsService } from '../field-definitions/field-definitions.
   ],
   controllers: [SourceController],
   providers: [SourceService, PrismaService, FieldDefinitionsService],
+  exports:[SourceService]
 })
 export class SourceModule {}

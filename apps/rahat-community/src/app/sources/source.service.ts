@@ -247,7 +247,7 @@ export class SourceService {
       );
 
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest, processedData);
+      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
     }
 
     this.logger.debug(
@@ -430,7 +430,7 @@ export class SourceService {
 
   // ─── R2 staging ─────────────────────────────────────────────────────────────
 
-  private async uploadStagedCSV(
+    async uploadStagedCSV(
     importId: string,
     buffer: Buffer,
   ): Promise<string> {

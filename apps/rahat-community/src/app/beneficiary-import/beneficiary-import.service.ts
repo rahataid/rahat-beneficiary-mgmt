@@ -11,7 +11,7 @@ import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
-import { fetchSchemaFields } from './helpers';
+
 import {
   downloadFromR2,
   archiveInR2,
@@ -107,8 +107,8 @@ export class BeneficiaryImportService {
    *
    * The CSV "extras" column holds a JSON string — we parse it back here.
    */
-  private splitPrimaryAndExtraFields(
-    records: Record<string, string>[],
+  public splitPrimaryAndExtraFields(
+    records: any[],
     createdBy: string,
   ): any[] {
     return records.map((row) => {
@@ -117,10 +117,14 @@ export class BeneficiaryImportService {
       // Parse the pre-serialized extras column
       let extras: Record<string, any> = {};
       if (row['extras']) {
-        try {
-          extras = JSON.parse(row['extras']);
-        } catch {
-          // malformed extras — treat as empty
+        if (typeof row['extras'] === 'string') {
+          try {
+            extras = JSON.parse(row['extras']);
+          } catch {
+            // malformed extras — treat as empty
+          }
+        } else if (typeof row['extras'] === 'object') {
+          extras = row['extras'];
         }
       }
 
@@ -216,16 +220,18 @@ export class BeneficiaryImportService {
    * Everything runs in a single Prisma interactive transaction so a failure
    * at any step rolls back completely.
    */
-  private async runCopyPipeline({
+  public async runCopyPipeline({
     records,
     sourceUID,
     defaultGroupUID,
     importGroupUID,
+    onlyUpsert = false,
   }: {
     records: any[];
     sourceUID: string;
     defaultGroupUID: string;
     importGroupUID: string;
+    onlyUpsert?: boolean;
   }): Promise<{ imported: number; failed: number }> {
     const CHUNK_SIZE = 1000;
 
@@ -331,33 +337,35 @@ export class BeneficiaryImportService {
         `;
         this.logger.debug('Beneficiaries upserted from staging.');
 
-        // Step 4 — add to default group (INSERT...ON CONFLICT DO NOTHING)
-        await tx.$executeRaw`
-          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
-          SELECT
-            gen_random_uuid(),
-            b.uuid,
-            ${defaultGroupUID}::uuid,
-            NOW()
-          FROM tbl_beneficiaries b
-          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
-          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
-        `;
-        this.logger.debug('Default group memberships inserted.');
+    if (!onlyUpsert) {
+      // Step 4 — add to default group (INSERT...ON CONFLICT DO NOTHING)
+      await tx.$executeRaw`
+        INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+        SELECT
+          gen_random_uuid(),
+          b.uuid,
+          ${defaultGroupUID}::uuid,
+          NOW()
+        FROM tbl_beneficiaries b
+        JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+        ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+      `;
+      this.logger.debug('Default group memberships inserted.');
 
-        // Step 5 — add to import group
-        await tx.$executeRaw`
-          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
-          SELECT
-            gen_random_uuid(),
-            b.uuid,
-            ${importGroupUID}::uuid,
-            NOW()
-          FROM tbl_beneficiaries b
-          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
-          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
-        `;
-        this.logger.debug('Import group memberships inserted.');
+      // Step 5 — add to import group
+      await tx.$executeRaw`
+        INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+        SELECT
+          gen_random_uuid(),
+          b.uuid,
+          ${importGroupUID}::uuid,
+          NOW()
+        FROM tbl_beneficiaries b
+        JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+        ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+      `;
+      this.logger.debug('Import group memberships inserted.');
+    }
 
         // Step 6 — link beneficiaries to source
         await tx.$executeRaw`
@@ -521,5 +529,70 @@ export class BeneficiaryImportService {
         sourceUID: sourceUID,
       },
     });
+  }
+
+  // for the bulk update
+    async processBulkUpdateJob(sourceUUID: string, groupUUID: string) {
+    this.logger.debug(`Processing bulk update job. source=${sourceUUID} group=${groupUUID}`);
+    // Mark job as in progress
+    await this.sourceService.updateImportProgress(sourceUUID, {
+      status: 'IN_PROGRESS',
+      startedAt: new Date().toISOString(),
+    });
+
+    try {
+      // Fetch source metadata
+      const source = await this.prisma.source.findUnique({
+        where: { uuid: sourceUUID },
+      });
+      if (!source) throw new Error('Source not found');
+
+      // Fetch beneficiary UUIDs belonging to the target group
+      const groupRows = await this.prisma.beneficiaryGroup.findMany({
+        where: { groupUID: groupUUID },
+        select: { beneficiaryUID: true },
+      });
+      const allowedUuids = groupRows.map((r) => r.beneficiaryUID);
+      if (allowedUuids.length === 0) {
+        throw new Error('No beneficiaries found for the specified group');
+      }
+
+      // Retrieve full beneficiary records
+      const beneficiaries = await this.prisma.beneficiary.findMany({
+        where: { uuid: { in: allowedUuids } },
+      });
+
+      // Split primary and extra fields using the same logic as the import pipeline
+      const records = this.splitPrimaryAndExtraFields(
+        beneficiaries,
+        source.createdBy,
+      );
+
+      // Run the copy pipeline in upsert‑only mode (skip group creation)
+      const { imported, failed } = await this.runCopyPipeline({
+        records,
+        sourceUID: source.uuid,
+        defaultGroupUID: groupUUID, // same group for default & import
+        importGroupUID: groupUUID,
+        onlyUpsert: true,
+      });
+
+      // Mark job as done
+      await this.sourceService.updateImportProgress(sourceUUID, {
+        status: 'DONE',
+        imported,
+        failed,
+        completedAt: new Date().toISOString(),
+        error: null,
+      });
+      await this.sourceService.updateImportFlag(sourceUUID, true);
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${err.message}`);
+      await this.sourceService.updateImportProgress(sourceUUID, {
+        status: 'FAILED',
+        error: err.message,
+        completedAt: new Date().toISOString(),
+      });
+    }
   }
 }

@@ -10,8 +10,9 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   CreateGroupDto,
   ListGroupDto,
@@ -28,6 +29,8 @@ import {
 } from '@rumsan/user';
 import { GroupService } from './group.service';
 import { UUID } from 'crypto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from '../utils/multer';
 
 @Controller('group')
 @ApiTags('Group')
