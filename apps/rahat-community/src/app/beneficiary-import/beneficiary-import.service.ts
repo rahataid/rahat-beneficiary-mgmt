@@ -532,60 +532,56 @@ export class BeneficiaryImportService {
   }
 
   // for the bulk update
-    async processBulkUpdateJob(sourceUUID: string, groupUUID: string) {
+    async processBulkUpdateJob(sourceUUID: string, groupUUID: string, data?:any) {
+ 
     this.logger.debug(`Processing bulk update job. source=${sourceUUID} group=${groupUUID}`);
-    // Mark job as in progress
-    await this.sourceService.updateImportProgress(sourceUUID, {
+      await this.sourceService.updateImportProgress(sourceUUID, {
       status: 'IN_PROGRESS',
       startedAt: new Date().toISOString(),
     });
 
+  
     try {
-      // Fetch source metadata
-      const source = await this.prisma.source.findUnique({
-        where: { uuid: sourceUUID },
-      });
-      if (!source) throw new Error('Source not found');
+    const source = await this.prisma.source.findUnique({
+      where: { uuid: sourceUUID },
+    });
+    if (!source) throw new Error('Source not found');
+    console.log(source, 'source inside process');
 
-      // Fetch beneficiary UUIDs belonging to the target group
-      const groupRows = await this.prisma.beneficiaryGroup.findMany({
-        where: { groupUID: groupUUID },
-        select: { beneficiaryUID: true },
-      });
-      const allowedUuids = groupRows.map((r) => r.beneficiaryUID);
-      if (allowedUuids.length === 0) {
-        throw new Error('No beneficiaries found for the specified group');
+  
+    let updatedCount = 0;
+    let failedCount = 0;
+    
+    if (Array.isArray(data) && data.length) {
+      for (const row of data) {
+        const { uuid, ...rest } = row as any;
+  
+        const data: any = {};
+        for (const [key, value] of Object.entries(rest)) {
+          if (PRIMARY_FIELDS.has(key) && value !== undefined && value !== '') {
+            data[key] = value;
+          }
+        }
+        try {
+          await this.prisma.beneficiary.update({
+            where: { uuid },
+            data,
+          });
+          updatedCount++;
+        } catch (err) {
+          failedCount++;
+          this.logger.error(`Failed to update beneficiary ${uuid}: ${err.message}`);
+        }
       }
+    }
 
-      // Retrieve full beneficiary records
-      const beneficiaries = await this.prisma.beneficiary.findMany({
-        where: { uuid: { in: allowedUuids } },
-      });
+   
+    await this.sourceService.updateImportProgress(sourceUUID, {
+      imported: ((source.importProgress as any)?.imported || 0) + updatedCount,
+      failed: ((source.importProgress as any)?.failed || 0) + failedCount,
+      status: 'DONE',
+    });
 
-      // Split primary and extra fields using the same logic as the import pipeline
-      const records = this.splitPrimaryAndExtraFields(
-        beneficiaries,
-        source.createdBy,
-      );
-
-      // Run the copy pipeline in upsert‑only mode (skip group creation)
-      const { imported, failed } = await this.runCopyPipeline({
-        records,
-        sourceUID: source.uuid,
-        defaultGroupUID: groupUUID, // same group for default & import
-        importGroupUID: groupUUID,
-        onlyUpsert: true,
-      });
-
-      // Mark job as done
-      await this.sourceService.updateImportProgress(sourceUUID, {
-        status: 'DONE',
-        imported,
-        failed,
-        completedAt: new Date().toISOString(),
-        error: null,
-      });
-      await this.sourceService.updateImportFlag(sourceUUID, true);
     } catch (err) {
       this.logger.error(`Bulk update failed: ${err.message}`);
       await this.sourceService.updateImportProgress(sourceUUID, {
@@ -594,5 +590,7 @@ export class BeneficiaryImportService {
         completedAt: new Date().toISOString(),
       });
     }
+
   }
 }
+  

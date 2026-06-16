@@ -24,9 +24,9 @@ export class BeneficiaryProcessor {
    * trigger a retry rather than silently completing the job.
    */
   @Process(JOBS.BENEFICIARY.BULK_UPDATE)
-  async bulkUpdateBeneficiary(job: Job<{ sourceUUID:string , groupUUID:string}>) {
+  async bulkUpdateBeneficiary(job: Job<{ sourceUUID:string , groupUUID:string,data?:any}>) {
     this.logger.log(`Processing bulk update job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}`);
-    await this.benefImportService.processBulkUpdateJob(job.data.sourceUUID,job.data.groupUUID);
+    await this.benefImportService.processBulkUpdateJob(job.data.sourceUUID,job.data.groupUUID, job.data.data);
   } 
 
   @Process(JOBS.BENEFICIARY.IMPORT)

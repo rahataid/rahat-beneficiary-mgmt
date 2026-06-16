@@ -162,37 +162,76 @@ export class BeneficiaryGroupService {
 
   async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
     console.log(userUUID, 'userId')
-     this.logger.debug(`Queueing bulk update from file. path=${file?.path ?? ''}`);
+     this.logger.debug(`Queueing bulk update from file. path`);
     
       const workbook = XLSX.readFile(file.path);
       await deleteFileFromDisk(file.path);
     
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    // Convert sheet to JSON rows
     let rows = XLSX.utils.sheet_to_json(sheet, {
       raw: false,
       defval: '',
     });
-  
-  
 
-  // const source = await this.prisma.source.create({
-  //   data: {
-  //     name: `Bulk update ${groupUUID}`,
-  //     importId: `bulk-${uuid()}`,
-  //     importField: Enums.ImportField.UUID,
-  //     stagedFileKey: stagedKey,
-  //     isImported: false,
-  //     importProgress: {}, 
-  //     createdBy: userUUID, // adjust as needed
-  //   },
+    // Extract column names (keys) from the first row
+    const columnNames = rows.length ? Object.keys(rows[0]) : [];
+   
+
+    // Example: extract values of a specific column (e.g., 'uuid')
+    // TODO: replace 'uuid' with the desired column name.
+    const targetColumn = 'uuid';
+    const columnValues = rows.map((row: any) => row[targetColumn]);
+
+    // Extract original file name if available (Multer provides originalname)
+    const fileName = (file as any).originalname || file.path.split('/').pop();
+
+
+    this.logger.debug(`Processing bulk update from file: ${fileName}`);
+    this.logger.debug(`Detected columns: ${columnNames.join(', ')}`);
+    this.logger.debug(`Extracted ${columnValues.length} values from column '${targetColumn}'.`);  
+     const source = await this.prisma.source.create({
+      data: {
+        name: `Bulk update -${fileName}`,
+        importId: `${fileName}`,
+        importField: Enums.ImportField.UUID,
+        stagedFileKey: "",
+        isImported: false,
+        importProgress: {
+
+          total:rows.length,
+          failed:0, 
+          updated:0,
+          status:'PENDING',
+          startedAt:null,
+          completedAt:null,
+          error:null
+        },
+        createdBy: userUUID,
+        fieldMapping: {
+          columnMap: columnNames.map((col) => ({ sourceField: col, targetField: col })),
+        },
+      },
+    });
+ 
   // });
 
    // 3️⃣ Queue the job (pass both source and target group)
-  await this.benefQueue.add(
-    JOBS.BENEFICIARY.BULK_UPDATE,
-    { sourceUUID: 'uuid' , groupUUID },
-    QUEUE_RETRY_OPTIONS,
-  );
+  // await this.benefQueue.add(
+  //   JOBS.BENEFICIARY.BULK_UPDATE,
+  //   { sourceUUID: 'uuid' , groupUUID },
+  //   QUEUE_RETRY_OPTIONS,
+  // );
+
+  const BATCH_SIZE = 500
+  for(let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const chunk = rows.slice(i, i + BATCH_SIZE);
+    await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
+      sourceUUID: source.uuid,
+      groupUUID,
+      data: chunk,
+    }, QUEUE_RETRY_OPTIONS);
+  }
   return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
 
 
