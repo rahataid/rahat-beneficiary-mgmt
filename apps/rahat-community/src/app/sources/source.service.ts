@@ -335,13 +335,13 @@ export class SourceService {
       hasUUID,
       uniqueFields,
     );
-    console.log(processedData,'processeddata form  validate schema')
+
 
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
       uniqueFields,
     );
-    console.log(duplicates, 'duplessssssss')
+  
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,

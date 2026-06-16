@@ -8,7 +8,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   IF NEW."phone" IS NULL OR TRIM(NEW."phone") = '' THEN
     NEW."phone" :=
-      '+010888' ||
+      '+000888' ||
       LPAD(
         nextval('tbl_beneficiaries_derived_phone_seq')::text,
         7,
