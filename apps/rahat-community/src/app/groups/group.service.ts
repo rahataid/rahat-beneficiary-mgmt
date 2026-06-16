@@ -103,6 +103,7 @@ export class GroupService {
       uuid: true,
       id: true,
       autoCreated: true,
+      createdAt:true,
       user: {
         select: { name: true },
       },
