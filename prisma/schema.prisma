@@ -485,3 +485,27 @@ model Stats {
 }
 
 //End Stats Schema //
+
+
+model BeneficiaryStaging {
+  uuid          String  @id @map("uuid")
+  firstName     String?
+  lastName      String?
+  phone         String?
+  email         String?
+  govtIDNumber  String?
+  gender        String?
+  birthDate     String?
+  walletAddress String?
+  location      String?
+  latitude      String?
+  longitude     String?
+  notes         String?
+  bankedStatus  String?
+  internetStatus String?
+  phoneStatus   String?
+  extras        String?
+  createdBy     String?
+
+  @@map("tbl_beneficiary_staging")
+}

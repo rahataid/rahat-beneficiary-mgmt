@@ -95,6 +95,7 @@ export class SourceService {
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
     const existing = await this.fetchExistingBeneficiaries();
+   
     const payloadDups = this.markDuplicates(payload, uniqueFields);
     return this.compareDuplicateBeneficiary(
       payloadDups,
@@ -104,36 +105,48 @@ export class SourceService {
   }
 
   markDuplicates(data: any[], uniqueFields: string[]) {
+    // Build occurrence maps, ignoring empty/undefined values
     const fieldOccurrences: Record<string, Map<string, number>> = {};
 
     uniqueFields.forEach((field) => {
-      fieldOccurrences[field] = new Map();
+      fieldOccurrences[field] = new Map<string, number>();
     });
 
+    // Count occurrences for each unique field
     data.forEach((item) => {
       uniqueFields.forEach((field) => {
-        const value = item[field];
-        if(!value) return;
-        if (!fieldOccurrences[field].has(value)) {
-          fieldOccurrences[field].set(value, 0);
-        }
-        fieldOccurrences[field].set(
-          value,
-          fieldOccurrences[field].get(value) + 1,
-        );
+        const rawVal = item[field];
+        if (rawVal === undefined || rawVal === null) return;
+        const value = String(rawVal).trim();
+        if (value === '') return; // ignore empty strings
+        const map = fieldOccurrences[field];
+        const count = map.get(value) ?? 0;
+        map.set(value, count + 1);
       });
     });
 
+    // Flag items as duplicate only when a real value appears more than once
     data.forEach((item) => {
+      let isDup = false;
       uniqueFields.forEach((field) => {
-        if (fieldOccurrences[field].get(item[field]) > 1) {
-          item.isDuplicate = true;
+        const rawVal = item[field];
+        if (rawVal === undefined || rawVal === null) return;
+        const value = String(rawVal).trim();
+        if (value === '') return;
+        const count = fieldOccurrences[field].get(value);
+        if (count && count > 1) {
+          isDup = true;
         }
       });
+      if (isDup) {
+        (item as any).isDuplicate = true;
+      }
     });
 
     return data;
   }
+
+  
 
   async compareDuplicateBeneficiary(
     payload: any,
@@ -323,10 +336,12 @@ export class SourceService {
       uniqueFields
     );
 
+
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
       uniqueFields,
     );
+  
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,

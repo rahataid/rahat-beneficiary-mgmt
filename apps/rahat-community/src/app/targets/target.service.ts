@@ -56,6 +56,7 @@ export class TargetService {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
+   
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
     return target;
   }
