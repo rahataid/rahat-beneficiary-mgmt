@@ -326,7 +326,7 @@ export class BeneficiaryImportService {
             "bankedStatus"   = EXCLUDED."bankedStatus",
             "internetStatus" = EXCLUDED."internetStatus",
             "phoneStatus"    = EXCLUDED."phoneStatus",
-            extras           = COALESCE(EXCLUDED.extras, tbl_beneficiaries.extras),
+            extras = COALESCE(tbl_beneficiaries.extras, '{}'::jsonb) || COALESCE(EXCLUDED.extras, '{}'::jsonb),
             "updatedAt"      = NOW()
         `;
         this.logger.debug('Beneficiaries upserted from staging.');
@@ -538,8 +538,6 @@ export class BeneficiaryImportService {
       where: { uuid: sourceUUID },
     });
     if (!source) throw new Error('Source not found');
-    console.log(source, 'source inside process');
-
   
     let updatedCount = 0;
     let failedCount = 0;
@@ -560,7 +558,13 @@ export class BeneficiaryImportService {
         }
         const updatePayload: any = { ...primaryData };
         if (Object.keys(extraData).length) {
-          updatePayload.extras = extraData;
+          // Fetch existing extras to preserve previous data
+          const existing = await this.prisma.beneficiary.findUnique({
+            where: { uuid },
+            select: { extras: true },
+          });
+          const mergedExtras = { ...(existing?.extras ? (existing.extras as any) : {}), ...extraData };
+          updatePayload.extras = mergedExtras;
         }
         try {
           await this.prisma.beneficiary.update({
