@@ -4,14 +4,16 @@ import {
   ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { GroupOrigins } from '@rahataid/community-tool-sdk';
+import { Enums, GroupOrigins } from '@rahataid/community-tool-sdk';
 import { RSError } from '@rumsan/core';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { paginate } from '../utils/paginate';
 import { InjectQueue } from '@nestjs/bull';
-import { JOBS, QUEUE } from '../../constants';
+import { JOBS, QUEUE , QUEUE_RETRY_OPTIONS} from '../../constants';
 import { Queue } from 'bull';
+import XLSX from 'xlsx';
+import { deleteFileFromDisk } from '../utils/multer';
 
 const BATCH_SIZE = 50;
 
@@ -152,6 +154,62 @@ export class BeneficiaryGroupService {
       where: { uuid },
       data: {},
     });
+  }
+
+  async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
+  this.logger.log(`Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}`)
+    
+      const workbook = XLSX.readFile(file.path);
+      await deleteFileFromDisk(file.path);
+    
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    let rows = XLSX.utils.sheet_to_json(sheet, {
+      raw: false,
+      defval: '',
+    });
+     const columnNames = rows.length ? Object.keys(rows[0]) : [];
+    const fileName = (file as any).originalname || file.path.split('/').pop();
+    this.logger.log(`creating beneficiary source for bulk update with filename ${fileName}`)
+     const source = await this.prisma.source.create({
+      data: {
+        name: `Bulk update -${fileName}`,
+        importId: `${fileName}`,
+        importField: Enums.ImportField.UUID,
+        stagedFileKey: "",
+        isImported: false,
+        importProgress: {
+
+          total:rows.length,
+          failed:0, 
+          updated:0,
+          status:'PENDING',
+          startedAt:null,
+          completedAt:null,
+          error:null
+        },
+        createdBy: userUUID,
+        fieldMapping: {
+          columnMap: columnNames.map((col) => ({ sourceField: col, targetField: col })),
+        },
+      },
+    });
+
+    this.logger.log(`Bulk update source created with uuid ${source.uuid}`)
+
+  const BATCH_SIZE = 500
+  for(let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const chunk = rows.slice(i, i + BATCH_SIZE);
+    await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
+      sourceUUID: source.uuid,
+      groupUUID,
+      data: chunk,
+    }, QUEUE_RETRY_OPTIONS);
+  }
+  return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
+
+
+
+
   }
 
   async remove(uuid: string) {

@@ -522,4 +522,74 @@ export class BeneficiaryImportService {
       },
     });
   }
+
+   // for the bulk update
+    async processBulkUpdateJob(sourceUUID: string, groupUUID: string, data?:any) {
+ 
+    this.logger.debug(`Processing bulk update job. source=${sourceUUID} group=${groupUUID}`);
+      await this.sourceService.updateImportProgress(sourceUUID, {
+      status: 'IN_PROGRESS',
+      startedAt: new Date().toISOString(),
+    });
+
+  
+    try {
+    const source = await this.prisma.source.findUnique({
+      where: { uuid: sourceUUID },
+    });
+    if (!source) throw new Error('Source not found');
+    console.log(source, 'source inside process');
+
+  
+    let updatedCount = 0;
+    let failedCount = 0;
+    
+    if (Array.isArray(data) && data.length) {
+      for (const row of data) {
+        const { uuid, ...rest } = row as any;
+  
+        const primaryData: any = {};
+        const extraData: any = {};
+        for (const [key, value] of Object.entries(rest)) {
+          if (value === undefined || value === '') continue;
+          if (PRIMARY_FIELDS.has(key)) {
+            primaryData[key] = value;
+          } else {
+            extraData[key] = value;
+          }
+        }
+        const updatePayload: any = { ...primaryData };
+        if (Object.keys(extraData).length) {
+          updatePayload.extras = extraData;
+        }
+        try {
+          await this.prisma.beneficiary.update({
+            where: { uuid },
+            data: updatePayload,
+          });
+          updatedCount++;
+        } catch (err) {
+          failedCount++;
+          this.logger.error(`Failed to update beneficiary ${uuid}: ${err.message}`);
+        }
+      }
+    }
+
+   
+    await this.sourceService.updateImportProgress(sourceUUID, {
+      imported: ((source.importProgress as any)?.imported || 0) + updatedCount,
+      failed: ((source.importProgress as any)?.failed || 0) + failedCount,
+      status: 'DONE',
+    });
+
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${err.message}`);
+      await this.sourceService.updateImportProgress(sourceUUID, {
+        status: 'FAILED',
+        error: err.message,
+        completedAt: new Date().toISOString(),
+      });
+    }
+
+  }
 }
