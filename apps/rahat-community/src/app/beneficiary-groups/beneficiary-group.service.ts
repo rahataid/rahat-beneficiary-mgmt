@@ -14,9 +14,7 @@ import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 import { Queue } from 'bull';
 import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
-import { SourceService } from '../sources/source.service';
-import { uuid } from 'uuidv4';
-import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+
 
 const BATCH_SIZE = 50;
 
@@ -161,35 +159,19 @@ export class BeneficiaryGroupService {
   }
 
   async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
-    console.log(userUUID, 'userId')
-     this.logger.debug(`Queueing bulk update from file. path`);
+  this.logger.log(`Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}`)
     
       const workbook = XLSX.readFile(file.path);
       await deleteFileFromDisk(file.path);
     
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    // Convert sheet to JSON rows
     let rows = XLSX.utils.sheet_to_json(sheet, {
       raw: false,
       defval: '',
     });
-
-    // Extract column names (keys) from the first row
-    const columnNames = rows.length ? Object.keys(rows[0]) : [];
-   
-
-    // Example: extract values of a specific column (e.g., 'uuid')
-    // TODO: replace 'uuid' with the desired column name.
-    const targetColumn = 'uuid';
-    const columnValues = rows.map((row: any) => row[targetColumn]);
-
-    // Extract original file name if available (Multer provides originalname)
+     const columnNames = rows.length ? Object.keys(rows[0]) : [];
     const fileName = (file as any).originalname || file.path.split('/').pop();
-
-
-    this.logger.debug(`Processing bulk update from file: ${fileName}`);
-    this.logger.debug(`Detected columns: ${columnNames.join(', ')}`);
-    this.logger.debug(`Extracted ${columnValues.length} values from column '${targetColumn}'.`);  
+    this.logger.log(`creating beneficiary source for bulk update with filename ${fileName}`)
      const source = await this.prisma.source.create({
       data: {
         name: `Bulk update -${fileName}`,
@@ -213,15 +195,8 @@ export class BeneficiaryGroupService {
         },
       },
     });
- 
-  // });
 
-   // 3️⃣ Queue the job (pass both source and target group)
-  // await this.benefQueue.add(
-  //   JOBS.BENEFICIARY.BULK_UPDATE,
-  //   { sourceUUID: 'uuid' , groupUUID },
-  //   QUEUE_RETRY_OPTIONS,
-  // );
+    this.logger.log(`Bulk update source created with uuid ${source.uuid}`)
 
   const BATCH_SIZE = 500
   for(let i = 0; i < rows.length; i += BATCH_SIZE) {

@@ -99,25 +99,9 @@ export class BeneficiariesController {
     file: //@ts-ignore
     Express.Multer.file,
   ) {
-   // return this.beneficiariesService.uploadFile(file);
-    return this.beneficiariesService.bulkUpdateFromFile(file);
+   return this.beneficiariesService.uploadFile(file);
+ 
   }
-
-  // @Put('bulk')
-  // @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.BENEFICIARY })
-  // @ApiConsumes('multipart/form-data')
-  // @UseInterceptors(FileInterceptor('file', multerOptions))
-  // async bulkUpdateFromFile(
-  //   @UploadedFile(
-  //     new ParseFilePipe({
-  //       validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
-  //     }),
-  //   )
-  //   file://@ts-ignore
-  //   Express.Multer.file,
-  // ) {
-  //   return this.beneficiariesService.bulkUpdateFromFile(file);
-  // }
 
   @UseGuards(JwtGuard, AbilitiesGuard)
   @Get()

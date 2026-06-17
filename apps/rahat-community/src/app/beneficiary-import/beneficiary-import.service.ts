@@ -220,18 +220,16 @@ export class BeneficiaryImportService {
    * Everything runs in a single Prisma interactive transaction so a failure
    * at any step rolls back completely.
    */
-  public async runCopyPipeline({
+private async runCopyPipeline({
     records,
     sourceUID,
     defaultGroupUID,
     importGroupUID,
-    onlyUpsert = false,
   }: {
     records: any[];
     sourceUID: string;
     defaultGroupUID: string;
     importGroupUID: string;
-    onlyUpsert?: boolean;
   }): Promise<{ imported: number; failed: number }> {
     const CHUNK_SIZE = 1000;
 
@@ -337,35 +335,33 @@ export class BeneficiaryImportService {
         `;
         this.logger.debug('Beneficiaries upserted from staging.');
 
-    if (!onlyUpsert) {
-      // Step 4 — add to default group (INSERT...ON CONFLICT DO NOTHING)
-      await tx.$executeRaw`
-        INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
-        SELECT
-          gen_random_uuid(),
-          b.uuid,
-          ${defaultGroupUID}::uuid,
-          NOW()
-        FROM tbl_beneficiaries b
-        JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
-        ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
-      `;
-      this.logger.debug('Default group memberships inserted.');
+        // Step 4 — add to default group (INSERT...ON CONFLICT DO NOTHING)
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+          SELECT
+            gen_random_uuid(),
+            b.uuid,
+            ${defaultGroupUID}::uuid,
+            NOW()
+          FROM tbl_beneficiaries b
+          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+        `;
+        this.logger.debug('Default group memberships inserted.');
 
-      // Step 5 — add to import group
-      await tx.$executeRaw`
-        INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
-        SELECT
-          gen_random_uuid(),
-          b.uuid,
-          ${importGroupUID}::uuid,
-          NOW()
-        FROM tbl_beneficiaries b
-        JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
-        ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
-      `;
-      this.logger.debug('Import group memberships inserted.');
-    }
+        // Step 5 — add to import group
+        await tx.$executeRaw`
+          INSERT INTO tbl_beneficiary_groups (uuid, "beneficiaryUID", "groupUID", "createdAt")
+          SELECT
+            gen_random_uuid(),
+            b.uuid,
+            ${importGroupUID}::uuid,
+            NOW()
+          FROM tbl_beneficiaries b
+          JOIN tbl_beneficiary_staging s ON s.uuid = b.uuid::text
+          ON CONFLICT ("beneficiaryUID", "groupUID") DO NOTHING
+        `;
+        this.logger.debug('Import group memberships inserted.');
 
         // Step 6 — link beneficiaries to source
         await tx.$executeRaw`
@@ -396,6 +392,7 @@ export class BeneficiaryImportService {
       { timeout: 300_000 }, // 5-minute transaction timeout for very large imports
     );
   }
+
 
   // ─── Main entry point ────────────────────────────────────────────────────────
 
@@ -556,16 +553,24 @@ export class BeneficiaryImportService {
       for (const row of data) {
         const { uuid, ...rest } = row as any;
   
-        const data: any = {};
+        const primaryData: any = {};
+        const extraData: any = {};
         for (const [key, value] of Object.entries(rest)) {
-          if (PRIMARY_FIELDS.has(key) && value !== undefined && value !== '') {
-            data[key] = value;
+          if (value === undefined || value === '') continue;
+          if (PRIMARY_FIELDS.has(key)) {
+            primaryData[key] = value;
+          } else {
+            extraData[key] = value;
           }
+        }
+        const updatePayload: any = { ...primaryData };
+        if (Object.keys(extraData).length) {
+          updatePayload.extras = extraData;
         }
         try {
           await this.prisma.beneficiary.update({
             where: { uuid },
-            data,
+            data: updatePayload,
           });
           updatedCount++;
         } catch (err) {
