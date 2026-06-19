@@ -545,6 +545,14 @@ export class BeneficiaryImportService {
     if (Array.isArray(data) && data.length) {
       for (const row of data) {
         const { uuid, ...rest } = row as any;
+        if (rest.householdHeadName) {
+          const parts = String(rest.householdHeadName).trim().split(/\s+/);
+          const firstName = parts[0] || '';
+          const lastName = parts.slice(1).join(' ') || '';
+          if (firstName) rest.firstName = firstName;
+          if (lastName) rest.lastName = lastName;
+          delete rest.householdHeadName;
+        }
   
         const primaryData: any = {};
         const extraData: any = {};
