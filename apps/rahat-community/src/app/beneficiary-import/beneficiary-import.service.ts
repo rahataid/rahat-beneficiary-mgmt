@@ -557,7 +557,7 @@ export class BeneficiaryImportService {
         const primaryData: any = {};
         const extraData: any = {};
         for (const [key, value] of Object.entries(rest)) {
-          if (value === undefined || value === '') continue;
+          if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) continue;
           if (PRIMARY_FIELDS.has(key)) {
             primaryData[key] = value;
           } else {
