@@ -6,7 +6,7 @@ import {
   GroupOrigins,
 } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
-import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
+import { DB_MODELS, DEFAULT_GROUP, EVENTS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
@@ -524,22 +524,13 @@ export class BeneficiaryImportService {
   }
 
    // for the bulk update
-    async processBulkUpdateJob(sourceUUID: string, groupUUID: string, data?:any) {
+    async processBulkUpdateJob(groupUUID: string, data?:any) {
  
-    this.logger.debug(`Processing bulk update job. source=${sourceUUID} group=${groupUUID}`);
-      await this.sourceService.updateImportProgress(sourceUUID, {
-      status: 'IN_PROGRESS',
-      startedAt: new Date().toISOString(),
-    });
-
+   this.logger.log(`Processing bulk update job for group ${groupUUID}`)
   
     try {
-    const source = await this.prisma.source.findUnique({
-      where: { uuid: sourceUUID },
-    });
-    if (!source) throw new Error('Source not found');
   
-    let updatedCount = 0;
+let updatedCount = 0;
     let failedCount = 0;
     
     if (Array.isArray(data) && data.length) {
@@ -588,19 +579,12 @@ export class BeneficiaryImportService {
     }
 
    
-    await this.sourceService.updateImportProgress(sourceUUID, {
-      imported: ((source.importProgress as any)?.imported || 0) + updatedCount,
-      failed: ((source.importProgress as any)?.failed || 0) + failedCount,
-      status: 'DONE',
-    });
+  
+    this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, groupUUID);
 
     } catch (err) {
       this.logger.error(`Bulk update failed: ${err.message}`);
-      await this.sourceService.updateImportProgress(sourceUUID, {
-        status: 'FAILED',
-        error: err.message,
-        completedAt: new Date().toISOString(),
-      });
+
     }
 
   }

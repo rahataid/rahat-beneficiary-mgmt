@@ -169,38 +169,12 @@ export class BeneficiaryGroupService {
     });
      const columnNames = rows.length ? Object.keys(rows[0]) : [];
     const fileName = (file as any).originalname || file.path.split('/').pop();
-    this.logger.log(`creating beneficiary source for bulk update with filename ${fileName}`)
-     const source = await this.prisma.source.create({
-      data: {
-        name: `Bulk update -${fileName}`,
-        importId: `${fileName}`,
-        importField: Enums.ImportField.UUID,
-        stagedFileKey: "",
-        isImported: false,
-        importProgress: {
-
-          total:rows.length,
-          failed:0, 
-          updated:0,
-          status:'PENDING',
-          startedAt:null,
-          completedAt:null,
-          error:null
-        },
-        createdBy: userUUID,
-        fieldMapping: {
-          columnMap: columnNames.map((col) => ({ sourceField: col, targetField: col })),
-        },
-      },
-    });
-
-    this.logger.log(`Bulk update source created with uuid ${source.uuid}`)
+  
 
   const BATCH_SIZE = 500
   for(let i = 0; i < rows.length; i += BATCH_SIZE) {
     const chunk = rows.slice(i, i + BATCH_SIZE);
     await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
-      sourceUUID: source.uuid,
       groupUUID,
       data: chunk,
     }, QUEUE_RETRY_OPTIONS);
