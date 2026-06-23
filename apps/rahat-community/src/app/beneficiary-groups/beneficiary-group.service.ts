@@ -4,16 +4,14 @@ import {
   ListBeneficiaryGroupDto,
   UpdateBeneficiaryGroupDto,
 } from '@rahataid/community-tool-extensions';
-import { Enums, GroupOrigins } from '@rahataid/community-tool-sdk';
+import { GroupOrigins } from '@rahataid/community-tool-sdk';
 import { RSError } from '@rumsan/core';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { paginate } from '../utils/paginate';
 import { InjectQueue } from '@nestjs/bull';
-import { JOBS, QUEUE , QUEUE_RETRY_OPTIONS} from '../../constants';
+import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
 import { Queue } from 'bull';
-import XLSX from 'xlsx';
-import { deleteFileFromDisk } from '../utils/multer';
 
 const BATCH_SIZE = 50;
 
@@ -156,47 +154,25 @@ export class BeneficiaryGroupService {
     });
   }
 
-  async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
-    this.logger.log(`Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}`)
-    
-    const workbook = XLSX.readFile(file.path);
-    await deleteFileFromDisk(file.path);
-    
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    let rows = XLSX.utils.sheet_to_json(sheet, {
-      raw: false,
-      defval: '',
+  async fetchGroupBeneficiaryUUIDs(groupUUID: string): Promise<Set<string>> {
+    const rows = await this.prisma.beneficiaryGroup.findMany({
+      where: { groupUID: groupUUID },
+      select: { beneficiaryUID: true },
     });
-
-    const existingBeneficiaries = await this.fetchExistingBeneficiariesWithUUID();
-    const existingUUIDs = new Set(existingBeneficiaries.map((b) => b.uuid));
-
-    for (const row of rows) {
-      const { uuid } = row as any;
-      if (!uuid || !existingUUIDs.has(uuid)) {
-        throw new Error(`Beneficiary with UUID ${uuid || 'empty'} not found!`);
-      }
-    }
-   
-    const BATCH_SIZE = 500
-    for(let i = 0; i < rows.length; i += BATCH_SIZE) {
-      const chunk = rows.slice(i, i + BATCH_SIZE);
-      await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
-        groupUUID,
-        data: chunk,
-      }, QUEUE_RETRY_OPTIONS);
-    }
-    return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
+    return new Set(rows.map((r) => r.beneficiaryUID));
   }
 
-
-   async fetchExistingBeneficiariesWithUUID() {
-    return this.prisma.beneficiary.findMany({
-      select: {
-        uuid: true,
-
-      },
-    });
+  async queueBulkUpdateBatch(
+    groupUUID: string,
+    chunk: unknown[],
+    batchIndex: number,
+    totalBatches: number,
+  ) {
+    return this.benefQueue.add(
+      JOBS.BENEFICIARY.BULK_UPDATE,
+      { groupUUID, data: chunk, batchIndex, totalBatches },
+      QUEUE_RETRY_OPTIONS,
+    );
   }
 
   async remove(uuid: string) {

@@ -1,5 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import {
+  BulkUpdateResponse,
+  DownloadExcelQuery,
   GroupBeneficiaryQuery,
   GroupInput,
   GroupMessage,
@@ -50,6 +52,12 @@ export type GroupClient = {
     config: AxiosRequestConfig;
   }) => Promise<any>;
 
+  downloadExcel: (
+    uuid: string,
+    query?: DownloadExcelQuery,
+    config?: AxiosRequestConfig,
+  ) => Promise<Blob>;
+
   deleteGroup: (
     uuid?: string,
     config?: AxiosRequestConfig,
@@ -59,4 +67,11 @@ export type GroupClient = {
     groupUID: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<ResultGroup>>;
+
+  updateInBulk: (
+    groupUUID: string,
+    data: FormData,
+    batchSize?: number,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<BulkUpdateResponse>>;
 };

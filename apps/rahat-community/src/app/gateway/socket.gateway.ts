@@ -47,8 +47,14 @@ export class SocketGateway
   }
 
   @OnEvent(EVENTS.BENEFICIARY_GROUP_UPDATED)
-  async notifyBeneficiaryGroupUpdated(groupUuid: string) {
-    this.logger.log(`beneficiary group updated for ${groupUuid}`);
-    this.io.emit('beneficiary-group-updated', groupUuid);
+  async notifyBeneficiaryGroupUpdated(summary: {
+    groupUUID: string;
+    updatedCount: number;
+    failedCount: number;
+  }) {
+    this.logger.log(
+      `beneficiary group updated for ${summary.groupUUID}: ${summary.updatedCount} updated, ${summary.failedCount} failed`,
+    );
+    this.io.emit('beneficiary-group-updated', summary);
   }
 }

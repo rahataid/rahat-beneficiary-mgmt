@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {
@@ -14,13 +14,25 @@ import {
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { generateExcelData } from '../export/helpers/data-flattener.helper';
+import { generateExcelBuffer, generateExcelData } from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import { VerificationService } from '../beneficiaries/verification.service';
 import { UUID } from 'crypto';
+import { EVENTS } from '../../constants';
+import XLSX from 'xlsx';
+import { deleteFileFromDisk } from '../utils/multer';
+
+const PRIMARY_FIELDS = new Set([
+  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
+  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
+  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
+  'createdBy', 'createdAt', 'updatedAt', 'id', 'archived', 'isVerified',
+]);
 
 @Injectable()
 export class GroupService {
+  private readonly logger = new Logger(GroupService.name);
+
   constructor(
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
@@ -249,6 +261,159 @@ export class GroupService {
     const excelData = generateExcelData(formattedData);
 
     return excelData;
+  }
+
+  async downloadGroupExcel(uuid: string, fields?: string): Promise<Buffer> {
+    const group = await this.findOne(uuid);
+    if (!group) throw new Error('Group not found');
+
+    const formattedData: Record<string, unknown>[] =
+      group.beneficiariesGroup.map((item) => ({
+        ...(item.beneficiary as Record<string, unknown>),
+        groupName: group.name,
+      }));
+
+    let selectedFields: string[] | null = null;
+    if (fields) {
+      const rawFields = fields
+        .split(',')
+        .map((f) => f.trim())
+        .filter(Boolean);
+      selectedFields = Array.from(new Set(['uuid', ...rawFields]));
+    }
+
+    const filteredData = selectedFields
+      ? formattedData.map((row) =>
+          selectedFields.reduce(
+            (acc: Record<string, unknown>, key) => {
+              if (row[key] !== undefined) acc[key] = row[key];
+              return acc;
+            },
+            {},
+          ),
+        )
+      : formattedData;
+
+    return generateExcelBuffer(filteredData);
+  }
+
+  async bulkUpdateFromFile(
+    userUUID: string,
+    groupUUID: string,
+    file: Express.Multer.File,
+    batchSize = 500,
+  ) {
+    this.logger.log(
+      `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}`,
+    );
+
+    const workbook = XLSX.readFile(file.path);
+    await deleteFileFromDisk(file.path);
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+
+    const groupBeneficiaryUUIDs =
+      await this.beneficaryGroupService.fetchGroupBeneficiaryUUIDs(groupUUID);
+
+    for (const row of rows) {
+      const { uuid } = row as Record<string, string>;
+      if (!uuid || !groupBeneficiaryUUIDs.has(uuid)) {
+        throw new Error(
+          `Beneficiary with UUID ${uuid || 'empty'} not found in group!`,
+        );
+      }
+    }
+
+    const totalBatches = Math.ceil(rows.length / batchSize);
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batchIndex = Math.floor(i / batchSize);
+      const chunk = rows.slice(i, i + batchSize);
+      await this.beneficaryGroupService.queueBulkUpdateBatch(
+        groupUUID,
+        chunk,
+        batchIndex,
+        totalBatches,
+      );
+    }
+    return { success: true, message: 'Bulk update queued' };
+  }
+
+  async processBulkUpdateJob(
+    groupUUID: string,
+    data?: unknown[],
+    batchIndex = 0,
+    totalBatches = 1,
+  ) {
+    this.logger.log(
+      `Processing bulk update job for group ${groupUUID} (batch ${batchIndex + 1}/${totalBatches})`,
+    );
+
+    let updatedCount = 0;
+    let failedCount = 0;
+
+    try {
+      if (Array.isArray(data) && data.length) {
+        for (const row of data) {
+          const { uuid, ...rest } = row as Record<string, unknown>;
+
+          const primaryData: Record<string, unknown> = {};
+          const extraData: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(rest)) {
+            if (
+              value === undefined ||
+              value === null ||
+              value === '' ||
+              (typeof value === 'string' && value.trim() === '')
+            )
+              continue;
+            if (PRIMARY_FIELDS.has(key)) {
+              primaryData[key] = value;
+            } else {
+              extraData[key] = value;
+            }
+          }
+
+          const updatePayload: Record<string, unknown> = { ...primaryData };
+          if (Object.keys(extraData).length) {
+            const existing = await this.prisma.beneficiary.findUnique({
+              where: { uuid: uuid as string },
+              select: { extras: true },
+            });
+            updatePayload.extras = {
+              ...(existing?.extras
+                ? (existing.extras as Record<string, unknown>)
+                : {}),
+              ...extraData,
+            };
+          }
+
+          try {
+            await this.prisma.beneficiary.update({
+              where: { uuid: uuid as string },
+              data: updatePayload,
+            });
+            updatedCount++;
+          } catch (err) {
+            failedCount++;
+            this.logger.error(
+              `Failed to update beneficiary ${uuid}: ${(err as Error).message}`,
+            );
+          }
+        }
+      }
+
+      const isLastBatch = batchIndex === totalBatches - 1;
+      if (isLastBatch) {
+        const summary = { groupUUID, updatedCount, failedCount };
+        this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, summary);
+        this.logger.log(
+          `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${(err as Error).message}`);
+    }
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {

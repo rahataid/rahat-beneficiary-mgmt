@@ -1,9 +1,15 @@
 import { Logger } from '@nestjs/common';
-import { OnQueueCompleted, OnQueueFailed, Process, Processor } from '@nestjs/bull';
+import {
+  OnQueueCompleted,
+  OnQueueFailed,
+  Process,
+  Processor,
+} from '@nestjs/bull';
 import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+import { GroupService } from '../groups/group.service';
 
 @Processor(QUEUE.BENEFICIARY)
 export class BeneficiaryProcessor {
@@ -12,6 +18,7 @@ export class BeneficiaryProcessor {
   constructor(
     private eventEmitter: EventEmitter2,
     private benefImportService: BeneficiaryImportService,
+    private groupService: GroupService,
   ) {}
 
   /**
@@ -29,10 +36,26 @@ export class BeneficiaryProcessor {
   }
 
   @Process(JOBS.BENEFICIARY.BULK_UPDATE)
-  async bulkUpdateBeneficiary(job: Job<{ groupUUID:string,data?:any}>) {
-    this.logger.log(`Processing bulk update job. jobId=${job.id}`);
-    await this.benefImportService.processBulkUpdateJob(job.data.groupUUID, job.data.data);
-  } 
+  async bulkUpdateBeneficiary(
+    job: Job<{
+      groupUUID: string;
+      data?: unknown[];
+      batchIndex: number;
+      totalBatches: number;
+    }>,
+  ) {
+    this.logger.log(
+      `Processing bulk update job. jobId=${job.id}, batch=${
+        job.data.batchIndex + 1
+      }/${job.data.totalBatches}`,
+    );
+    await this.groupService.processBulkUpdateJob(
+      job.data.groupUUID,
+      job.data.data,
+      job.data.batchIndex,
+      job.data.totalBatches,
+    );
+  }
 
   @Process(JOBS.BENEFICIARY.EXPORT)
   async exportBeneficiary(job: Job<unknown>) {

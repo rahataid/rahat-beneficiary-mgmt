@@ -71,3 +71,12 @@ export type ResultGroup = {
   message: string;
   success: boolean;
 };
+
+export type BulkUpdateResponse = {
+  success: boolean;
+  message: string;
+};
+
+export type DownloadExcelQuery = {
+  fields?: string;
+};
