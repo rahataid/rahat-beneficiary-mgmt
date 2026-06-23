@@ -157,33 +157,46 @@ export class BeneficiaryGroupService {
   }
 
   async bulkUpdateFromFile (userUUID:string,groupUUID:string, file:any ){
-  this.logger.log(`Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}`)
+    this.logger.log(`Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}`)
     
-      const workbook = XLSX.readFile(file.path);
-      await deleteFileFromDisk(file.path);
+    const workbook = XLSX.readFile(file.path);
+    await deleteFileFromDisk(file.path);
     
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
     let rows = XLSX.utils.sheet_to_json(sheet, {
       raw: false,
       defval: '',
     });
-     const columnNames = rows.length ? Object.keys(rows[0]) : [];
-    const fileName = (file as any).originalname || file.path.split('/').pop();
-  
 
-  const BATCH_SIZE = 500
-  for(let i = 0; i < rows.length; i += BATCH_SIZE) {
-    const chunk = rows.slice(i, i + BATCH_SIZE);
-    await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
-      groupUUID,
-      data: chunk,
-    }, QUEUE_RETRY_OPTIONS);
+    const existingBeneficiaries = await this.fetchExistingBeneficiariesWithUUID();
+    const existingUUIDs = new Set(existingBeneficiaries.map((b) => b.uuid));
+
+    for (const row of rows) {
+      const { uuid } = row as any;
+      if (!uuid || !existingUUIDs.has(uuid)) {
+        throw new Error(`Beneficiary with UUID ${uuid || 'empty'} not found!`);
+      }
+    }
+   
+    const BATCH_SIZE = 500
+    for(let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const chunk = rows.slice(i, i + BATCH_SIZE);
+      await this.benefQueue.add(JOBS.BENEFICIARY.BULK_UPDATE, {
+        groupUUID,
+        data: chunk,
+      }, QUEUE_RETRY_OPTIONS);
+    }
+    return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
   }
-  return { success: true, message: 'Bulk update queued', sourceUUID: 'uiuid' };
 
 
+   async fetchExistingBeneficiariesWithUUID() {
+    return this.prisma.beneficiary.findMany({
+      select: {
+        uuid: true,
 
-
+      },
+    });
   }
 
   async remove(uuid: string) {
