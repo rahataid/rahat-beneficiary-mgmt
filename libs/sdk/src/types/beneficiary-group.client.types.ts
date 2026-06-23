@@ -34,10 +34,4 @@ export type BeneficiaryGroupClient = {
     uuid: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BeneficiaryGroup>>;
-
-    updateInBulk: (
-    groupUUID: string,
-    data: FormData,
-    config?: AxiosRequestConfig,
-  ) => Promise<FormattedResponse<BeneficiaryGroup>>;
 };
