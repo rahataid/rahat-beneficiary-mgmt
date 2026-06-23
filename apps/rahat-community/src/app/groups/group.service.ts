@@ -14,19 +14,42 @@ import {
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { generateExcelBuffer, generateExcelData } from '../export/helpers/data-flattener.helper';
+import {
+  generateExcelBuffer,
+  generateExcelData,
+} from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import { VerificationService } from '../beneficiaries/verification.service';
 import { UUID } from 'crypto';
-import { EVENTS } from '../../constants';
+import { EVENTS, QUEUE, QUEUE_RETRY_OPTIONS, JOBS } from '../../constants';
 import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 const PRIMARY_FIELDS = new Set([
-  'uuid', 'firstName', 'lastName', 'phone', 'email', 'govtIDNumber',
-  'gender', 'birthDate', 'walletAddress', 'location', 'latitude',
-  'longitude', 'notes', 'bankedStatus', 'internetStatus', 'phoneStatus',
-  'createdBy', 'createdAt', 'updatedAt', 'id', 'archived', 'isVerified',
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'id',
+  'archived',
+  'isVerified',
 ]);
 
 @Injectable()
@@ -39,6 +62,7 @@ export class GroupService {
     private beneficaryService: BeneficiariesService,
     private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
+    @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
   ) {}
 
   async beneficiariesByGroup(groupUID: UUID) {
@@ -115,7 +139,7 @@ export class GroupService {
       uuid: true,
       id: true,
       autoCreated: true,
-      createdAt:true,
+      createdAt: true,
       user: {
         select: { name: true },
       },
@@ -284,13 +308,10 @@ export class GroupService {
 
     const filteredData = selectedFields
       ? formattedData.map((row) =>
-          selectedFields.reduce(
-            (acc: Record<string, unknown>, key) => {
-              if (row[key] !== undefined) acc[key] = row[key];
-              return acc;
-            },
-            {},
-          ),
+          selectedFields.reduce((acc: Record<string, unknown>, key) => {
+            if (row[key] !== undefined) acc[key] = row[key];
+            return acc;
+          }, {}),
         )
       : formattedData;
 
@@ -307,29 +328,35 @@ export class GroupService {
       `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}`,
     );
 
+    const resolvedBatchSize = Number(batchSize) > 0 ? Number(batchSize) : 500;
+
     const workbook = XLSX.readFile(file.path);
     await deleteFileFromDisk(file.path);
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+    const rows: Record<string, string>[] = Array.from(
+      XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' }) as Record<
+        string,
+        string
+      >[],
+    );
 
     const groupBeneficiaryUUIDs =
       await this.beneficaryGroupService.fetchGroupBeneficiaryUUIDs(groupUUID);
 
     for (const row of rows) {
-      const { uuid } = row as Record<string, string>;
-      if (!uuid || !groupBeneficiaryUUIDs.has(uuid)) {
+      if (!row.uuid || !groupBeneficiaryUUIDs.has(row.uuid)) {
         throw new Error(
-          `Beneficiary with UUID ${uuid || 'empty'} not found in group!`,
+          `Beneficiary with UUID ${row.uuid || 'empty'} not found in group!`,
         );
       }
     }
 
-    const totalBatches = Math.ceil(rows.length / batchSize);
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batchIndex = Math.floor(i / batchSize);
-      const chunk = rows.slice(i, i + batchSize);
-      await this.beneficaryGroupService.queueBulkUpdateBatch(
+    const totalBatches = Math.ceil(rows.length / resolvedBatchSize);
+    for (let i = 0; i < rows.length; i += resolvedBatchSize) {
+      const batchIndex = Math.floor(i / resolvedBatchSize);
+      const chunk = rows.slice(i, i + resolvedBatchSize);
+      await this.queueBulkUpdateBatch(
         groupUUID,
         chunk,
         batchIndex,
@@ -341,12 +368,14 @@ export class GroupService {
 
   async processBulkUpdateJob(
     groupUUID: string,
-    data?: unknown[],
+    data?: Record<string, string>[],
     batchIndex = 0,
     totalBatches = 1,
   ) {
     this.logger.log(
-      `Processing bulk update job for group ${groupUUID} (batch ${batchIndex + 1}/${totalBatches})`,
+      `Processing bulk update job for group ${groupUUID} (batch ${
+        batchIndex + 1
+      }/${totalBatches})`,
     );
 
     let updatedCount = 0;
@@ -414,6 +443,19 @@ export class GroupService {
     } catch (err) {
       this.logger.error(`Bulk update failed: ${(err as Error).message}`);
     }
+  }
+
+  private async queueBulkUpdateBatch(
+    groupUUID: string,
+    chunk: Record<string, string>[],
+    batchIndex: number,
+    totalBatches: number,
+  ) {
+    return this.benefQueue.add(
+      JOBS.BENEFICIARY.BULK_UPDATE,
+      { groupUUID, data: chunk, batchIndex, totalBatches },
+      QUEUE_RETRY_OPTIONS,
+    );
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {

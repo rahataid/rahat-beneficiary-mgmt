@@ -10,7 +10,7 @@ import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { paginate } from '../utils/paginate';
 import { InjectQueue } from '@nestjs/bull';
-import { JOBS, QUEUE, QUEUE_RETRY_OPTIONS } from '../../constants';
+import { JOBS, QUEUE } from '../../constants';
 import { Queue } from 'bull';
 
 const BATCH_SIZE = 50;
@@ -160,19 +160,6 @@ export class BeneficiaryGroupService {
       select: { beneficiaryUID: true },
     });
     return new Set(rows.map((r) => r.beneficiaryUID));
-  }
-
-  async queueBulkUpdateBatch(
-    groupUUID: string,
-    chunk: unknown[],
-    batchIndex: number,
-    totalBatches: number,
-  ) {
-    return this.benefQueue.add(
-      JOBS.BENEFICIARY.BULK_UPDATE,
-      { groupUUID, data: chunk, batchIndex, totalBatches },
-      QUEUE_RETRY_OPTIONS,
-    );
   }
 
   async remove(uuid: string) {

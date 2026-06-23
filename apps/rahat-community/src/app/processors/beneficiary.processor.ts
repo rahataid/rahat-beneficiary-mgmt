@@ -39,7 +39,7 @@ export class BeneficiaryProcessor {
   async bulkUpdateBeneficiary(
     job: Job<{
       groupUUID: string;
-      data?: unknown[];
+      data?: Record<string, string>[];
       batchIndex: number;
       totalBatches: number;
     }>,
