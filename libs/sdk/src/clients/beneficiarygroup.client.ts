@@ -45,5 +45,13 @@ export const getBeneficiaryGroupClient = (
       );
       return formatResponse<BeneficiaryGroup>(response);
     },
+     updateInBulk:async (groupUUID: string, data: FormData, config?: AxiosRequestConfig) => {
+      const response = await client.put(
+        `/beneficiary-group/${groupUUID}/bulk-update`,
+        data,
+        config,
+      );
+      return formatResponse<BeneficiaryGroup>(response);
+    },
   };
 };

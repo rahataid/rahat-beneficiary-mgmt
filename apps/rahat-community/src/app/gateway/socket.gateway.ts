@@ -45,4 +45,10 @@ export class SocketGateway
     this.logger.log(`targeting completed for ${targetUuid}`);
     this.io.emit('targeting-completed', targetUuid);
   }
+
+  @OnEvent(EVENTS.BENEFICIARY_GROUP_UPDATED)
+  async notifyBeneficiaryGroupUpdated(groupUuid: string) {
+    this.logger.log(`beneficiary group updated for ${groupUuid}`);
+    this.io.emit('beneficiary-group-updated', groupUuid);
+  }
 }

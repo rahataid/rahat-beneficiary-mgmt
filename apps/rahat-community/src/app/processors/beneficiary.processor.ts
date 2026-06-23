@@ -28,6 +28,12 @@ export class BeneficiaryProcessor {
     await this.benefImportService.importBySourceUUID(job.data.sourceUUID);
   }
 
+  @Process(JOBS.BENEFICIARY.BULK_UPDATE)
+  async bulkUpdateBeneficiary(job: Job<{ groupUUID:string,data?:any}>) {
+    this.logger.log(`Processing bulk update job. jobId=${job.id}`);
+    await this.benefImportService.processBulkUpdateJob(job.data.groupUUID, job.data.data);
+  } 
+
   @Process(JOBS.BENEFICIARY.EXPORT)
   async exportBeneficiary(job: Job<unknown>) {
     this.logger.log(`Processing ${job.name}`);

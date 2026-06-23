@@ -6,7 +6,7 @@ import {
   GroupOrigins,
 } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
-import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
+import { DB_MODELS, DEFAULT_GROUP, EVENTS } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
@@ -326,7 +326,7 @@ export class BeneficiaryImportService {
             "bankedStatus"   = EXCLUDED."bankedStatus",
             "internetStatus" = EXCLUDED."internetStatus",
             "phoneStatus"    = EXCLUDED."phoneStatus",
-            extras           = COALESCE(EXCLUDED.extras, tbl_beneficiaries.extras),
+            extras = COALESCE(tbl_beneficiaries.extras, '{}'::jsonb) || COALESCE(EXCLUDED.extras, '{}'::jsonb),
             "updatedAt"      = NOW()
         `;
         this.logger.debug('Beneficiaries upserted from staging.');
@@ -521,5 +521,71 @@ export class BeneficiaryImportService {
         sourceUID: sourceUID,
       },
     });
+  }
+
+   // for the bulk update
+    async processBulkUpdateJob(groupUUID: string, data?:any) {
+ 
+   this.logger.log(`Processing bulk update job for group ${groupUUID}`)
+  
+    try {
+  
+let updatedCount = 0;
+    let failedCount = 0;
+    
+    if (Array.isArray(data) && data.length) {
+      for (const row of data) {
+        const { uuid, ...rest } = row as any;
+        if (rest.householdHeadName) {
+          const parts = String(rest.householdHeadName).trim().split(/\s+/);
+          const firstName = parts[0] || '';
+          const lastName = parts.slice(1).join(' ') || '';
+          if (firstName) rest.firstName = firstName;
+          if (lastName) rest.lastName = lastName;
+          delete rest.householdHeadName;
+        }
+  
+        const primaryData: any = {};
+        const extraData: any = {};
+        for (const [key, value] of Object.entries(rest)) {
+          if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) continue;
+          if (PRIMARY_FIELDS.has(key)) {
+            primaryData[key] = value;
+          } else {
+            extraData[key] = value;
+          }
+        }
+        const updatePayload: any = { ...primaryData };
+        if (Object.keys(extraData).length) {
+          // Fetch existing extras to preserve previous data
+          const existing = await this.prisma.beneficiary.findUnique({
+            where: { uuid },
+            select: { extras: true },
+          });
+          const mergedExtras = { ...(existing?.extras ? (existing.extras as any) : {}), ...extraData };
+          updatePayload.extras = mergedExtras;
+        }
+        try {
+          await this.prisma.beneficiary.update({
+            where: { uuid },
+            data: updatePayload,
+          });
+          updatedCount++;
+        } catch (err) {
+          failedCount++;
+          this.logger.error(`Failed to update beneficiary ${uuid}: ${err.message}`);
+        }
+      }
+    }
+
+   
+  
+    this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, groupUUID);
+
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${err.message}`);
+
+    }
+
   }
 }
