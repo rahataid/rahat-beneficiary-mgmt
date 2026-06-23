@@ -30,11 +30,11 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
-  constructor() {
-    this.firstName = '';
-    this.lastName = '';
-    this.govtIDNumber = '';
-  }
+  // constructor() {
+  //   this.firstName = '';
+  //   this.lastName = '';
+  //   this.govtIDNumber = '';
+  // }
 
   @IsNotEmpty()
   @ApiProperty({
@@ -42,7 +42,7 @@ export class CreateBeneficiaryDto {
     example: 'Ram',
   })
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsNotEmpty()
   @ApiProperty({
@@ -50,7 +50,7 @@ export class CreateBeneficiaryDto {
     example: 'Sharma',
   })
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @ApiProperty({
     type: 'string',
