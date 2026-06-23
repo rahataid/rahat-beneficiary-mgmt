@@ -30,11 +30,6 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
-  // constructor() {
-  //   this.firstName = '';
-  //   this.lastName = '';
-  //   this.govtIDNumber = '';
-  // }
 
   @IsNotEmpty()
   @ApiProperty({
