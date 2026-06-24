@@ -153,7 +153,6 @@ const validatePrimaryFields = async (
   for (const item of payload) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
-    console.log(errors, 'errorrss');
     if (errors.length) {
       for (const e of errors) {
         // Skip validation error if the property is phone and its value is empty/falsy
