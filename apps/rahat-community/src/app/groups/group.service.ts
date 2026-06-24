@@ -272,11 +272,11 @@ export class GroupService {
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
       (item) => {
-        const { firstName, lastName, ...rest } = item.beneficiary;
+        const { ...rest } = item.beneficiary;
 
         return {
           ...rest,
-          householdHeadName: `${firstName} ${lastName}`,
+
           groupName,
         };
       },
@@ -380,6 +380,7 @@ export class GroupService {
 
     let updatedCount = 0;
     let failedCount = 0;
+    console.log(data, 'datafrom the processBulkUpdate');
 
     try {
       if (Array.isArray(data) && data.length) {
