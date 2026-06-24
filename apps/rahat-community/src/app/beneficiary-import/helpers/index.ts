@@ -8,6 +8,7 @@ import {
   EXTERNAL_UUID_FIELD,
 } from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
+import { error } from 'console';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -146,60 +147,51 @@ const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
 ) => {
-  const emptyFieldsSet = new Set<string>();
+  const emptyFields = [];
   const primaryErrors = [];
-  const BATCH_SIZE = 500;
 
-  for (let i = 0; i < payload.length; i += BATCH_SIZE) {
-    const chunk: Record<string, unknown>[] = payload.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      chunk.map((item) => {
-        const dto = plainToInstance(CreateBeneficiaryDto, item);
-        return validate(dto).then((errors) => ({ item, errors }));
-      }),
-    );
-
-    for (const { item, errors } of results) {
-      if (errors.length) {
-        for (const e of errors) {
-          // Skip validation error if the property is phone and its value is empty/falsy
-          if (
-            e.property === BENEF_UNIQUE_FIELDS.PHONE &&
-            (!item[BENEF_UNIQUE_FIELDS.PHONE] ||
-              item[BENEF_UNIQUE_FIELDS.PHONE] === '')
-          ) {
-            continue;
-          }
-
-          primaryErrors.push({
-            uuid: item.uuid,
-            fieldName: e.property,
-            value: item[e.property],
-            message: "Invalid value for field '" + e.property + "'",
-          });
+  for (const item of payload) {
+    const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
+    const errors = await validate(beneficiaryDto);
+    console.log(errors, 'errorrss');
+    if (errors.length) {
+      for (const e of errors) {
+        // Skip validation error if the property is phone and its value is empty/falsy
+        if (
+          e.property === BENEF_UNIQUE_FIELDS.PHONE &&
+          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
+        ) {
+          continue;
         }
+
+        primaryErrors.push({
+          uuid: item.uuid,
+          fieldName: e.property,
+          value: item[e.property],
+          message: "Invalid value for field '" + e.property + "'",
+        });
       }
+    }
 
-      // Required fields validation
-      for (const f of requiredFields) {
-        if (!item[f]) {
-          emptyFieldsSet.add(f);
-          // Skip validation error for phone field; it will be generated later
-          if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
-            primaryErrors.push({
-              uuid: item.uuid,
-              fieldName: f,
-              value: '',
-              isNull: true,
-              message: 'Required field is missing',
-            });
-          }
-        }
+    // Required fields validation
+    for (const f of requiredFields) {
+      if (!item[f]) {
+        emptyFields.push(f);
+        // Skip validation error for phone field; it will be generated later
+        // if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
+        primaryErrors.push({
+          uuid: item.uuid,
+          fieldName: f,
+          value: '',
+          isNull: true,
+          message: 'Required field is missing',
+        });
+        // }
       }
     }
   }
 
-  const processedData = addEmptyFieldsToPayload(payload, [...emptyFieldsSet]);
+  const processedData = addEmptyFieldsToPayload(payload, emptyFields);
   return { primaryErrors, processedData };
 };
 
