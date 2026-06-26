@@ -62,7 +62,9 @@ export class CreateFieldDefinitionDto {
 
   @ApiProperty({
     type: 'string',
-    example: 'value1,value2',
+    example: 'value1|value2',
+    description:
+      'Pipe-separated list of options for DROPDOWN, RADIO, or CHECKBOX fields',
   })
   @IsString()
   @IsOptional()

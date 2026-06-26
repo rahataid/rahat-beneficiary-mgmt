@@ -12,9 +12,11 @@ export const validateAllowedFieldAndTypes = (reqObject: any, dbFields: any) => {
   return nonMatchingFields;
 };
 
-export const convertStringsToDropdownOptions = (dropdownPopulates: string) => {
-  const array = dropdownPopulates.split(',');
-  if (!array.length) null;
+export const OPTION_SEPARATOR = '|';
+
+export const convertStringsToFieldOptions = (optionString: string) => {
+  const array = optionString.split(OPTION_SEPARATOR).filter((item) => item.trim());
+  if (!array.length) return null;
   return {
     data: array.map((item) => ({
       label: removeConsecutiveSpaces(item),
@@ -22,6 +24,8 @@ export const convertStringsToDropdownOptions = (dropdownPopulates: string) => {
     })),
   };
 };
+
+export const convertStringsToDropdownOptions = convertStringsToFieldOptions;
 
 export const removeConsecutiveSpaces = (str: string) => {
   return str.replace(/\s{2,}/g, ' ').trim();
