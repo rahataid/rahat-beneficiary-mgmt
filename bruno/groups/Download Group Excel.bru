@@ -1,0 +1,34 @@
+meta {
+  name: Download Group Excel
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/group/{{groupUUID}}/download-excel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:query {
+  ~fields: uuid,firstName,lastName,phone,gender
+}
+
+vars:pre-request {
+  groupUUID:
+}
+
+docs {
+  Download all beneficiaries in a group as an Excel (.xlsx) file.
+
+  - `groupUUID`: UUID of the group (set in pre-request vars or replace inline)
+  - `fields` (optional): comma-separated list of columns to include. Remove the ~ to enable.
+    Example: uuid,firstName,lastName,phone,gender,bankedStatus
+    If omitted, all fields are included. uuid is always present regardless.
+
+  The response streams an .xlsx file with Content-Disposition: attachment.
+}

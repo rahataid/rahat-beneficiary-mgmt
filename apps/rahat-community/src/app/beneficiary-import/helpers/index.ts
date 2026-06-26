@@ -8,6 +8,7 @@ import {
   EXTERNAL_UUID_FIELD,
 } from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
+import { error } from 'console';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
@@ -146,19 +147,18 @@ const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
 ) => {
-  let emptyFields = [];
+  const emptyFields = [];
   const primaryErrors = [];
 
-  for (let item of payload) {
+  for (const item of payload) {
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
     if (errors.length) {
-      for (let e of errors) {
+      for (const e of errors) {
         // Skip validation error if the property is phone and its value is empty/falsy
         if (
           e.property === BENEF_UNIQUE_FIELDS.PHONE &&
-          (!item[BENEF_UNIQUE_FIELDS.PHONE] ||
-            item[BENEF_UNIQUE_FIELDS.PHONE] === '')
+          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
         ) {
           continue;
         }
@@ -173,11 +173,11 @@ const validatePrimaryFields = async (
     }
 
     // Required fields validation
-    for (let f of requiredFields) {
+    for (const f of requiredFields) {
       if (!item[f]) {
         emptyFields.push(f);
         // Skip validation error for phone field; it will be generated later
-        if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
+        // if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
         primaryErrors.push({
           uuid: item.uuid,
           fieldName: f,
@@ -185,7 +185,7 @@ const validatePrimaryFields = async (
           isNull: true,
           message: 'Required field is missing',
         });
-         }
+        // }
       }
     }
   }
