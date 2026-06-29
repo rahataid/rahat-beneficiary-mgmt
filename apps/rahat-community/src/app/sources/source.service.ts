@@ -94,13 +94,16 @@ export class SourceService {
       ? ([...new Set(records.map((p) => p.email).filter(Boolean))] as string[])
       : ([] as string[]);
     const govtIDs = hasGovtID
-      ? ([...new Set(records.map((p) => p.govtIDNumber).filter(Boolean))] as string[])
+      ? ([
+          ...new Set(records.map((p) => p.govtIDNumber).filter(Boolean)),
+        ] as string[])
       : ([] as string[]);
     const walletAddrs = hasWalletAddress
-      ? ([...new Set(records.map((p) => p.walletAddress).filter(Boolean))] as string[])
+      ? ([
+          ...new Set(records.map((p) => p.walletAddress).filter(Boolean)),
+        ] as string[])
       : ([] as string[]);
 
-    console.time('[fetchExistingBeneficiaries] db query');
     const result = await this.prisma.beneficiary.findMany({
       where: {
         OR: [
@@ -119,28 +122,20 @@ export class SourceService {
         email: true,
       },
     });
-    console.timeEnd('[fetchExistingBeneficiaries] db query');
-    console.log(`[fetchExistingBeneficiaries] matched ${result.length} existing records`);
     return result;
   }
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
-    console.time('[checkDuplicateBeneficiary] total');
-    const existing = await this.fetchExistingBeneficiaries(payload, uniqueFields);
-
-    console.time('[checkDuplicateBeneficiary] markDuplicates');
+    const existing = await this.fetchExistingBeneficiaries(
+      payload,
+      uniqueFields,
+    );
     const payloadDups = this.markDuplicates(payload, uniqueFields);
-    console.timeEnd('[checkDuplicateBeneficiary] markDuplicates');
-
-    console.time('[checkDuplicateBeneficiary] compareDuplicates');
-    const result = await this.compareDuplicateBeneficiary(
+    return this.compareDuplicateBeneficiary(
       payloadDups,
       existing,
       uniqueFields,
     );
-    console.timeEnd('[checkDuplicateBeneficiary] compareDuplicates');
-    console.timeEnd('[checkDuplicateBeneficiary] total');
-    return result;
   }
 
   markDuplicates(data: any[], uniqueFields: string[]) {
@@ -185,8 +180,6 @@ export class SourceService {
     return data;
   }
 
-  
-
   async compareDuplicateBeneficiary(
     payload: any,
     existingData: Record<string, string | null>[],
@@ -216,9 +209,17 @@ export class SourceService {
         item.isDuplicate = 'true';
       if (hasEmail && item.email && emailSet!.has(normalize(item.email)))
         item.isDuplicate = 'true';
-      if (hasGovtID && item.govtIDNumber && govtSet!.has(normalize(item.govtIDNumber)))
+      if (
+        hasGovtID &&
+        item.govtIDNumber &&
+        govtSet!.has(normalize(item.govtIDNumber))
+      )
         item.isDuplicate = 'true';
-      if (hasWalletAddress && item.walletAddress && walletSet!.has(normalize(item.walletAddress)))
+      if (
+        hasWalletAddress &&
+        item.walletAddress &&
+        walletSet!.has(normalize(item.walletAddress))
+      )
         item.isDuplicate = 'true';
       return item;
     });
@@ -365,12 +366,10 @@ export class SourceService {
       uniqueFields,
     );
 
-
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
       uniqueFields,
     );
-  
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
