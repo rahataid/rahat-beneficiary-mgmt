@@ -82,8 +82,36 @@ export class SourceService {
     private readonly fdService: FieldDefinitionsService,
   ) {}
 
-  async fetchExistingBeneficiaries() {
-    return this.prisma.beneficiary.findMany({
+  async fetchExistingBeneficiaries(payload: any, uniqueFields: string[]) {
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+      resolveUniqueFields(uniqueFields);
+
+    const records: Record<string, string>[] = Array.from(payload);
+    const phones = hasPhone
+      ? ([...new Set(records.map((p) => p.phone).filter(Boolean))] as string[])
+      : ([] as string[]);
+    const emails = hasEmail
+      ? ([...new Set(records.map((p) => p.email).filter(Boolean))] as string[])
+      : ([] as string[]);
+    const govtIDs = hasGovtID
+      ? ([...new Set(records.map((p) => p.govtIDNumber).filter(Boolean))] as string[])
+      : ([] as string[]);
+    const walletAddrs = hasWalletAddress
+      ? ([...new Set(records.map((p) => p.walletAddress).filter(Boolean))] as string[])
+      : ([] as string[]);
+
+    console.time('[fetchExistingBeneficiaries] db query');
+    const result = await this.prisma.beneficiary.findMany({
+      where: {
+        OR: [
+          ...(phones.length ? [{ phone: { in: phones } }] : []),
+          ...(emails.length ? [{ email: { in: emails } }] : []),
+          ...(govtIDs.length ? [{ govtIDNumber: { in: govtIDs } }] : []),
+          ...(walletAddrs.length
+            ? [{ walletAddress: { in: walletAddrs } }]
+            : []),
+        ],
+      },
       select: {
         phone: true,
         govtIDNumber: true,
@@ -91,17 +119,28 @@ export class SourceService {
         email: true,
       },
     });
+    console.timeEnd('[fetchExistingBeneficiaries] db query');
+    console.log(`[fetchExistingBeneficiaries] matched ${result.length} existing records`);
+    return result;
   }
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
-    const existing = await this.fetchExistingBeneficiaries();
-   
+    console.time('[checkDuplicateBeneficiary] total');
+    const existing = await this.fetchExistingBeneficiaries(payload, uniqueFields);
+
+    console.time('[checkDuplicateBeneficiary] markDuplicates');
     const payloadDups = this.markDuplicates(payload, uniqueFields);
-    return this.compareDuplicateBeneficiary(
+    console.timeEnd('[checkDuplicateBeneficiary] markDuplicates');
+
+    console.time('[checkDuplicateBeneficiary] compareDuplicates');
+    const result = await this.compareDuplicateBeneficiary(
       payloadDups,
       existing,
       uniqueFields,
     );
+    console.timeEnd('[checkDuplicateBeneficiary] compareDuplicates');
+    console.timeEnd('[checkDuplicateBeneficiary] total');
+    return result;
   }
 
   markDuplicates(data: any[], uniqueFields: string[]) {
@@ -150,49 +189,39 @@ export class SourceService {
 
   async compareDuplicateBeneficiary(
     payload: any,
-    existingData: any,
+    existingData: Record<string, string | null>[],
     uniqueFields: string[],
   ) {
-    const result = [];
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
       resolveUniqueFields(uniqueFields);
-    for (let p of payload) {
-      if (hasPhone) {
-        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.PHONE, existingData);
-      }
-      if (hasEmail) {
-        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.EMAIL, existingData);
-      }
-      if (hasGovtID) {
-        p = this.attachIsDuplicate(
-          p,
-          BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
-          existingData,
-        );
-      }
-      if (hasWalletAddress) {
-        p = this.attachIsDuplicate(
-          p,
-          BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
-          existingData,
-        );
-      }
 
-      result.push(p);
-    }
-    return result;
-  }
+    const normalize = allowOnlyAlphabetAndNumbers;
+    const phoneSet = hasPhone
+      ? new Set(existingData.map((e) => normalize(e.phone ?? '')))
+      : null;
+    const emailSet = hasEmail
+      ? new Set(existingData.map((e) => normalize(e.email ?? '')))
+      : null;
+    const govtSet = hasGovtID
+      ? new Set(existingData.map((e) => normalize(e.govtIDNumber ?? '')))
+      : null;
+    const walletSet = hasWalletAddress
+      ? new Set(existingData.map((e) => normalize(e.walletAddress ?? '')))
+      : null;
 
-  attachIsDuplicate(p: any, fieldName: string, existingData: any) {
-    if (p[fieldName]) {
-      const found = existingData.find(
-        (f) =>
-          allowOnlyAlphabetAndNumbers(f[fieldName]) ===
-          allowOnlyAlphabetAndNumbers(p[fieldName]),
-      );
-      if (found) p.isDuplicate = true;
-    }
-    return p;
+    const records: Record<string, string>[] = Array.from(payload);
+    return records.map((p) => {
+      const item = { ...p };
+      if (hasPhone && item.phone && phoneSet!.has(normalize(item.phone)))
+        item.isDuplicate = 'true';
+      if (hasEmail && item.email && emailSet!.has(normalize(item.email)))
+        item.isDuplicate = 'true';
+      if (hasGovtID && item.govtIDNumber && govtSet!.has(normalize(item.govtIDNumber)))
+        item.isDuplicate = 'true';
+      if (hasWalletAddress && item.walletAddress && walletSet!.has(normalize(item.walletAddress)))
+        item.isDuplicate = 'true';
+      return item;
+    });
   }
 
   async create(dto: CreateSourceDto) {
