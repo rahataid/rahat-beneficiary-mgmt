@@ -62,6 +62,7 @@ export const validateSchemaFields = async (
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
+    uniqueFields,
   );
 
   let secondaryErrors = [];
@@ -179,22 +180,32 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
   return values;
 }
 
+const ALL_UNIQUE_FIELD_VALUES = Object.values(BENEF_UNIQUE_FIELDS);
+
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
+  uniqueFields: string[] = [],
 ) => {
   const emptyFields = [];
   const primaryErrors = [];
 
   for (const item of payload) {
+    // Default non-enabled unique fields to 'N/A'
+    for (const field of ALL_UNIQUE_FIELD_VALUES) {
+      if (!uniqueFields.includes(field) && !item[field]) {
+        item[field] = 'N/A';
+      }
+    }
+
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
     if (errors.length) {
       for (const e of errors) {
-        // Skip validation error if the property is phone and its value is empty/falsy
+        // Skip validation errors for unique fields not enabled for validation
         if (
-          e.property === BENEF_UNIQUE_FIELDS.PHONE &&
-          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
+          ALL_UNIQUE_FIELD_VALUES.includes(e.property) &&
+          !uniqueFields.includes(e.property)
         ) {
           continue;
         }
@@ -405,6 +416,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
     hasGovtID: false,
     hasWalletAddress: false,
   };
+  console.log(uniqueFields, 'uniqueFields');
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.PHONE)) rData.hasPhone = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.EMAIL)) rData.hasEmail = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER))
