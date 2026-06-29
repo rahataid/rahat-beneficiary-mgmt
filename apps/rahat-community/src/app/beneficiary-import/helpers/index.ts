@@ -183,14 +183,16 @@ const validatePrimaryFields = async (
 
         for (const f of requiredFields) {
           if (!item[f]) {
-            fields.push(f);
-            errors.push({
-              uuid: item.uuid,
-              fieldName: f,
-              value: '',
-              isNull: true,
-              message: 'Required field is missing',
-            });
+            if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
+              fields.push(f);
+              errors.push({
+                uuid: item.uuid,
+                fieldName: f,
+                value: '',
+                isNull: true,
+                message: 'Required field is missing',
+              });
+            }
           }
         }
 
