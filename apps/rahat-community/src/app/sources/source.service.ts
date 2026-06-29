@@ -202,25 +202,16 @@ export class SourceService {
       ? new Set(existingData.map((e) => normalize(e.walletAddress ?? '')))
       : null;
 
-    const records: Record<string, string>[] = Array.from(payload);
-    return records.map((p) => {
-      const item = { ...p };
-      if (hasPhone && item.phone && phoneSet!.has(normalize(item.phone)))
-        item.isDuplicate = 'true';
-      if (hasEmail && item.email && emailSet!.has(normalize(item.email)))
-        item.isDuplicate = 'true';
-      if (
-        hasGovtID &&
-        item.govtIDNumber &&
-        govtSet!.has(normalize(item.govtIDNumber))
-      )
-        item.isDuplicate = 'true';
-      if (
-        hasWalletAddress &&
-        item.walletAddress &&
-        walletSet!.has(normalize(item.walletAddress))
-      )
-        item.isDuplicate = 'true';
+    return payload.map((p: Record<string, string>) => {
+      const item: Record<string, unknown> = { ...p };
+      if (hasPhone && p.phone && phoneSet!.has(normalize(p.phone)))
+        item.isDuplicate = true;
+      if (hasEmail && p.email && emailSet!.has(normalize(p.email)))
+        item.isDuplicate = true;
+      if (hasGovtID && p.govtIDNumber && govtSet!.has(normalize(p.govtIDNumber)))
+        item.isDuplicate = true;
+      if (hasWalletAddress && p.walletAddress && walletSet!.has(normalize(p.walletAddress)))
+        item.isDuplicate = true;
       return item;
     });
   }
