@@ -159,17 +159,14 @@ const validatePrimaryFields = async (
         const errors = [];
         const fields: string[] = [];
 
-        const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
+        const dtoInput =
+          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
+            ? { ...item, [BENEF_UNIQUE_FIELDS.PHONE]: null }
+            : item;
+        const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, dtoInput);
         const validationErrors = await validate(beneficiaryDto);
 
         for (const e of validationErrors) {
-          // Skip validation error if the property is phone and its value is empty/falsy
-          if (
-            e.property === BENEF_UNIQUE_FIELDS.PHONE &&
-            item[BENEF_UNIQUE_FIELDS.PHONE] === ''
-          ) {
-            continue;
-          }
           errors.push({
             uuid: item.uuid,
             fieldName: e.property,
@@ -180,16 +177,14 @@ const validatePrimaryFields = async (
 
         for (const f of requiredFields) {
           if (!item[f]) {
-            if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
-              fields.push(f);
-              errors.push({
-                uuid: item.uuid,
-                fieldName: f,
-                value: '',
-                isNull: true,
-                message: 'Required field is missing',
-              });
-            }
+            fields.push(f);
+            errors.push({
+              uuid: item.uuid,
+              fieldName: f,
+              value: '',
+              isNull: true,
+              message: 'Required field is missing',
+            });
           }
         }
 
