@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {
@@ -14,19 +14,55 @@ import {
 import { PrismaService } from '@rumsan/prisma';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { BeneficiaryGroupService } from '../beneficiary-groups/beneficiary-group.service';
-import { generateExcelData } from '../export/helpers/data-flattener.helper';
+import {
+  generateExcelBuffer,
+  generateExcelData,
+} from '../export/helpers/data-flattener.helper';
 import { paginate } from '../utils/paginate';
 import { VerificationService } from '../beneficiaries/verification.service';
 import { UUID } from 'crypto';
+import { EVENTS, QUEUE, QUEUE_RETRY_OPTIONS, JOBS } from '../../constants';
+import XLSX from 'xlsx';
+import { deleteFileFromDisk } from '../utils/multer';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+
+const PRIMARY_FIELDS = new Set([
+  'uuid',
+  'firstName',
+  'lastName',
+  'phone',
+  'email',
+  'govtIDNumber',
+  'gender',
+  'birthDate',
+  'walletAddress',
+  'location',
+  'latitude',
+  'longitude',
+  'notes',
+  'bankedStatus',
+  'internetStatus',
+  'phoneStatus',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'id',
+  'archived',
+  'isVerified',
+]);
 
 @Injectable()
 export class GroupService {
+  private readonly logger = new Logger(GroupService.name);
+
   constructor(
     private prisma: PrismaService,
     private beneficaryGroupService: BeneficiaryGroupService,
     private beneficaryService: BeneficiariesService,
     private verificationService: VerificationService,
     private eventEmitter: EventEmitter2,
+    @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
   ) {}
 
   async beneficiariesByGroup(groupUID: UUID) {
@@ -103,7 +139,7 @@ export class GroupService {
       uuid: true,
       id: true,
       autoCreated: true,
-      createdAt:true,
+      createdAt: true,
       user: {
         select: { name: true },
       },
@@ -236,11 +272,11 @@ export class GroupService {
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
       (item) => {
-        const { firstName, lastName, ...rest } = item.beneficiary;
+        const { ...rest } = item.beneficiary;
 
         return {
           ...rest,
-          householdHeadName: `${firstName} ${lastName}`,
+
           groupName,
         };
       },
@@ -249,6 +285,178 @@ export class GroupService {
     const excelData = generateExcelData(formattedData);
 
     return excelData;
+  }
+
+  async downloadGroupExcel(uuid: string, fields?: string): Promise<Buffer> {
+    const group = await this.findOne(uuid);
+    if (!group) throw new Error('Group not found');
+
+    const formattedData: Record<string, unknown>[] =
+      group.beneficiariesGroup.map((item) => ({
+        ...(item.beneficiary as Record<string, unknown>),
+        groupName: group.name,
+      }));
+
+    let selectedFields: string[] | null = null;
+    if (fields) {
+      const rawFields = fields
+        .split(',')
+        .map((f) => f.trim())
+        .filter(Boolean);
+      selectedFields = Array.from(new Set(['uuid', ...rawFields]));
+    }
+
+    const filteredData = selectedFields
+      ? formattedData.map((row) =>
+          selectedFields.reduce((acc: Record<string, unknown>, key) => {
+            if (row[key] !== undefined) acc[key] = row[key];
+            return acc;
+          }, {}),
+        )
+      : formattedData;
+
+    return generateExcelBuffer(filteredData);
+  }
+
+  async bulkUpdateFromFile(
+    userUUID: string,
+    groupUUID: string,
+    file: Express.Multer.File,
+    batchSize = 500,
+  ) {
+    this.logger.log(
+      `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}`,
+    );
+
+    const resolvedBatchSize = Number(batchSize) > 0 ? Number(batchSize) : 500;
+
+    const workbook = XLSX.readFile(file.path);
+    await deleteFileFromDisk(file.path);
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows: Record<string, string>[] = Array.from(
+      XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' }) as Record<
+        string,
+        string
+      >[],
+    );
+
+    const groupBeneficiaryUUIDs =
+      await this.beneficaryGroupService.fetchGroupBeneficiaryUUIDs(groupUUID);
+
+    for (const row of rows) {
+      if (!row.uuid || !groupBeneficiaryUUIDs.has(row.uuid)) {
+        throw new Error(
+          `Beneficiary with UUID ${row.uuid || 'empty'} not found in group!`,
+        );
+      }
+    }
+
+    const totalBatches = Math.ceil(rows.length / resolvedBatchSize);
+    for (let i = 0; i < rows.length; i += resolvedBatchSize) {
+      const batchIndex = Math.floor(i / resolvedBatchSize);
+      const chunk = rows.slice(i, i + resolvedBatchSize);
+      await this.queueBulkUpdateBatch(
+        groupUUID,
+        chunk,
+        batchIndex,
+        totalBatches,
+      );
+    }
+    return { success: true, message: 'Bulk update queued' };
+  }
+
+  async processBulkUpdateJob(
+    groupUUID: string,
+    data?: Record<string, string>[],
+    batchIndex = 0,
+    totalBatches = 1,
+  ) {
+    this.logger.log(
+      `Processing bulk update job for group ${groupUUID} (batch ${
+        batchIndex + 1
+      }/${totalBatches})`,
+    );
+
+    let updatedCount = 0;
+    let failedCount = 0;
+    console.log(data, 'datafrom the processBulkUpdate');
+
+    try {
+      if (Array.isArray(data) && data.length) {
+        for (const row of data) {
+          const { uuid, ...rest } = row as Record<string, unknown>;
+
+          const primaryData: Record<string, unknown> = {};
+          const extraData: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(rest)) {
+            if (
+              value === undefined ||
+              value === null ||
+              value === '' ||
+              (typeof value === 'string' && value.trim() === '')
+            )
+              continue;
+            if (PRIMARY_FIELDS.has(key)) {
+              primaryData[key] = value;
+            } else {
+              extraData[key] = value;
+            }
+          }
+
+          const updatePayload: Record<string, unknown> = { ...primaryData };
+          if (Object.keys(extraData).length) {
+            const existing = await this.prisma.beneficiary.findUnique({
+              where: { uuid: uuid as string },
+              select: { extras: true },
+            });
+            updatePayload.extras = {
+              ...(existing?.extras
+                ? (existing.extras as Record<string, unknown>)
+                : {}),
+              ...extraData,
+            };
+          }
+
+          try {
+            await this.prisma.beneficiary.update({
+              where: { uuid: uuid as string },
+              data: updatePayload,
+            });
+            updatedCount++;
+          } catch (err) {
+            failedCount++;
+            this.logger.error(
+              `Failed to update beneficiary ${uuid}: ${(err as Error).message}`,
+            );
+          }
+        }
+      }
+
+      const isLastBatch = batchIndex === totalBatches - 1;
+      if (isLastBatch) {
+        const summary = { groupUUID, updatedCount, failedCount };
+        this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, summary);
+        this.logger.log(
+          `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${(err as Error).message}`);
+    }
+  }
+
+  private async queueBulkUpdateBatch(
+    groupUUID: string,
+    chunk: Record<string, string>[],
+    batchIndex: number,
+    totalBatches: number,
+  ) {
+    return this.benefQueue.add(
+      JOBS.BENEFICIARY.BULK_UPDATE,
+      { groupUUID, data: chunk, batchIndex, totalBatches },
+      QUEUE_RETRY_OPTIONS,
+    );
   }
 
   async archiveDeletedBeneficiary(beneficiary: any, flag: string) {

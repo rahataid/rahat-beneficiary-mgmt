@@ -1,0 +1,46 @@
+meta {
+  name: Bulk Update Beneficiaries
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{url}}/group/{{groupUUID}}/bulk-update
+  body: multipart-form
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:query {
+  ~batchSize: 500
+}
+
+body:multipart-form {
+  file: @file()
+}
+
+vars:pre-request {
+  groupUUID:
+}
+
+docs {
+  Upload an Excel (.xlsx) file to bulk update beneficiaries in a group.
+
+  - `groupUUID`: UUID of the group whose beneficiaries are being updated
+  - `file`: the Excel file to upload (select via @file() in Bruno UI)
+  - `batchSize` (optional): number of rows per Bull queue job, default 500. Remove ~ to override.
+
+  The file must contain a `uuid` column matching beneficiaries that belong to this group.
+  Any uuid not found in the group will cause a validation error before queuing starts.
+
+  Columns map directly to beneficiary fields:
+    uuid, firstName, lastName, phone, email, gender, birthDate,
+    govtIDNumber, walletAddress, location, latitude, longitude,
+    bankedStatus, internetStatus, phoneStatus, notes
+  Any unrecognised column is stored in the extras JSON field.
+
+  Returns: { success: true, message: "Bulk update queued" }
+}

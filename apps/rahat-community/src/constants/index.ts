@@ -28,6 +28,7 @@ export const JOBS = {
     IMPORT: 'job.beneficiary.import',
     EXPORT: 'job.beneficiary.export',
     EXPORT_V2: 'job.beneficiary.export-v2',
+     BULK_UPDATE: 'job.beneficiary.bulk_update',
   },
   OTP: 'otp',
   CREATE_BENEF_GROUP: 'job.create.benef.group',
@@ -42,6 +43,7 @@ export const EVENTS = {
   EMIT_TARGET_RESULT: 'emit_target_result',
   TARGETING_COMPLETED: 'beneficiary.targeting.completed',
   BENEF_EXPORT: 'beneficiary.export',
+  BENEFICIARY_GROUP_UPDATED: 'beneficiary.group.update',
   BENEF_EXPORT_V2: 'beneficiary.export-v2',
   CREATE_BENEF_GROUP: 'create.benef.group',
 };
