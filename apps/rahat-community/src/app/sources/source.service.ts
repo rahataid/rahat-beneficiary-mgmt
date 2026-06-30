@@ -82,8 +82,39 @@ export class SourceService {
     private readonly fdService: FieldDefinitionsService,
   ) {}
 
-  async fetchExistingBeneficiaries() {
-    return this.prisma.beneficiary.findMany({
+  async fetchExistingBeneficiaries(payload: any, uniqueFields: string[]) {
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+      resolveUniqueFields(uniqueFields);
+
+    const records: Record<string, string>[] = Array.from(payload);
+    const phones = hasPhone
+      ? ([...new Set(records.map((p) => p.phone).filter(Boolean))] as string[])
+      : ([] as string[]);
+    const emails = hasEmail
+      ? ([...new Set(records.map((p) => p.email).filter(Boolean))] as string[])
+      : ([] as string[]);
+    const govtIDs = hasGovtID
+      ? ([
+          ...new Set(records.map((p) => p.govtIDNumber).filter(Boolean)),
+        ] as string[])
+      : ([] as string[]);
+    const walletAddrs = hasWalletAddress
+      ? ([
+          ...new Set(records.map((p) => p.walletAddress).filter(Boolean)),
+        ] as string[])
+      : ([] as string[]);
+
+    const result = await this.prisma.beneficiary.findMany({
+      where: {
+        OR: [
+          ...(phones.length ? [{ phone: { in: phones } }] : []),
+          ...(emails.length ? [{ email: { in: emails } }] : []),
+          ...(govtIDs.length ? [{ govtIDNumber: { in: govtIDs } }] : []),
+          ...(walletAddrs.length
+            ? [{ walletAddress: { in: walletAddrs } }]
+            : []),
+        ],
+      },
       select: {
         phone: true,
         govtIDNumber: true,
@@ -91,11 +122,14 @@ export class SourceService {
         email: true,
       },
     });
+    return result;
   }
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
-    const existing = await this.fetchExistingBeneficiaries();
-   
+    const existing = await this.fetchExistingBeneficiaries(
+      payload,
+      uniqueFields,
+    );
     const payloadDups = this.markDuplicates(payload, uniqueFields);
     return this.compareDuplicateBeneficiary(
       payloadDups,
@@ -146,53 +180,40 @@ export class SourceService {
     return data;
   }
 
-  
-
   async compareDuplicateBeneficiary(
     payload: any,
-    existingData: any,
+    existingData: Record<string, string | null>[],
     uniqueFields: string[],
   ) {
-    const result = [];
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
       resolveUniqueFields(uniqueFields);
-    for (let p of payload) {
-      if (hasPhone) {
-        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.PHONE, existingData);
-      }
-      if (hasEmail) {
-        p = this.attachIsDuplicate(p, BENEF_UNIQUE_FIELDS.EMAIL, existingData);
-      }
-      if (hasGovtID) {
-        p = this.attachIsDuplicate(
-          p,
-          BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
-          existingData,
-        );
-      }
-      if (hasWalletAddress) {
-        p = this.attachIsDuplicate(
-          p,
-          BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
-          existingData,
-        );
-      }
 
-      result.push(p);
-    }
-    return result;
-  }
+    const normalize = allowOnlyAlphabetAndNumbers;
+    const phoneSet = hasPhone
+      ? new Set(existingData.map((e) => normalize(e.phone ?? '')))
+      : null;
+    const emailSet = hasEmail
+      ? new Set(existingData.map((e) => normalize(e.email ?? '')))
+      : null;
+    const govtSet = hasGovtID
+      ? new Set(existingData.map((e) => normalize(e.govtIDNumber ?? '')))
+      : null;
+    const walletSet = hasWalletAddress
+      ? new Set(existingData.map((e) => normalize(e.walletAddress ?? '')))
+      : null;
 
-  attachIsDuplicate(p: any, fieldName: string, existingData: any) {
-    if (p[fieldName]) {
-      const found = existingData.find(
-        (f) =>
-          allowOnlyAlphabetAndNumbers(f[fieldName]) ===
-          allowOnlyAlphabetAndNumbers(p[fieldName]),
-      );
-      if (found) p.isDuplicate = true;
-    }
-    return p;
+    return payload.map((p: Record<string, string>) => {
+      const item: Record<string, unknown> = { ...p };
+      if (hasPhone && p.phone && phoneSet!.has(normalize(p.phone)))
+        item.isDuplicate = true;
+      if (hasEmail && p.email && emailSet!.has(normalize(p.email)))
+        item.isDuplicate = true;
+      if (hasGovtID && p.govtIDNumber && govtSet!.has(normalize(p.govtIDNumber)))
+        item.isDuplicate = true;
+      if (hasWalletAddress && p.walletAddress && walletSet!.has(normalize(p.walletAddress)))
+        item.isDuplicate = true;
+      return item;
+    });
   }
 
   async create(dto: CreateSourceDto) {
@@ -336,12 +357,10 @@ export class SourceService {
       uniqueFields,
     );
 
-
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
       uniqueFields,
     );
-  
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
