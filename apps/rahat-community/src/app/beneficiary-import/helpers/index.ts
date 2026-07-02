@@ -69,7 +69,7 @@ export const validateSchemaFields = async (
   if (validateSecondaryField) {
     secondaryErrors = await validateSecondaryFields(payload, extraFields);
   } else {
-    fillSecondaryFieldDefaults(payload, extraFields);
+    fillSecondaryFieldDefaults(processedData, extraFields);
   }
 
   const allValidationErrors = [...primaryErrors, ...secondaryErrors];
@@ -81,7 +81,6 @@ const validateSecondaryFields = async (
   payload: any,
   extraFields: IExtraField[],
 ) => {
-  console.log('Validating secondary fields...');
   const secondaryErrors = [];
   const dbFields = await fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
   const primaryFields = dbFields.map((f) => f.name);
@@ -121,14 +120,14 @@ const fillSecondaryFieldDefaults = (
   const primaryFields = dbFields.map((f) => f.name);
 
   payload.forEach((item: any) => {
-    extraFields.forEach((ef) => {
-      if (!primaryFields.includes(ef.name)) {
-        const val = item[ef.name];
-        if (val === undefined || val === null || val === '') {
-          item[ef.name] = 'N/A';
-        }
-      }
-    });
+    // extraFields.forEach((ef) => {
+    //   if (!primaryFields.includes(ef.name)) {
+    //     const val = item[ef.name];
+    //     if (val === undefined || val === null || val === '') {
+    //       item[ef.name] = 'N/A';
+    //     }
+    //   }
+    // });
 
     Object.keys(item).forEach((key) => {
       if (!primaryFields.includes(key) && key !== 'rawData') {
@@ -142,7 +141,6 @@ const fillSecondaryFieldDefaults = (
 };
 
 function validateValueByType({ value, type, fieldName, extraFields }) {
-  console.log('Validating value by type...', { value, type, fieldName });
   switch (type.toUpperCase()) {
     case FIELD_DEF_TYPES.NUMBER:
       const val = value ? value : 0;
@@ -416,7 +414,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
     hasGovtID: false,
     hasWalletAddress: false,
   };
-  console.log(uniqueFields, 'uniqueFields');
+
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.PHONE)) rData.hasPhone = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.EMAIL)) rData.hasEmail = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER))
