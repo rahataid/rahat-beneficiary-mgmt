@@ -26,6 +26,11 @@ import XLSX from 'xlsx';
 import { deleteFileFromDisk } from '../utils/multer';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import {
+  uploadToR2,
+  downloadFromR2,
+  deleteFromR2,
+} from '../export/helpers/r2-upload.helper';
 
 const PRIMARY_FIELDS = new Set([
   'uuid',
@@ -353,14 +358,20 @@ export class GroupService {
     }
 
     const totalBatches = Math.ceil(rows.length / resolvedBatchSize);
+    const r2Key = `bulk-update/${groupUUID}-${Date.now()}.json`;
+    const buffer = Buffer.from(JSON.stringify(rows));
+    
+    // Upload the entire parsed array to R2 once
+    await uploadToR2(this.prisma, buffer, r2Key, 'application/json');
+
     for (let i = 0; i < rows.length; i += resolvedBatchSize) {
       const batchIndex = Math.floor(i / resolvedBatchSize);
-      const chunk = rows.slice(i, i + resolvedBatchSize);
       await this.queueBulkUpdateBatch(
         groupUUID,
-        chunk,
+        r2Key,
         batchIndex,
         totalBatches,
+        resolvedBatchSize,
       );
     }
     return { success: true, message: 'Bulk update queued' };
@@ -368,9 +379,10 @@ export class GroupService {
 
   async processBulkUpdateJob(
     groupUUID: string,
-    data?: Record<string, string>[],
+    r2Key: string,
     batchIndex = 0,
     totalBatches = 1,
+    batchSize = 500,
   ) {
     this.logger.log(
       `Processing bulk update job for group ${groupUUID} (batch ${
@@ -380,7 +392,18 @@ export class GroupService {
 
     let updatedCount = 0;
     let failedCount = 0;
-    console.log(data, 'datafrom the processBulkUpdate');
+    
+    let fullData: Record<string, string>[] = [];
+    try {
+      const buffer = await downloadFromR2(this.prisma, r2Key);
+      fullData = JSON.parse(buffer.toString('utf-8'));
+    } catch (err) {
+      this.logger.error(`Failed to download or parse from R2: ${(err as Error).message}`);
+      throw err;
+    }
+
+    const startIndex = batchIndex * batchSize;
+    const data = fullData.slice(startIndex, startIndex + batchSize);
 
     try {
       if (Array.isArray(data) && data.length) {
@@ -440,6 +463,12 @@ export class GroupService {
         this.logger.log(
           `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
         );
+
+        try {
+          await deleteFromR2(this.prisma, r2Key);
+        } catch (err) {
+          this.logger.error(`Failed to delete full file from R2: ${r2Key}`);
+        }
       }
     } catch (err) {
       this.logger.error(`Bulk update failed: ${(err as Error).message}`);
@@ -448,13 +477,14 @@ export class GroupService {
 
   private async queueBulkUpdateBatch(
     groupUUID: string,
-    chunk: Record<string, string>[],
+    r2Key: string,
     batchIndex: number,
     totalBatches: number,
+    batchSize: number,
   ) {
     return this.benefQueue.add(
       JOBS.BENEFICIARY.BULK_UPDATE,
-      { groupUUID, data: chunk, batchIndex, totalBatches },
+      { groupUUID, r2Key, batchIndex, totalBatches, batchSize },
       QUEUE_RETRY_OPTIONS,
     );
   }
