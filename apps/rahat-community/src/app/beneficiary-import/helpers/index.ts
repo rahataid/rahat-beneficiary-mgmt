@@ -36,7 +36,7 @@ interface IExtraField {
 
 export const injectCustomID = (customUniqueField: string, payload: any) => {
   const final = [];
-  for (let p of payload) {
+  for (const p of payload) {
     const newItem = { ...p };
     if (customUniqueField) {
       newItem.customId = p[customUniqueField];
@@ -51,19 +51,26 @@ export const validateSchemaFields = async (
   extraFields: IExtraField[],
   hasUUID: boolean,
   uniqueFields: string[],
+  validateSecondaryField: boolean = true,
 ) => {
-  let requiredFields = [
+  const requiredFields = [
     BENEFICIARY_REQ_FIELDS.FIRST_NAME,
     BENEFICIARY_REQ_FIELDS.LAST_NAME,
     ...uniqueFields,
   ];
-  // if (customUniqueField) requiredFields.push(customUniqueField);
   if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
     requiredFields,
+    uniqueFields,
   );
-  const secondaryErrors = await validateSecondaryFields(payload, extraFields);
+
+  let secondaryErrors = [];
+  if (validateSecondaryField) {
+    secondaryErrors = await validateSecondaryFields(payload, extraFields);
+  } else {
+    fillSecondaryFieldDefaults(processedData, extraFields);
+  }
 
   const allValidationErrors = [...primaryErrors, ...secondaryErrors];
   return { allValidationErrors, processedData };
@@ -105,10 +112,38 @@ const validateSecondaryFields = async (
   return secondaryErrors;
 };
 
+const fillSecondaryFieldDefaults = (
+  payload: any,
+  extraFields: IExtraField[],
+) => {
+  const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
+  const primaryFields = dbFields.map((f) => f.name);
+
+  payload.forEach((item: any) => {
+    // extraFields.forEach((ef) => {
+    //   if (!primaryFields.includes(ef.name)) {
+    //     const val = item[ef.name];
+    //     if (val === undefined || val === null || val === '') {
+    //       item[ef.name] = 'N/A';
+    //     }
+    //   }
+    // });
+
+    Object.keys(item).forEach((key) => {
+      if (!primaryFields.includes(key) && key !== 'rawData') {
+        const val = item[key];
+        if (val === undefined || val === null || val === '') {
+          item[key] = 'N/A';
+        }
+      }
+    });
+  });
+};
+
 function validateValueByType({ value, type, fieldName, extraFields }) {
   switch (type.toUpperCase()) {
     case FIELD_DEF_TYPES.NUMBER:
-      let val = value ? value : 0;
+      const val = value ? value : 0;
       return !isNaN(parseInt(val)) && isFinite(parseInt(val));
     case FIELD_DEF_TYPES.TEXT:
       return typeof value === 'string' || typeof value === 'number';
@@ -143,22 +178,32 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
   return values;
 }
 
+const ALL_UNIQUE_FIELD_VALUES = Object.values(BENEF_UNIQUE_FIELDS);
+
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
+  uniqueFields: string[] = [],
 ) => {
   const emptyFields = [];
   const primaryErrors = [];
 
   for (const item of payload) {
+    // Default non-enabled unique fields to 'N/A'
+    // for (const field of ALL_UNIQUE_FIELD_VALUES) {
+    //   if (!uniqueFields.includes(field) && !item[field]) {
+    //     item[field] = 'N/A';
+    //   }
+    // }
+
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
     if (errors.length) {
       for (const e of errors) {
-        // Skip validation error if the property is phone and its value is empty/falsy
+        // Skip validation errors for unique fields not enabled for validation
         if (
-          e.property === BENEF_UNIQUE_FIELDS.PHONE &&
-          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
+          ALL_UNIQUE_FIELD_VALUES.includes(e.property) &&
+          !uniqueFields.includes(e.property)
         ) {
           continue;
         }
@@ -224,7 +269,7 @@ export const extractFieldsMatchingWithDBFields = (
   payload: any,
 ) => {
   let matching_fields = [];
-  for (let p of payload) {
+  for (const p of payload) {
     const keys = Object.keys(p);
     const valid = validateKeysAndDBFields(keys, dbFields);
     matching_fields = valid;
@@ -257,7 +302,7 @@ function extractFields(payload: any, fieldsToSelect: any) {
 // Eg: If target is Float, convert value to Float
 export const parseValuesByTargetTypes = (data: any, dbFields: any) => {
   let parsed_result = [];
-  for (let d of data) {
+  for (const d of data) {
     const keys = Object.keys(d);
     const values = Object.values(d);
     const newItem = getFieldTypeAndParse({ keys, values, dbFields, item: d });
@@ -319,7 +364,7 @@ const ENUM_MAPPING = {
 
 function isValidDateFormat(dateString: string) {
   // Regular expression to match the YYYY-MM-DD format
-  var dateFormat = /^\d{4}-\d{2}-\d{2}$/;
+  const dateFormat = /^\d{4}-\d{2}-\d{2}$/;
 
   // Check if the string matches the desired format
   if (!dateFormat.test(dateString)) {
@@ -327,10 +372,10 @@ function isValidDateFormat(dateString: string) {
   }
 
   // Further validation for the date parts
-  var parts = dateString.split('-');
-  var year = parseInt(parts[0]);
-  var month = parseInt(parts[1]);
-  var day = parseInt(parts[2]);
+  const parts = dateString.split('-');
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]);
+  const day = parseInt(parts[2]);
 
   // Check if month and day values are within valid ranges
   if (month < 1 || month > 12 || day < 1 || day > 31) {
@@ -343,7 +388,7 @@ function isValidDateFormat(dateString: string) {
   }
 
   if (month == 2) {
-    var isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    const isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
     if ((isLeapYear && day > 29) || (!isLeapYear && day > 28)) {
       return false;
     }
@@ -369,6 +414,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
     hasGovtID: false,
     hasWalletAddress: false,
   };
+
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.PHONE)) rData.hasPhone = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.EMAIL)) rData.hasEmail = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER))

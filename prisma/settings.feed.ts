@@ -29,6 +29,17 @@ const settingsData = [
     isPrivate: false,
     isReadOnly: false,
   },
+
+  {
+    name: SETTINGS_NAMES.VALIDATE_SECONDARY_FIELD,
+    dataType: SettingDataType.BOOLEAN,
+    requiredFields: ['DATA'],
+    value: {
+      DATA: true,
+    },
+    isPrivate: false,
+    isReadOnly: false,
+  },
 ];
 
 const prisma = new PrismaClient();
