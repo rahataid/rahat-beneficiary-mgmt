@@ -190,11 +190,11 @@ const validatePrimaryFields = async (
 
   for (const item of payload) {
     // Default non-enabled unique fields to 'N/A'
-    for (const field of ALL_UNIQUE_FIELD_VALUES) {
-      if (!uniqueFields.includes(field) && !item[field]) {
-        item[field] = 'N/A';
-      }
-    }
+    // for (const field of ALL_UNIQUE_FIELD_VALUES) {
+    //   if (!uniqueFields.includes(field) && !item[field]) {
+    //     item[field] = 'N/A';
+    //   }
+    // }
 
     const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
     const errors = await validate(beneficiaryDto);
