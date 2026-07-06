@@ -360,6 +360,9 @@ export class GroupService {
     const buffer = Buffer.from(JSON.stringify(rows));
 
     // Upload the entire parsed array to R2 once
+    this.logger.log(
+      `Uploading bulk update file to R2 bucket with key: ${r2Key}`,
+    );
     await uploadToR2(this.prisma, buffer, r2Key, 'application/json');
 
     await this.benefQueue.add(
@@ -389,6 +392,7 @@ export class GroupService {
 
     try {
       const buffer = await downloadFromR2(this.prisma, r2Key);
+      this.logger.log(`Downloading bulk update file from R2 bucket: ${r2Key}`);
       const fullData: Record<string, string>[] = JSON.parse(
         buffer.toString('utf-8'),
       );
