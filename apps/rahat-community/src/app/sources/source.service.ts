@@ -208,9 +208,17 @@ export class SourceService {
         item.isDuplicate = true;
       if (hasEmail && p.email && emailSet!.has(normalize(p.email)))
         item.isDuplicate = true;
-      if (hasGovtID && p.govtIDNumber && govtSet!.has(normalize(p.govtIDNumber)))
+      if (
+        hasGovtID &&
+        p.govtIDNumber &&
+        govtSet!.has(normalize(p.govtIDNumber))
+      )
         item.isDuplicate = true;
-      if (hasWalletAddress && p.walletAddress && walletSet!.has(normalize(p.walletAddress)))
+      if (
+        hasWalletAddress &&
+        p.walletAddress &&
+        walletSet!.has(normalize(p.walletAddress))
+      )
         item.isDuplicate = true;
       return item;
     });
@@ -227,6 +235,8 @@ export class SourceService {
 
     const uniqueFields = await this.getUniqueFieldSettings();
     this.validateUniqueFields(uniqueFields);
+    const validateSecondaryField =
+      await this.getValidateSecondaryFieldSetting();
 
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
     this.logger.debug(
@@ -257,6 +267,7 @@ export class SourceService {
         extraFields,
         hasUUID,
         uniqueFields,
+        validateSecondaryField,
       });
     }
 
@@ -267,6 +278,7 @@ export class SourceService {
         extraFields,
         hasUUID,
         uniqueFields,
+        validateSecondaryField,
       );
 
       if (allValidationErrors.length) {
@@ -298,6 +310,16 @@ export class SourceService {
     if (!row || !row.value)
       throw new Error('Please setup unique fields from settings!');
     return row.value?.DATA.split(',');
+  }
+
+  async getValidateSecondaryFieldSetting(): Promise<boolean> {
+    const row: any = await this.prisma.setting.findFirst({
+      where: {
+        name: SETTINGS_NAMES.VALIDATE_SECONDARY_FIELD,
+      },
+    });
+    if (!row || !row.value) return true;
+    return row.value?.DATA !== false && row.value?.DATA !== 'false';
   }
 
   async getMappingsByImportId(importId: string) {
@@ -345,7 +367,19 @@ export class SourceService {
     return true;
   }
 
-  async ValidateBeneficiaryImort({ data, extraFields, hasUUID, uniqueFields }) {
+  async ValidateBeneficiaryImort({
+    data,
+    extraFields,
+    hasUUID,
+    uniqueFields,
+    validateSecondaryField,
+  }: {
+    data: any;
+    extraFields: any;
+    hasUUID: any;
+    uniqueFields: any;
+    validateSecondaryField: boolean;
+  }) {
     this.logger.log(
       `Validate beneficiaries started. records=${data.length}, hasUUID=${hasUUID}`,
     );
@@ -355,6 +389,7 @@ export class SourceService {
       extraFields,
       hasUUID,
       uniqueFields,
+      validateSecondaryField,
     );
 
     const duplicates = await this.checkDuplicateBeneficiary(

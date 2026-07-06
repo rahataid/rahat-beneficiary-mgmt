@@ -356,15 +356,13 @@ export class GroupService {
         );
       }
     }
-
-    const totalBatches = Math.ceil(rows.length / resolvedBatchSize);
     const r2Key = `bulk-update/${groupUUID}-${Date.now()}.json`;
     const buffer = Buffer.from(JSON.stringify(rows));
-    
+
     // Upload the entire parsed array to R2 once
     await uploadToR2(this.prisma, buffer, r2Key, 'application/json');
 
-      await this.benefQueue.add(
+    await this.benefQueue.add(
       JOBS.BENEFICIARY.BULK_UPDATE,
       {
         groupUUID,
@@ -377,114 +375,112 @@ export class GroupService {
     return { success: true, message: 'Bulk update queued' };
   }
 
-async processBulkUpdateJob(
-  groupUUID: string,
-  r2Key: string,
-  batchSize = 500,
-) {
-  this.logger.log(
-    `Processing bulk update job for group ${groupUUID} (batch size ${batchSize})`,
-  );
-
-  let updatedCount = 0;
-  let failedCount = 0;
-
-  try {
-    const buffer = await downloadFromR2(this.prisma, r2Key);
-    const fullData: Record<string, string>[] = JSON.parse(
-      buffer.toString('utf-8'),
+  async processBulkUpdateJob(
+    groupUUID: string,
+    r2Key: string,
+    batchSize = 500,
+  ) {
+    this.logger.log(
+      `Processing bulk update job for group ${groupUUID} (batch size ${batchSize})`,
     );
 
-    for (let i = 0; i < fullData.length; i += batchSize) {
-      const data = fullData.slice(i, i + batchSize);
+    let updatedCount = 0;
+    let failedCount = 0;
 
-      this.logger.log(
-        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
-          fullData.length / batchSize,
-        )}`,
+    try {
+      const buffer = await downloadFromR2(this.prisma, r2Key);
+      const fullData: Record<string, string>[] = JSON.parse(
+        buffer.toString('utf-8'),
       );
 
-      for (const row of data) {
-        const { uuid, ...rest } = row as Record<string, unknown>;
+      for (let i = 0; i < fullData.length; i += batchSize) {
+        const data = fullData.slice(i, i + batchSize);
 
-        const primaryData: Record<string, unknown> = {};
-        const extraData: Record<string, unknown> = {};
+        this.logger.log(
+          `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+            fullData.length / batchSize,
+          )}`,
+        );
 
-        for (const [key, value] of Object.entries(rest)) {
-          if (
-            value === undefined ||
-            value === null ||
-            value === '' ||
-            (typeof value === 'string' && value.trim() === '')
-          ) {
-            continue;
+        for (const row of data) {
+          const { uuid, ...rest } = row as Record<string, unknown>;
+
+          const primaryData: Record<string, unknown> = {};
+          const extraData: Record<string, unknown> = {};
+
+          for (const [key, value] of Object.entries(rest)) {
+            if (
+              value === undefined ||
+              value === null ||
+              value === '' ||
+              (typeof value === 'string' && value.trim() === '')
+            ) {
+              continue;
+            }
+
+            if (PRIMARY_FIELDS.has(key)) {
+              primaryData[key] = value;
+            } else {
+              extraData[key] = value;
+            }
           }
 
-          if (PRIMARY_FIELDS.has(key)) {
-            primaryData[key] = value;
-          } else {
-            extraData[key] = value;
+          const updatePayload: Record<string, unknown> = { ...primaryData };
+
+          if (Object.keys(extraData).length) {
+            const existing = await this.prisma.beneficiary.findUnique({
+              where: { uuid: uuid as string },
+              select: { extras: true },
+            });
+
+            updatePayload.extras = {
+              ...(existing?.extras
+                ? (existing.extras as Record<string, unknown>)
+                : {}),
+              ...extraData,
+            };
           }
-        }
 
-        const updatePayload: Record<string, unknown> = { ...primaryData };
+          try {
+            await this.prisma.beneficiary.update({
+              where: { uuid: uuid as string },
+              data: updatePayload,
+            });
 
-        if (Object.keys(extraData).length) {
-          const existing = await this.prisma.beneficiary.findUnique({
-            where: { uuid: uuid as string },
-            select: { extras: true },
-          });
+            updatedCount++;
+          } catch (err) {
+            failedCount++;
 
-          updatePayload.extras = {
-            ...(existing?.extras
-              ? (existing.extras as Record<string, unknown>)
-              : {}),
-            ...extraData,
-          };
-        }
-
-        try {
-          await this.prisma.beneficiary.update({
-            where: { uuid: uuid as string },
-            data: updatePayload,
-          });
-
-          updatedCount++;
-        } catch (err) {
-          failedCount++;
-
-          this.logger.error(
-            `Failed to update beneficiary ${uuid}: ${
-              (err as Error).message
-            }`,
-          );
+            this.logger.error(
+              `Failed to update beneficiary ${uuid}: ${(err as Error).message}`,
+            );
+          }
         }
       }
-    }
 
-    const summary = {
-      groupUUID,
-      updatedCount,
-      failedCount,
-    };
+      const summary = {
+        groupUUID,
+        updatedCount,
+        failedCount,
+      };
 
-    this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, summary);
+      this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, summary);
 
-    this.logger.log(
-      `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
-    );
-  } catch (err) {
-    this.logger.error(`Bulk update failed: ${(err as Error).message}`);
-  } finally {
-    try {
-      await deleteFromR2(this.prisma, r2Key);
-    } catch (err) {
-      this.logger.error(
-        `Failed to delete bulk update file from R2: ${r2Key}`,
+      this.logger.log(
+        `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
       );
+    } catch (err) {
+      this.logger.error(`Bulk update failed: ${(err as Error).message}`);
+    } finally {
+      try {
+        await deleteFromR2(this.prisma, r2Key);
+      } catch (err) {
+        this.logger.error(
+          `Failed to delete bulk update file from R2: ${r2Key}`,
+        );
+      }
     }
   }
-}
 
   // private async queueBulkUpdateBatch(
   //   groupUUID: string,
