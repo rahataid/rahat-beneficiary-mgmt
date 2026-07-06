@@ -178,60 +178,58 @@ function getPopulateFieldValues(fieldName: string, extraFields: any) {
   return values;
 }
 
-const ALL_UNIQUE_FIELD_VALUES = Object.values(BENEF_UNIQUE_FIELDS);
+const VALIDATION_CHUNK_SIZE = 500;
 
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
   uniqueFields: string[] = [],
 ) => {
-  const emptyFields = [];
+  const emptyFields: string[] = [];
   const primaryErrors = [];
 
-  for (const item of payload) {
-    // Default non-enabled unique fields to 'N/A'
-    // for (const field of ALL_UNIQUE_FIELD_VALUES) {
-    //   if (!uniqueFields.includes(field) && !item[field]) {
-    //     item[field] = 'N/A';
-    //   }
-    // }
+  for (let i = 0; i < payload.length; i += VALIDATION_CHUNK_SIZE) {
+    const chunkResults = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload.slice(i, i + VALIDATION_CHUNK_SIZE).map(async (item: any) => {
+        const errors = [];
+        const fields: string[] = [];
 
-    const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, item);
-    const errors = await validate(beneficiaryDto);
-    if (errors.length) {
-      for (const e of errors) {
-        // Skip validation errors for unique fields not enabled for validation
-        if (
-          ALL_UNIQUE_FIELD_VALUES.includes(e.property) &&
-          !uniqueFields.includes(e.property)
-        ) {
-          continue;
+        const dtoInput =
+          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
+            ? { ...item, [BENEF_UNIQUE_FIELDS.PHONE]: null }
+            : item;
+        const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, dtoInput);
+        const validationErrors = await validate(beneficiaryDto);
+
+        for (const e of validationErrors) {
+          errors.push({
+            uuid: item.uuid,
+            fieldName: e.property,
+            value: item[e.property],
+            message: `Invalid value for field '${e.property}'`,
+          });
         }
 
-        primaryErrors.push({
-          uuid: item.uuid,
-          fieldName: e.property,
-          value: item[e.property],
-          message: "Invalid value for field '" + e.property + "'",
-        });
-      }
-    }
+        for (const f of requiredFields) {
+          if (!item[f]) {
+            fields.push(f);
+            errors.push({
+              uuid: item.uuid,
+              fieldName: f,
+              value: '',
+              isNull: true,
+              message: 'Required field is missing',
+            });
+          }
+        }
 
-    // Required fields validation
-    for (const f of requiredFields) {
-      if (!item[f]) {
-        emptyFields.push(f);
-        // Skip validation error for phone field; it will be generated later
-        // if (f !== BENEF_UNIQUE_FIELDS.PHONE) {
-        primaryErrors.push({
-          uuid: item.uuid,
-          fieldName: f,
-          value: '',
-          isNull: true,
-          message: 'Required field is missing',
-        });
-        // }
-      }
+        return { errors, fields };
+      }),
+    );
+    for (const r of chunkResults) {
+      primaryErrors.push(...r.errors);
+      emptyFields.push(...r.fields);
     }
   }
 

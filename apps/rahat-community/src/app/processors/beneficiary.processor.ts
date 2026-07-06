@@ -39,21 +39,18 @@ export class BeneficiaryProcessor {
   async bulkUpdateBeneficiary(
     job: Job<{
       groupUUID: string;
-      data?: Record<string, string>[];
-      batchIndex: number;
-      totalBatches: number;
+      r2Key: string;
+      batchSize: number;
+
     }>,
   ) {
     this.logger.log(
-      `Processing bulk update job. jobId=${job.id}, batch=${
-        job.data.batchIndex + 1
-      }/${job.data.totalBatches}`,
+      `Processing bulk update job. jobId=${job.id}`,
     );
     await this.groupService.processBulkUpdateJob(
       job.data.groupUUID,
-      job.data.data,
-      job.data.batchIndex,
-      job.data.totalBatches,
+      job.data.r2Key,
+      job.data.batchSize,
     );
   }
 
