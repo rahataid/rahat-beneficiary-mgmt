@@ -155,7 +155,7 @@ export class BeneficiaryImportService {
     });
     const importGroup = await this.groupService.upsertByName({
       name: groupName ? groupName : `import_${formatDateAndTime(new Date())}`,
-      autoCreated: true,
+      ...(!groupName && { autoCreated: true }),
       origins: [GroupOrigins.IMPORT],
       createdBy,
     });
