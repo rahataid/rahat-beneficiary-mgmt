@@ -9,6 +9,7 @@ import { Job } from 'bull';
 import { JOBS, QUEUE, EVENTS } from '../../constants';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BeneficiaryImportService } from '../beneficiary-import/beneficiary-import.service';
+import { GroupService } from '../groups/group.service';
 
 @Processor(QUEUE.BENEFICIARY)
 export class BeneficiaryProcessor {
@@ -17,6 +18,7 @@ export class BeneficiaryProcessor {
   constructor(
     private eventEmitter: EventEmitter2,
     private benefImportService: BeneficiaryImportService,
+    private groupService: GroupService,
   ) {}
 
   /**
@@ -35,6 +37,25 @@ export class BeneficiaryProcessor {
     await this.benefImportService.importBySourceUUID(
       job.data.sourceUUID,
       job.data.groupName,
+    );
+  }
+
+  @Process(JOBS.BENEFICIARY.BULK_UPDATE)
+  async bulkUpdateBeneficiary(
+    job: Job<{
+      groupUUID: string;
+      r2Key: string;
+      batchSize: number;
+
+    }>,
+  ) {
+    this.logger.log(
+      `Processing bulk update job. jobId=${job.id}`,
+    );
+    await this.groupService.processBulkUpdateJob(
+      job.data.groupUUID,
+      job.data.r2Key,
+      job.data.batchSize,
     );
   }
 

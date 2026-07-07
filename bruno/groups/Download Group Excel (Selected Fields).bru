@@ -1,0 +1,34 @@
+meta {
+  name: Download Group Excel (Selected Fields)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{url}}/group/{{groupUUID}}/download-excel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:query {
+  fields: uuid,firstName,lastName,phone,gender
+}
+
+vars:pre-request {
+  groupUUID:
+}
+
+docs {
+  Download a filtered Excel sheet — only the specified columns are included.
+  uuid is always present even if not listed in fields.
+
+  Adjust the fields query param to match the columns you want users to edit and re-upload.
+  This is the recommended flow before a bulk update:
+    1. Download with only the fields you want to allow editing
+    2. Share the sheet with data entry operators
+    3. Re-upload via PUT /group/:uuid/bulk-update
+}

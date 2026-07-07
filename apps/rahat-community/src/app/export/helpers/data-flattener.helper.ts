@@ -12,6 +12,7 @@ const flattenObject = (obj: any, prefix = '') => {
     return acc;
   }, {});
 };
+
 export const generateExcelData = (data: any) => {
   {
     const flattenedData = data.map((item) => {
@@ -29,10 +30,13 @@ export const generateExcelData = (data: any) => {
         }, {});
     });
     return flattenedData;
-
-    // const ws = XLSX.utils.json_to_sheet(flattenedData);
-    // const wb = XLSX.utils.book_new();
-    // XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-    // return XLSX.write(wb, { type: 'buffer' });
   }
+};
+
+export const generateExcelBuffer = (data: any[]): Buffer => {
+  const flattenedData = generateExcelData(data);
+  const ws = XLSX.utils.json_to_sheet(flattenedData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
 };

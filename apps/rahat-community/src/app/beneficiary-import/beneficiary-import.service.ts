@@ -6,12 +6,12 @@ import {
   GroupOrigins,
 } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
-import { DB_MODELS, DEFAULT_GROUP } from '../../constants';
+import { DEFAULT_GROUP } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { GroupService } from '../groups/group.service';
 import { SourceService } from '../sources/source.service';
 import { formatDateAndTime } from '../utils';
-import { fetchSchemaFields } from './helpers';
+
 import {
   downloadFromR2,
   archiveInR2,
@@ -22,32 +22,6 @@ import { Readable } from 'stream';
 const csvParser = require('csv-parser') as () => NodeJS.ReadWriteStream;
 
 const { ImportField } = Enums;
-
-// Primary DB scalar fields — anything else goes into extras
-const PRIMARY_FIELDS = new Set([
-  'uuid',
-  'firstName',
-  'lastName',
-  'phone',
-  'email',
-  'govtIDNumber',
-  'gender',
-  'birthDate',
-  'walletAddress',
-  'location',
-  'latitude',
-  'longitude',
-  'notes',
-  'bankedStatus',
-  'internetStatus',
-  'phoneStatus',
-  'createdBy',
-  'createdAt',
-  'updatedAt',
-  'id',
-  'archived',
-  'isVerified',
-]);
 
 // All staging columns in the exact order of tbl_beneficiary_staging
 const STAGING_COLUMNS = [
@@ -326,7 +300,7 @@ export class BeneficiaryImportService {
             "bankedStatus"   = EXCLUDED."bankedStatus",
             "internetStatus" = EXCLUDED."internetStatus",
             "phoneStatus"    = EXCLUDED."phoneStatus",
-            extras           = COALESCE(EXCLUDED.extras, tbl_beneficiaries.extras),
+            extras = COALESCE(tbl_beneficiaries.extras, '{}'::jsonb) || COALESCE(EXCLUDED.extras, '{}'::jsonb),
             "updatedAt"      = NOW()
         `;
         this.logger.debug('Beneficiaries upserted from staging.');

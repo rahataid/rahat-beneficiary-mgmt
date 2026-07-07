@@ -18,6 +18,7 @@ import {
   IsValidDate,
   IsValidLongitude,
 } from '../../validators';
+import { IsValidPhone } from './is-valid-phone.decorator';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -29,11 +30,6 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
-  constructor() {
-    this.firstName = '';
-    this.lastName = '';
-    this.govtIDNumber = '';
-  }
 
   @IsNotEmpty()
   @ApiProperty({
@@ -41,7 +37,7 @@ export class CreateBeneficiaryDto {
     example: 'Ram',
   })
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsNotEmpty()
   @ApiProperty({
@@ -49,7 +45,7 @@ export class CreateBeneficiaryDto {
     example: 'Sharma',
   })
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @ApiProperty({
     type: 'string',
@@ -88,11 +84,10 @@ export class CreateBeneficiaryDto {
 
   @ApiProperty({
     type: 'string',
-    example: '9785623749',
+    example: '+9779785623749',
   })
-  @IsString()
   @IsOptional()
-  @MinLength(10)
+  @IsValidPhone()
   phone?: string;
 
   @ApiProperty({

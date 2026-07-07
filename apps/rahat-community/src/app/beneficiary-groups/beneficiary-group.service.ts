@@ -154,6 +154,14 @@ export class BeneficiaryGroupService {
     });
   }
 
+  async fetchGroupBeneficiaryUUIDs(groupUUID: string): Promise<Set<string>> {
+    const rows = await this.prisma.beneficiaryGroup.findMany({
+      where: { groupUID: groupUUID },
+      select: { beneficiaryUID: true },
+    });
+    return new Set(rows.map((r) => r.beneficiaryUID));
+  }
+
   async remove(uuid: string) {
     this.logger.log(`Removing beneficiary-group link. uuid=${uuid}`);
 

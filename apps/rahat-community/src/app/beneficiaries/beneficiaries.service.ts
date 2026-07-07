@@ -515,14 +515,18 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
+
+  
     this.logger.log(`Updating beneficiary. uuid=${uuid}`);
 
-    const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
-      dto.phone,
-      dto.govtIDNumber,
-    )) as any;
-    if (hasPhone) delete dto.phone;
-    if (hasGovtID) delete dto.govtIDNumber;
+    if (dto.phone || dto.govtIDNumber) {
+      const { hasPhone, hasGovtID } = (await this.checkDuplicatePhoneAndGovtID(
+        dto.phone,
+        dto.govtIDNumber,
+      )) as any;
+      if (hasPhone) delete dto.phone;
+      if (hasGovtID) delete dto.govtIDNumber;
+    }
     const findUuid = await this.findOne(uuid);
 
     if (!findUuid) throw new Error('Not Found');
@@ -531,7 +535,7 @@ export class BeneficiariesService {
       const formattedDate = new Date(dto.birthDate).toISOString();
       dto.birthDate = formattedDate;
     }
-    if (Object.keys(extras).length) {
+    if (extras && Object.keys(extras).length) {
       const fields = await this.fieldDefService.listActive();
       if (!fields.length) throw new Error('Please setup allowed fields first!');
       const nonMatching = validateAllowedFieldAndTypes(extras, fields);

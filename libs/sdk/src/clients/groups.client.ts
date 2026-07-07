@@ -10,6 +10,8 @@ import {
   GroupMessage,
   RemoveGroup,
   ResultGroup,
+  BulkUpdateResponse,
+  DownloadExcelQuery,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -74,13 +76,45 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       });
       return response;
     },
+
+    downloadExcel: async (
+      uuid: string,
+      query?: DownloadExcelQuery,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.get(`/group/${uuid}/download-excel`, {
+        params: query,
+        responseType: 'blob',
+        ...config,
+      });
+      return response.data as Blob;
+    },
+
     deleteGroup: async (uuid?: string, config?: AxiosRequestConfig) => {
       const response = await client.delete(`/group/${uuid}`, config);
       return formatResponse<GroupMessage>(response);
     },
+
     bulkGenerateLink: async (groupUID: string) => {
       const response = await client.get(`/group/bulk/${groupUID}`);
       return formatResponse<ResultGroup>(response);
+    },
+
+    updateInBulk: async (
+      groupUUID: string,
+      data: FormData,
+      batchSize?: number,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.put(
+        `/group/${groupUUID}/bulk-update`,
+        data,
+        {
+          params: batchSize ? { batchSize } : undefined,
+          ...config,
+        },
+      );
+      return formatResponse<BulkUpdateResponse>(response);
     },
   };
 };
