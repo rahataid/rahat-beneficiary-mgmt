@@ -5,6 +5,7 @@ export type Source = {
   action?: string;
   uuid?: UUID;
   name: string;
+  groupName?: string;
   isImported?: boolean;
   details?: any;
   fieldMapping: any;
