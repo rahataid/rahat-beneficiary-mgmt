@@ -331,7 +331,7 @@ export class GroupService {
     uniqueField?: string,
   ) {
     this.logger.log(
-      `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}, uniqueField=${
+      `Bulk update requested. batchSize=${batchSize}, uniqueField=${
         uniqueField ?? 'uuid'
       }`,
     );
