@@ -15,11 +15,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import {
   CreateGroupDto,
+  FileUploadDto,
   ListGroupDto,
   PurgeGroupDto,
   RemoveGroupDto,
@@ -36,6 +37,7 @@ import { GroupService } from './group.service';
 import { UUID } from 'crypto';
 import { multerOptions } from '../utils/multer';
 import { DownloadGroupDto } from './dto/download-group.dto';
+import { BulkUpdateGroupDto } from './dto/bulk-update-group.dto';
 
 const MAX_FILE_SIZE = 10_000_000_000;
 
@@ -81,11 +83,12 @@ export class GroupController {
   @Put(':uuid/bulk-update')
   @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.GROUP })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: FileUploadDto })
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async bulkUpdate(
     @Req() req: any,
     @Param('uuid') uuid: string,
-    @Query('batchSize') batchSize: number = 500,
+    @Query() query: BulkUpdateGroupDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
@@ -97,7 +100,8 @@ export class GroupController {
       req?.user?.uuid,
       uuid,
       file,
-      +batchSize,
+      query.batchSize,
+      query.uniqueField,
     );
   }
 

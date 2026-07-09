@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {
@@ -328,12 +328,15 @@ export class GroupService {
     groupUUID: string,
     file: Express.Multer.File,
     batchSize = 500,
+    uniqueField?: string,
   ) {
     this.logger.log(
-      `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}`,
+      `Bulk update requested. userUUID=${userUUID}, groupUUID=${groupUUID}, batchSize=${batchSize}, uniqueField=${
+        uniqueField ?? 'uuid'
+      }`,
     );
 
-    const resolvedBatchSize = Number(batchSize) > 0 ? Number(batchSize) : 500;
+    const resolvedBatchSize = batchSize > 0 ? batchSize : 500;
 
     const workbook = XLSX.readFile(file.path);
     await deleteFileFromDisk(file.path);
@@ -346,20 +349,27 @@ export class GroupService {
       >[],
     );
 
-    const groupBeneficiaryUUIDs =
-      await this.beneficaryGroupService.fetchGroupBeneficiaryUUIDs(groupUUID);
+    // Removed groupBeneficiaryUUIDs fetch and group validation
 
-    for (const row of rows) {
-      if (!row.uuid || !groupBeneficiaryUUIDs.has(row.uuid)) {
-        throw new Error(
-          `Beneficiary with UUID ${row.uuid || 'empty'} not found in group!`,
-        );
-      }
+    if (uniqueField) {
+      rows.forEach((row, index) => {
+        if (!row[uniqueField]) {
+          throw new BadRequestException(
+            `Row ${index + 1} is missing required field "${uniqueField}"`,
+          );
+        }
+      });
+    } else {
+      rows.forEach((row, index) => {
+        if (!row.uuid) {
+          throw new BadRequestException(`Row ${index + 1} is missing UUID`);
+        }
+      });
     }
+
     const r2Key = `bulk-update/${groupUUID}-${Date.now()}.json`;
     const buffer = Buffer.from(JSON.stringify(rows));
 
-    // Upload the entire parsed array to R2 once
     this.logger.log(
       `Uploading bulk update file to R2 bucket with key: ${r2Key}`,
     );
@@ -371,6 +381,7 @@ export class GroupService {
         groupUUID,
         r2Key,
         batchSize: resolvedBatchSize,
+        uniqueField,
       },
       QUEUE_RETRY_OPTIONS,
     );
@@ -382,6 +393,7 @@ export class GroupService {
     groupUUID: string,
     r2Key: string,
     batchSize = 500,
+    uniqueField?: string,
   ) {
     this.logger.log(
       `Processing bulk update job for group ${groupUUID} (batch size ${batchSize})`,
@@ -389,11 +401,13 @@ export class GroupService {
 
     let updatedCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
 
     try {
       const buffer = await downloadFromR2(this.prisma, r2Key);
-      this.logger.log(`Downloading bulk update file from R2 bucket: ${r2Key}`);
-      const fullData: Record<string, string>[] = JSON.parse(
+      this.logger.log(`Downloading bulk update file from R2: ${r2Key}`);
+
+      const fullData: Record<string, unknown>[] = JSON.parse(
         buffer.toString('utf-8'),
       );
 
@@ -406,9 +420,40 @@ export class GroupService {
           )}`,
         );
 
-        for (const row of data) {
-          const { uuid, ...rest } = row as Record<string, unknown>;
+        // Resolve uniqueField → uuid mapping for this batch
+        const uuidMap = await this.resolveBatchUUIDs(data, uniqueField);
 
+        // Collect all UUIDs for this batch (both uuid-mode and uniqueField-mode)
+        const batchUUIDs = uniqueField
+          ? Array.from(uuidMap.values())
+          : data.map((row) => row.uuid as string).filter(Boolean);
+
+        const existingExtrasMap = await this.fetchExistingExtras(batchUUIDs);
+
+        const batchOps: ReturnType<typeof this.prisma.beneficiary.update>[] =
+          [];
+
+        for (const row of data) {
+          const typedRow = row as Record<string, unknown>;
+
+          let resolvedUUID: string | undefined;
+          if (uniqueField) {
+            resolvedUUID = uuidMap.get(typedRow[uniqueField] as string);
+          } else {
+            resolvedUUID = typedRow.uuid as string;
+          }
+
+          if (!resolvedUUID) {
+            failedCount++;
+            this.logger.warn(
+              `No beneficiary found with ${uniqueField || 'uuid'}=${
+                typedRow[uniqueField] || typedRow.uuid
+              }`,
+            );
+            continue;
+          }
+
+          const { uuid: _uuid, ...rest } = typedRow;
           const primaryData: Record<string, unknown> = {};
           const extraData: Record<string, unknown> = {};
 
@@ -431,59 +476,85 @@ export class GroupService {
 
           const updatePayload: Record<string, unknown> = { ...primaryData };
 
-          if (Object.keys(extraData).length) {
-            const existing = await this.prisma.beneficiary.findUnique({
-              where: { uuid: uuid as string },
-              select: { extras: true },
-            });
-
-            updatePayload.extras = {
-              ...(existing?.extras
-                ? (existing.extras as Record<string, unknown>)
-                : {}),
-              ...extraData,
-            };
+          if (Object.keys(extraData).length > 0) {
+            const currentExtras = existingExtrasMap.get(resolvedUUID) ?? {};
+            updatePayload.extras = { ...currentExtras, ...extraData };
           }
 
-          try {
-            await this.prisma.beneficiary.update({
-              where: { uuid: uuid as string },
+          if (Object.keys(updatePayload).length === 0) {
+            skippedCount++;
+            continue;
+          }
+
+          batchOps.push(
+            this.prisma.beneficiary.update({
+              where: { uuid: resolvedUUID },
               data: updatePayload,
-            });
+            }),
+          );
+        }
 
-            updatedCount++;
+        if (batchOps.length > 0) {
+          try {
+            await this.prisma.$transaction(batchOps);
+            updatedCount += batchOps.length;
           } catch (err) {
-            failedCount++;
-
+            failedCount += batchOps.length;
             this.logger.error(
-              `Failed to update beneficiary ${uuid}: ${(err as Error).message}`,
+              `Batch transaction failed: ${(err as Error).message}`,
             );
           }
         }
       }
 
-      const summary = {
-        groupUUID,
-        updatedCount,
-        failedCount,
-      };
-
+      const summary = { groupUUID, updatedCount, failedCount, skippedCount };
       this.eventEmitter.emit(EVENTS.BENEFICIARY_GROUP_UPDATED, summary);
 
       this.logger.log(
-        `Bulk update complete for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed`,
+        `Bulk update completed for group ${groupUUID}: ${updatedCount} updated, ${failedCount} failed, ${skippedCount} skipped`,
       );
     } catch (err) {
-      this.logger.error(`Bulk update failed: ${(err as Error).message}`);
+      this.logger.error(`Bulk update job failed: ${(err as Error).message}`);
     } finally {
       try {
         await deleteFromR2(this.prisma, r2Key);
       } catch (err) {
-        this.logger.error(
-          `Failed to delete bulk update file from R2: ${r2Key}`,
-        );
+        this.logger.error(`Failed to delete R2 file: ${r2Key}`);
       }
     }
+  }
+
+  private async resolveBatchUUIDs(
+    data: Record<string, unknown>[],
+    uniqueField?: string,
+  ) {
+    if (!uniqueField) return new Map(); // UUID is already in the row
+
+    const values = [
+      ...new Set(data.map((row) => (row as any)[uniqueField]).filter(Boolean)),
+    ];
+
+    const matched = await this.prisma.beneficiary.findMany({
+      where: { [uniqueField]: { in: values } },
+      select: { uuid: true, [uniqueField]: true },
+    });
+
+    return new Map(
+      matched.map((b) => [(b as any)[uniqueField] as string, b.uuid]),
+    );
+  }
+
+  private async fetchExistingExtras(uuids: string[]) {
+    if (uuids.length === 0) return new Map<string, Record<string, unknown>>();
+
+    const records = await this.prisma.beneficiary.findMany({
+      where: { uuid: { in: uuids } },
+      select: { uuid: true, extras: true },
+    });
+
+    return new Map(
+      records.map((r) => [r.uuid, (r.extras as Record<string, unknown>) ?? {}]),
+    );
   }
 
   // private async queueBulkUpdateBatch(
