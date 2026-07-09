@@ -78,7 +78,6 @@ model Beneficiary {
   @@index([phone])
   @@index([email])
   @@index([govtIDNumber])
-  @@index([walletAddress])
   @@map("tbl_beneficiaries")
 }
 

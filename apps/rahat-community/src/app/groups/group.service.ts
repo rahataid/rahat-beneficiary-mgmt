@@ -349,7 +349,6 @@ export class GroupService {
       >[],
     );
 
-    // Removed groupBeneficiaryUUIDs fetch and group validation
 
     if (uniqueField) {
       rows.forEach((row, index) => {
