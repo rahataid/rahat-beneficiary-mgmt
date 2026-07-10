@@ -535,35 +535,17 @@ export class GroupService {
 
     if (values.length === 0) return new Map();
 
-    if (PRIMARY_FIELDS.has(uniqueField)) {
-      const matched = await this.prisma.beneficiary.findMany({
-        where: { [uniqueField]: { in: values } },
-        select: { uuid: true, [uniqueField]: true },
-      });
+    const matched = await this.prisma.beneficiary.findMany({
+      where: { [uniqueField]: { in: values } },
+      select: { uuid: true, [uniqueField]: true },
+    });
 
-      return new Map(
-        matched.map((b) => [(b as any)[uniqueField] as string, b.uuid]),
-      );
-    } else {
-      const orConditions = values.map((v) => ({
-        extras: {
-          path: [uniqueField],
-          equals: v,
-        },
-      }));
-
-      const matched = await this.prisma.beneficiary.findMany({
-        where: { OR: orConditions },
-        select: { uuid: true, extras: true },
-      });
-
-      return new Map(
-        matched.map((b) => {
-          const extras = (b.extras as Record<string, unknown>) || {};
-          return [String(extras[uniqueField]), b.uuid];
-        }),
-      );
-    }
+    return new Map(
+      matched.map((b) => [
+        (b as Record<string, unknown>)[uniqueField] as string,
+        b.uuid,
+      ]),
+    );
   }
 
   private async fetchExistingExtras(uuids: string[]) {
