@@ -41,6 +41,7 @@ const STAGING_COLUMNS = [
   'bankedStatus',
   'internetStatus',
   'phoneStatus',
+  'koboId',
   'extras',
   'createdBy',
 ];
@@ -240,6 +241,7 @@ export class BeneficiaryImportService {
             "bankedStatus",
             "internetStatus",
             "phoneStatus",
+            "koboId",
             extras,
             "createdBy",
             "createdAt"
@@ -279,6 +281,7 @@ export class BeneficiaryImportService {
                 THEN s."phoneStatus"::"PhoneStatus"
               ELSE 'UNKNOWN'::"PhoneStatus"
             END,
+            NULLIF(s."koboId", ''),
             CASE WHEN s.extras IS NOT NULL AND s.extras != ''
               THEN s.extras::jsonb ELSE NULL END,
             s."createdBy",
@@ -300,6 +303,7 @@ export class BeneficiaryImportService {
             "bankedStatus"   = EXCLUDED."bankedStatus",
             "internetStatus" = EXCLUDED."internetStatus",
             "phoneStatus"    = EXCLUDED."phoneStatus",
+            "koboId"         = EXCLUDED."koboId",
             extras = COALESCE(tbl_beneficiaries.extras, '{}'::jsonb) || COALESCE(EXCLUDED.extras, '{}'::jsonb),
             "updatedAt"      = NOW()
         `;
