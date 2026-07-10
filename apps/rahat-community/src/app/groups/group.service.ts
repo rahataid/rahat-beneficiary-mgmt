@@ -49,6 +49,7 @@ const PRIMARY_FIELDS = new Set([
   'bankedStatus',
   'internetStatus',
   'phoneStatus',
+  'koboId',
   'createdBy',
   'createdAt',
   'updatedAt',
@@ -348,7 +349,6 @@ export class GroupService {
         string
       >[],
     );
-
 
     if (uniqueField) {
       rows.forEach((row, index) => {
