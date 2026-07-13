@@ -72,6 +72,7 @@ export type GroupClient = {
     groupUUID: string,
     data: FormData,
     batchSize?: number,
+    uniqueField?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BulkUpdateResponse>>;
 };

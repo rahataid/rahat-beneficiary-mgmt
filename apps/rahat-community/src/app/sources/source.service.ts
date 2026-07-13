@@ -28,6 +28,7 @@ import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { uploadToR2 } from '../export/helpers/r2-upload.helper';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { DB_MODELS } from '../../constants';
+import { group } from 'console';
 
 export type ImportProgressStatus =
   | 'PENDING'
@@ -70,6 +71,7 @@ const PRIMARY_BENEFICIARY_FIELDS = new Set<string>([
   'archived',
   'isVerified',
   'extras',
+  'koboId',
 ]);
 
 @Injectable()
@@ -249,10 +251,16 @@ export class SourceService {
       if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
       if (d.phone) d.phone = d.phone.toString();
       const formatted = formatEnumFieldValues(d);
-      const uid = hasUUID ? d[EXTERNAL_UUID_FIELD] : uuid();
+      const hasKoboId = d.koboId != null && d.koboId !== '';
+      const uid = hasUUID
+        ? d[EXTERNAL_UUID_FIELD]
+        : hasKoboId
+        ? d.koboId
+        : uuid();
       return {
         ...formatted,
         uuid: uid,
+        koboId: hasKoboId ? d.koboId : undefined,
       };
     });
     const extraFields = await this.listExtraFields();
@@ -477,6 +485,7 @@ export class SourceService {
       'bankedStatus',
       'internetStatus',
       'phoneStatus',
+      'koboId',
       'extras',
       'createdBy',
     ];
@@ -624,7 +633,7 @@ export class SourceService {
     // 4. Enqueue the import job
     await this.queueClient.add(
       JOBS.BENEFICIARY.IMPORT,
-      { sourceUUID: row.uuid },
+      { sourceUUID: row.uuid, groupName: data.groupName },
       QUEUE_RETRY_OPTIONS,
     );
 

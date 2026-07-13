@@ -28,11 +28,16 @@ export class BeneficiaryProcessor {
    * trigger a retry rather than silently completing the job.
    */
   @Process(JOBS.BENEFICIARY.IMPORT)
-  async importBeneficiary(job: Job<{ sourceUUID: string }>) {
+  async importBeneficiary(
+    job: Job<{ sourceUUID: string; groupName?: string }>,
+  ) {
     this.logger.log(
-      `Processing import job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}`,
+      `Processing import job. jobId=${job.id}, sourceUUID=${job.data.sourceUUID}, groupName=${job.data.groupName}`,
     );
-    await this.benefImportService.importBySourceUUID(job.data.sourceUUID);
+    await this.benefImportService.importBySourceUUID(
+      job.data.sourceUUID,
+      job.data.groupName,
+    );
   }
 
   @Process(JOBS.BENEFICIARY.BULK_UPDATE)
@@ -41,16 +46,15 @@ export class BeneficiaryProcessor {
       groupUUID: string;
       r2Key: string;
       batchSize: number;
-
+      uniqueField?: string;
     }>,
   ) {
-    this.logger.log(
-      `Processing bulk update job. jobId=${job.id}`,
-    );
+    this.logger.log(`Processing bulk update job. jobId=${job.id}`);
     await this.groupService.processBulkUpdateJob(
       job.data.groupUUID,
       job.data.r2Key,
       job.data.batchSize,
+      job.data.uniqueField,
     );
   }
 

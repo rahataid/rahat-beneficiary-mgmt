@@ -41,6 +41,7 @@ const STAGING_COLUMNS = [
   'bankedStatus',
   'internetStatus',
   'phoneStatus',
+  'koboId',
   'extras',
   'createdBy',
 ];
@@ -115,7 +116,7 @@ export class BeneficiaryImportService {
 
   // ─── Group creation ──────────────────────────────────────────────────────────
 
-  async createDefaultAndImportGroup(createdBy: string) {
+  async createDefaultAndImportGroup(createdBy: string, groupName?: string) {
     this.logger.debug(
       `Ensuring default/import groups for createdBy=${createdBy}`,
     );
@@ -128,8 +129,8 @@ export class BeneficiaryImportService {
       createdBy,
     });
     const importGroup = await this.groupService.upsertByName({
-      name: `import_${formatDateAndTime(new Date())}`,
-      autoCreated: true,
+      name: groupName ? groupName : `import_${formatDateAndTime(new Date())}`,
+      ...(!groupName && { autoCreated: true }),
       origins: [GroupOrigins.IMPORT],
       createdBy,
     });
@@ -240,6 +241,7 @@ export class BeneficiaryImportService {
             "bankedStatus",
             "internetStatus",
             "phoneStatus",
+            "koboId",
             extras,
             "createdBy",
             "createdAt"
@@ -279,6 +281,7 @@ export class BeneficiaryImportService {
                 THEN s."phoneStatus"::"PhoneStatus"
               ELSE 'UNKNOWN'::"PhoneStatus"
             END,
+            NULLIF(s."koboId", ''),
             CASE WHEN s.extras IS NOT NULL AND s.extras != ''
               THEN s.extras::jsonb ELSE NULL END,
             s."createdBy",
@@ -300,6 +303,7 @@ export class BeneficiaryImportService {
             "bankedStatus"   = EXCLUDED."bankedStatus",
             "internetStatus" = EXCLUDED."internetStatus",
             "phoneStatus"    = EXCLUDED."phoneStatus",
+            "koboId"         = EXCLUDED."koboId",
             extras = COALESCE(tbl_beneficiaries.extras, '{}'::jsonb) || COALESCE(EXCLUDED.extras, '{}'::jsonb),
             "updatedAt"      = NOW()
         `;
@@ -365,7 +369,7 @@ export class BeneficiaryImportService {
 
   // ─── Main entry point ────────────────────────────────────────────────────────
 
-  async importBySourceUUID(sourceUUID: string) {
+  async importBySourceUUID(sourceUUID: string, groupName?: string) {
     this.logger.log(`Import request started for sourceUUID=${sourceUUID}`);
 
     const source = await this.sourceService.findOne(sourceUUID);
@@ -410,7 +414,7 @@ export class BeneficiaryImportService {
 
       // 4. Create groups
       const { defaultGroupUID, importGroupUID } =
-        await this.createDefaultAndImportGroup(source.createdBy);
+        await this.createDefaultAndImportGroup(source.createdBy, groupName);
 
       // 5. Run the atomic COPY pipeline
       this.logger.log(

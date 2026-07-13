@@ -32,12 +32,12 @@ model BeneficiaryArchive {
   internetStatus InternetStatus @default(UNKNOWN)
   phoneStatus    PhoneStatus    @default(UNKNOWN)
   extras         Json?          @db.JsonB()
-
-  createdAt   DateTime
-  updatedAt   DateTime?
-  deletedAt   DateTime?
-  archiveType ArchiveType @default(DELETED)
-  createdBy   String?
+  koboId         String?
+  createdAt      DateTime
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  archiveType    ArchiveType    @default(DELETED)
+  createdBy      String?
 
   @@map("tbl_archive_beneficiaries")
 }
@@ -50,17 +50,17 @@ model Beneficiary {
   lastName     String
   govtIDNumber String?
 
-  gender        Gender    @default(UNKNOWN)
-  birthDate     DateTime?
-  walletAddress String?
-  phone         String?
-  email         String?
-  archived      Boolean   @default(false)
-  isVerified    Boolean @default(false)
-  location      String?
-  latitude      Float?
-  longitude     Float?
-
+  gender         Gender         @default(UNKNOWN)
+  birthDate      DateTime?
+  walletAddress  String?
+  phone          String?
+  email          String?
+  archived       Boolean        @default(false)
+  isVerified     Boolean        @default(false)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  koboId         String?
   notes          String?
   bankedStatus   BankedStatus   @default(UNKNOWN)
   internetStatus InternetStatus @default(UNKNOWN)
@@ -75,6 +75,10 @@ model Beneficiary {
   beneficiarySource  BeneficiarySource[]
   TargetResult       TargetResult[]
 
+  @@index([phone])
+  @@index([email])
+  @@index([govtIDNumber])
+  @@index([koboId])
   @@map("tbl_beneficiaries")
 }
 
@@ -85,8 +89,8 @@ model Source {
   importId       String      @unique
   importField    ImportField @default(UUID)
   isImported     Boolean     @default(false)
-  fieldMapping   Json        // { columnMap: [{ sourceField, targetField }] }
-  stagedFileKey  String?     // R2 key: "imports/{importId}/{timestamp}.csv"
+  fieldMapping   Json // { columnMap: [{ sourceField, targetField }] }
+  stagedFileKey  String? // R2 key: "imports/{importId}/{timestamp}.csv"
   importProgress Json?       @db.JsonB() // { total, imported, failed, status, startedAt, completedAt, error }
 
   createdAt DateTime  @default(now())
@@ -130,10 +134,10 @@ model FieldDefinition {
   isSystem      Boolean   @default(false)
   variations    String[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @updatedAt()
-  createdBy     String?
-  user          User?     @relation(fields: [createdBy], references: [uuid])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
+  createdBy String?
+  user      User?     @relation(fields: [createdBy], references: [uuid])
 
   @@map("tbl_field_definitions")
 }
@@ -145,7 +149,7 @@ model Group {
   beneficiariesGroup BeneficiaryGroup[]
   isSystem           Boolean            @default(false)
   autoCreated        Boolean            @default(false)
-  origins            String[]   // Targeting/Import
+  origins            String[] // Targeting/Import
   targetingCriteria  Json? // { data: TARGETING_DATA }
 
   createdAt DateTime  @default(now())
@@ -159,25 +163,25 @@ model Group {
 }
 
 model BeneficiaryComm {
-  id           Int     @id @default(autoincrement()) @db.Integer()
-  uuid         String  @unique @default(uuid()) @db.Uuid()
-  name         String
-  groupUID     String  @db.Uuid()
-  message      String
-  transportId  String
-  sessionId    String?
+  id          Int     @id @default(autoincrement()) @db.Integer()
+  uuid        String  @unique @default(uuid()) @db.Uuid()
+  name        String
+  groupUID    String  @db.Uuid()
+  message     String
+  transportId String
+  sessionId   String?
 
-  isActive     Boolean @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt()
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt()
 
-  createdBy    String?
-  user         User?     @relation(fields: [createdBy], references: [uuid])
-  group        Group     @relation(fields: [groupUID], references: [uuid])
+  createdBy String?
+  user      User?   @relation(fields: [createdBy], references: [uuid])
+  group     Group   @relation(fields: [groupUID], references: [uuid])
 
   @@map("tbl_beneficiary_comms")
 }
-   
+
 model BeneficiaryGroup {
   id             Int         @id @default(autoincrement()) @db.Integer()
   uuid           String      @unique @default(uuid()) @db.Uuid()
@@ -486,26 +490,26 @@ model Stats {
 
 //End Stats Schema //
 
-
 model BeneficiaryStaging {
-  uuid          String  @id @map("uuid")
-  firstName     String?
-  lastName      String?
-  phone         String?
-  email         String?
-  govtIDNumber  String?
-  gender        String?
-  birthDate     String?
-  walletAddress String?
-  location      String?
-  latitude      String?
-  longitude     String?
-  notes         String?
-  bankedStatus  String?
+  uuid           String  @id @map("uuid")
+  firstName      String?
+  lastName       String?
+  phone          String?
+  email          String?
+  govtIDNumber   String?
+  gender         String?
+  birthDate      String?
+  walletAddress  String?
+  location       String?
+  latitude       String?
+  longitude      String?
+  notes          String?
+  koboId         String?
+  bankedStatus   String?
   internetStatus String?
-  phoneStatus   String?
-  extras        String?
-  createdBy     String?
+  phoneStatus    String?
+  extras         String?
+  createdBy      String?
 
   @@map("tbl_beneficiary_staging")
 }
