@@ -46,16 +46,15 @@ export class BeneficiaryProcessor {
       groupUUID: string;
       r2Key: string;
       batchSize: number;
-
+      uniqueField?: string;
     }>,
   ) {
-    this.logger.log(
-      `Processing bulk update job. jobId=${job.id}`,
-    );
+    this.logger.log(`Processing bulk update job. jobId=${job.id}`);
     await this.groupService.processBulkUpdateJob(
       job.data.groupUUID,
       job.data.r2Key,
       job.data.batchSize,
+      job.data.uniqueField,
     );
   }
 

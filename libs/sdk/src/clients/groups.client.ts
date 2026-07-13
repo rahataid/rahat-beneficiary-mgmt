@@ -104,13 +104,14 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
       groupUUID: string,
       data: FormData,
       batchSize?: number,
+      uniqueField?: string,
       config?: AxiosRequestConfig,
     ) => {
       const response = await client.put(
         `/group/${groupUUID}/bulk-update`,
         data,
         {
-          params: batchSize ? { batchSize } : undefined,
+          params: { batchSize, uniqueField },
           ...config,
         },
       );
