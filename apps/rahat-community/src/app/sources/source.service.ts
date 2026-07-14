@@ -85,7 +85,7 @@ export class SourceService {
   ) {}
 
   async fetchExistingBeneficiaries(payload: any, uniqueFields: string[]) {
-    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
       resolveUniqueFields(uniqueFields);
 
     const records: Record<string, string>[] = Array.from(payload);
@@ -105,6 +105,9 @@ export class SourceService {
           ...new Set(records.map((p) => p.walletAddress).filter(Boolean)),
         ] as string[])
       : ([] as string[]);
+    const koboIds = hasKoboId
+      ? ([...new Set(records.map((p) => p.koboId).filter(Boolean))] as string[])
+      : ([] as string[]);
 
     const result = await this.prisma.beneficiary.findMany({
       where: {
@@ -115,6 +118,7 @@ export class SourceService {
           ...(walletAddrs.length
             ? [{ walletAddress: { in: walletAddrs } }]
             : []),
+          ...(koboIds.length ? [{ koboId: { in: koboIds } }] : []),
         ],
       },
       select: {
@@ -122,6 +126,7 @@ export class SourceService {
         govtIDNumber: true,
         walletAddress: true,
         email: true,
+        koboId: true,
       },
     });
     return result;
@@ -187,7 +192,7 @@ export class SourceService {
     existingData: Record<string, string | null>[],
     uniqueFields: string[],
   ) {
-    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress } =
+    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
       resolveUniqueFields(uniqueFields);
 
     const normalize = allowOnlyAlphabetAndNumbers;
@@ -202,6 +207,9 @@ export class SourceService {
       : null;
     const walletSet = hasWalletAddress
       ? new Set(existingData.map((e) => normalize(e.walletAddress ?? '')))
+      : null;
+    const koboIdSet = hasKoboId
+      ? new Set(existingData.map((e) => normalize(e.koboId ?? '')))
       : null;
 
     return payload.map((p: Record<string, string>) => {
@@ -221,6 +229,8 @@ export class SourceService {
         p.walletAddress &&
         walletSet!.has(normalize(p.walletAddress))
       )
+        item.isDuplicate = true;
+      if (hasKoboId && p.koboId && koboIdSet!.has(normalize(p.koboId)))
         item.isDuplicate = true;
       return item;
     });
@@ -364,6 +374,7 @@ export class SourceService {
       BENEF_UNIQUE_FIELDS.PHONE,
       BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
       BENEF_UNIQUE_FIELDS.EMAIL,
+      BENEF_UNIQUE_FIELDS.KOBO_ID,
     ];
     if (fields.some((field) => !allowedFields.includes(field))) {
       throw new Error(

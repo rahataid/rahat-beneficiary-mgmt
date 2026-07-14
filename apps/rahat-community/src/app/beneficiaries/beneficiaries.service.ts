@@ -270,6 +270,7 @@ export class BeneficiariesService {
     const benef = await this.prisma.beneficiary.create({
       data: {
         ...dto,
+        lastName: dto.lastName ?? '',
       },
     });
 
@@ -515,8 +516,6 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
-
-  
     this.logger.log(`Updating beneficiary. uuid=${uuid}`);
 
     if (dto.phone || dto.govtIDNumber) {

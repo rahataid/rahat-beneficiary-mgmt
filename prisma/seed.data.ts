@@ -96,6 +96,11 @@ export const SYSTEM_DB_FIELDS = [
     fieldType: FieldType.TEXT,
     isSystem: true,
   },
+  {
+    name: 'koboId',
+    fieldType: FieldType.TEXT,
+    isSystem: true,
+  },
 ];
 
 export const SETTINGS_NAMES = {
