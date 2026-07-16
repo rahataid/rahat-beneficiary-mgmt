@@ -255,7 +255,6 @@ export class BeneficiariesService {
     if (hasGovtID) throw new Error('Govt. ID number already exist!');
 
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
-    if (!walletAddress) dto.walletAddress = generateRandomWallet().address;
 
     if (extras && Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
