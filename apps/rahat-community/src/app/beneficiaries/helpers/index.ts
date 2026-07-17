@@ -34,7 +34,7 @@ export const filterExtraFieldValues = (main_query_result: any, extras: any) => {
           .map((value) => value.trim())
           .filter((value) => value !== '');
         if (queryValues.length === 0) return true; // Don't filter if all query values are empty
-        return queryValues.some((value) => item.extras[key] === value);
+        return queryValues.some((value) => item.extras?.[key] === value);
       });
     });
   };

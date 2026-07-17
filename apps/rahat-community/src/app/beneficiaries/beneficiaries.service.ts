@@ -255,7 +255,6 @@ export class BeneficiariesService {
     if (hasGovtID) throw new Error('Govt. ID number already exist!');
 
     if (birthDate) dto.birthDate = convertDateToISO(birthDate);
-    if (!walletAddress) dto.walletAddress = generateRandomWallet().address;
 
     if (extras && Object.keys(extras).length > 0) {
       const fields = await this.fieldDefService.listActive();
@@ -270,6 +269,7 @@ export class BeneficiariesService {
     const benef = await this.prisma.beneficiary.create({
       data: {
         ...dto,
+        lastName: dto.lastName ?? '',
       },
     });
 
@@ -515,8 +515,6 @@ export class BeneficiariesService {
   }
 
   async update(uuid: string, dto: UpdateBeneficiaryDto) {
-
-  
     this.logger.log(`Updating beneficiary. uuid=${uuid}`);
 
     if (dto.phone || dto.govtIDNumber) {
