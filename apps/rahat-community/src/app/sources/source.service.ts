@@ -270,7 +270,7 @@ export class SourceService {
       return {
         ...formatted,
         uuid: uid,
-        koboId: hasKoboId ? d.koboId : undefined,
+        koboId: hasKoboId ? d.koboId : '',
       };
     });
     const extraFields = await this.listExtraFields();
@@ -402,6 +402,7 @@ export class SourceService {
     this.logger.log(
       `Validate beneficiaries started. records=${data.length}, hasUUID=${hasUUID}`,
     );
+    console.log(data, 'before-dataaaaaa--------');
 
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
@@ -410,6 +411,7 @@ export class SourceService {
       uniqueFields,
       validateSecondaryField,
     );
+    console.log(processedData, 'processedDataaaaaaa----');
 
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
