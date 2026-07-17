@@ -249,7 +249,7 @@ export class BeneficiaryImportService {
           SELECT
             s.uuid::uuid,
             s."firstName",
-            s."lastName",
+            COALESCE(s."lastName", ''),
             s.phone,
             s.email,
             s."govtIDNumber",
@@ -289,7 +289,7 @@ export class BeneficiaryImportService {
           FROM tbl_beneficiary_staging s
           ON CONFLICT (uuid) DO UPDATE SET
             "firstName"      = EXCLUDED."firstName",
-            "lastName"       = EXCLUDED."lastName",
+            "lastName"       = COALESCE(EXCLUDED."lastName", ''),
             phone            = EXCLUDED.phone,
             email            = EXCLUDED.email,
             "govtIDNumber"   = EXCLUDED."govtIDNumber",

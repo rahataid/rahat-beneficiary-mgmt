@@ -30,7 +30,6 @@ export class BulkInsertDto {
 }
 
 export class CreateBeneficiaryDto {
-
   @IsNotEmpty()
   @ApiProperty({
     type: 'string',
@@ -39,13 +38,13 @@ export class CreateBeneficiaryDto {
   @IsString()
   firstName!: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({
     type: 'string',
     example: 'Sharma',
   })
   @IsString()
-  lastName!: string;
+  lastName?: string;
 
   @ApiProperty({
     type: 'string',

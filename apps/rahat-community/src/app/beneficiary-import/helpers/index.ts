@@ -8,11 +8,9 @@ import {
   EXTERNAL_UUID_FIELD,
 } from 'apps/rahat-community/src/constants';
 import { FIELD_DEF_TYPES } from '@rahataid/community-tool-sdk';
-import { error } from 'console';
 
 export const BENEFICIARY_REQ_FIELDS = {
   FIRST_NAME: 'firstName',
-  LAST_NAME: 'lastName',
 };
 
 export const BENEF_UNIQUE_FIELDS = {
@@ -20,6 +18,7 @@ export const BENEF_UNIQUE_FIELDS = {
   EMAIL: 'email',
   GOVT_ID_NUMBER: 'govtIDNumber',
   WALLET_ADDRESS: 'walletAddress',
+  KOBO_ID: 'koboId',
 };
 
 export const PRISMA_FIELD_TYPES = {
@@ -53,11 +52,7 @@ export const validateSchemaFields = async (
   uniqueFields: string[],
   validateSecondaryField: boolean = true,
 ) => {
-  const requiredFields = [
-    BENEFICIARY_REQ_FIELDS.FIRST_NAME,
-    BENEFICIARY_REQ_FIELDS.LAST_NAME,
-    ...uniqueFields,
-  ];
+  const requiredFields = [BENEFICIARY_REQ_FIELDS.FIRST_NAME, ...uniqueFields];
   if (hasUUID) requiredFields.push(EXTERNAL_UUID_FIELD);
   const { primaryErrors, processedData } = await validatePrimaryFields(
     payload,
@@ -199,6 +194,7 @@ const validatePrimaryFields = async (
           item[BENEF_UNIQUE_FIELDS.PHONE] === ''
             ? { ...item, [BENEF_UNIQUE_FIELDS.PHONE]: null }
             : item;
+        if (!dtoInput.lastName) dtoInput.lastName = '';
         const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, dtoInput);
         const validationErrors = await validate(beneficiaryDto);
 
@@ -411,6 +407,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
     hasEmail: false,
     hasGovtID: false,
     hasWalletAddress: false,
+    hasKoboId: false,
   };
 
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.PHONE)) rData.hasPhone = true;
@@ -419,5 +416,7 @@ export const resolveUniqueFields = (uniqueFields: string[]) => {
     rData.hasGovtID = true;
   if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.WALLET_ADDRESS))
     rData.hasWalletAddress = true;
+  if (uniqueFields.includes(BENEF_UNIQUE_FIELDS.KOBO_ID))
+    rData.hasKoboId = true;
   return rData;
 };
