@@ -56,6 +56,15 @@ export const allowOnlyAlphabetAndNumbers = (inputString: string) => {
   return result;
 };
 
+// Keeps leading + (country code) and digits only — strips dashes, spaces, parens, etc.
+export const sanitizePhoneNumber = (phone: string) => {
+  if (!phone) return '';
+  const trimmed = phone.trim();
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/[^0-9]/g, '');
+  return hasPlus ? `+${digits}` : digits;
+};
+
 export const getBaseUrl = (url: string) => {
   if (!url) return '';
   const parsedUrl = new URL(url);

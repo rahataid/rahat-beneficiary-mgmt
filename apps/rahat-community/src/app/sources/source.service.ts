@@ -22,7 +22,11 @@ import {
   validateSchemaFields,
 } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
-import { parseIsoDateToString, allowOnlyAlphabetAndNumbers } from '../utils';
+import {
+  parseIsoDateToString,
+  allowOnlyAlphabetAndNumbers,
+  sanitizePhoneNumber,
+} from '../utils';
 import { paginate } from '../utils/paginate';
 import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { uploadToR2 } from '../export/helpers/r2-upload.helper';
@@ -258,8 +262,9 @@ export class SourceService {
     );
 
     const payloadWithUUID = data.map((d: any) => {
-      if (d.govtIDNumber) d.govtIDNumber = allowOnlyAlphabetAndNumbers(d.govtIDNumber.toString());
-      if (d.phone) d.phone = allowOnlyAlphabetAndNumbers(d.phone.toString());
+      if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+
+      if (d.phone) d.phone = sanitizePhoneNumber(d.phone.toString());
       const formatted = formatEnumFieldValues(d);
       const hasKoboId = d.koboId != null && d.koboId !== '';
       const uid = hasUUID
@@ -402,7 +407,6 @@ export class SourceService {
     this.logger.log(
       `Validate beneficiaries started. records=${data.length}, hasUUID=${hasUUID}`,
     );
-    console.log(data, 'before-dataaaaaa--------');
 
     const { allValidationErrors, processedData } = await validateSchemaFields(
       data,
@@ -411,7 +415,6 @@ export class SourceService {
       uniqueFields,
       validateSecondaryField,
     );
-    console.log(processedData, 'processedDataaaaaaa----');
 
     const duplicates = await this.checkDuplicateBeneficiary(
       processedData,
