@@ -258,8 +258,8 @@ export class SourceService {
     );
 
     const payloadWithUUID = data.map((d: any) => {
-      if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
-      if (d.phone) d.phone = d.phone.toString();
+      if (d.govtIDNumber) d.govtIDNumber = allowOnlyAlphabetAndNumbers(d.govtIDNumber.toString());
+      if (d.phone) d.phone = allowOnlyAlphabetAndNumbers(d.phone.toString());
       const formatted = formatEnumFieldValues(d);
       const hasKoboId = d.koboId != null && d.koboId !== '';
       const uid = hasUUID
