@@ -56,6 +56,12 @@ export const allowOnlyAlphabetAndNumbers = (inputString: string) => {
   return result;
 };
 
+// Strips all non-digit characters, returns digits as string (for fields like bank_ac_number)
+export const sanitizeDigitsOnly = (value: string): string => {
+  if (!value) return '';
+  return value.replace(/[^0-9]/g, '');
+};
+
 // Keeps leading + (country code) and digits only — strips dashes, spaces, parens, etc.
 export const sanitizePhoneNumber = (phone: string) => {
   if (!phone) return '';
