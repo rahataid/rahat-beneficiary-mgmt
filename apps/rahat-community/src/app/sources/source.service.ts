@@ -263,8 +263,8 @@ export class SourceService {
     );
 
     const payloadWithUUID = data.map((d: any) => {
-      if (d.govtIDNumber)
-        d.govtIDNumber = allowOnlyAlphabetAndNumbers(d.govtIDNumber.toString());
+      if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+
       if (d.phone) d.phone = sanitizePhoneNumber(d.phone.toString());
       Object.keys(d).forEach((key) => {
         const k = key.toLowerCase();
