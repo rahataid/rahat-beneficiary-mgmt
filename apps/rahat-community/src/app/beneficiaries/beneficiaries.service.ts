@@ -300,17 +300,22 @@ export class BeneficiariesService {
     );
   }
 
-  async searchTargets(filters: any) {
+  async searchTargets(filters: any, extraConditions: unknown[] = []) {
     this.logger.debug(
       `Searching beneficiaries for targets. page=${
         +filters?.page || 1
       }, perPage=${+filters?.perPage || TARGETS_PER_PAGE}`,
     );
 
-    const search_conditions = createSearchQuery(filters);
+    const primary_conditions = createSearchQuery(filters);
+    const where =
+      extraConditions.length > 0
+        ? { AND: [primary_conditions, ...extraConditions] }
+        : primary_conditions;
+
     return paginate(
       this.prisma.beneficiary,
-      { where: search_conditions },
+      { where },
       {
         page: +filters?.page,
         perPage: +filters?.perPage || TARGETS_PER_PAGE,

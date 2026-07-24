@@ -3,16 +3,31 @@ export const createPrimaryAndExtraQuery = (
   keys: any,
   values: any,
 ) => {
-  const primary = {};
-  const extra = {};
+  const primary: Record<string, unknown> = {};
+  const extraConditions: any[] = [];
 
   for (let i = 0; i < keys.length; i++) {
     const found = primary_fields.find((f: any) => f.name === keys[i]);
-    if (found) primary[keys[i]] = values[i];
-    else extra[keys[i]] = values[i];
+    if (found) {
+      primary[keys[i]] = values[i];
+    } else {
+      // Build Prisma JSON path conditions so the DB filters extras, not JS
+      const queryValues = String(values[i])
+        .split(',')
+        .map((v) => v.trim())
+        .filter((v) => v !== '');
+
+      if (queryValues.length > 0) {
+        extraConditions.push({
+          OR: queryValues.map((val) => ({
+            extras: { path: [keys[i]], equals: val },
+          })),
+        });
+      }
+    }
   }
 
-  return { primary, extra };
+  return { primary, extraConditions };
 };
 
 export const createFinalResult = (final_result: any, filteredData: any) => {

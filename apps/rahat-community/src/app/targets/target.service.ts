@@ -24,7 +24,6 @@ import {
   TARGET_QUERY_STATUS,
 } from '../../constants';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
-import { filterExtraFieldValues } from '../beneficiaries/helpers';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { calculateNumberOfDays, getBaseUrl } from '../utils';
 import { generateExcelData } from '../export/helpers/data-flattener.helper';
@@ -71,23 +70,17 @@ export class TargetService {
     const values = Object.values(getFilterData);
 
     // 1. Split primary and extra queries
-    const { primary, extra } = createPrimaryAndExtraQuery(
+    const { primary, extraConditions } = createPrimaryAndExtraQuery(
       primary_fields,
       keys,
       values,
     );
 
-    // 2. Fetch data using primary AND query
-    const benefData = await this.benefService.searchTargets(primary);
+    // 2. Fetch data — DB applies both primary and extras filters
+    const benefData = await this.benefService.searchTargets(primary, extraConditions);
 
-    // 3. Filter data using extras AND query
-    const filteredData = filterExtraFieldValues(benefData.rows, extra);
-
-    // 4.Merge result i.e. final_result UNION filteredDta
-    // final_result = createFinalResult(final_result, filteredData);
-
-    // 5. Save final result in the TargetResult && Update Status to COMPLETED
-    await this.createManySearchResult(filteredData, targetUuid);
+    // 3. Save final result in the TargetResult && Update Status to COMPLETED
+    await this.createManySearchResult(benefData.rows, targetUuid);
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
@@ -95,7 +88,7 @@ export class TargetService {
     this.eventEmitter.emit(EVENTS.TARGETING_COMPLETED, targetUuid);
 
     return {
-      message: `${filteredData.length} Target result saved successfully`,
+      message: `${benefData.rows.length} Target result saved successfully`,
     };
   }
 
@@ -108,17 +101,15 @@ export class TargetService {
       const keys = Object.keys(item);
       const values = Object.values(item);
       // 1. Split primary and extra queries
-      const { primary, extra } = createPrimaryAndExtraQuery(
+      const { primary, extraConditions } = createPrimaryAndExtraQuery(
         primary_fields,
         keys,
         values,
       );
-      // 2. Fetch data using primary AND query
-      const data = await this.benefService.searchTargets(primary);
-      // 3. Filter data using extras AND query
-      const filteredData = filterExtraFieldValues(data.rows, extra);
-      // 4.Merge result i.e. final_result UNION filteredDta
-      final_result = createFinalResult(final_result, filteredData);
+      // 2. Fetch data — DB applies both primary and extras filters
+      const data = await this.benefService.searchTargets(primary, extraConditions);
+      // 3. Merge result i.e. final_result UNION data
+      final_result = createFinalResult(final_result, data.rows);
     }
     return final_result;
   }
