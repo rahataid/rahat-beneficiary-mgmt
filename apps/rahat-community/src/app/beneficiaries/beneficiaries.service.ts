@@ -308,18 +308,73 @@ export class BeneficiariesService {
     );
 
     const primary_conditions = createSearchQuery(filters);
+
+    if (extraConditions.length === 0) {
+      return paginate(
+        this.prisma.beneficiary,
+        { where: primary_conditions },
+        {
+          page: +filters?.page,
+          perPage: +filters?.perPage || TARGETS_PER_PAGE,
+        },
+      );
+    }
+
+    // Build raw SQL @> (containment) clauses for extras so the GIN JsonbPathOps
+    // index on tbl_beneficiaries.extras is used instead of the ->> operator
+    // that Prisma generates for { path, equals } which bypasses the index.
+    //
+    // extraConditions shape: Array<{ OR: Array<{ extras: { path: [key], equals: val } }> }>
+    // Each top-level item is AND-ed; values inside each OR are OR-ed.
+    const ginClauses: string[] = [];
+    const ginParams: string[] = [];
+
+    type ExtraCondition = {
+      OR: { extras: { path: string[]; equals: string } }[];
+    };
+    for (const condition of extraConditions as ExtraCondition[]) {
+      const orParts: string[] = [];
+      for (const orItem of condition.OR) {
+        const key = orItem.extras.path[0];
+        const val = orItem.extras.equals;
+        ginParams.push(JSON.stringify({ [key]: val }));
+        orParts.push(`extras @> $${ginParams.length}::jsonb`);
+      }
+      ginClauses.push(`(${orParts.join(' OR ')})`);
+    }
+
+    // Fetch UUIDs of beneficiaries matching the extras conditions via raw SQL,
+    // then feed them back into Prisma for the primary-field filtering + pagination.
+    const rawSql = `SELECT uuid FROM tbl_beneficiaries WHERE ${ginClauses.join(
+      ' AND ',
+    )}`;
+    const matchedRows: { uuid: string }[] = await this.prisma.$queryRawUnsafe(
+      rawSql,
+      ...ginParams,
+    );
+
+    if (matchedRows.length === 0) {
+      return {
+        rows: [],
+        meta: {
+          total: 0,
+          lastPage: 0,
+          currentPage: 1,
+          perPage: TARGETS_PER_PAGE,
+        },
+      };
+    }
+
+    const uuids = matchedRows.map((r) => r.uuid);
     const where =
-      extraConditions.length > 0
-        ? { AND: [primary_conditions, ...extraConditions] }
-        : primary_conditions;
+      Object.keys(primary_conditions).length > 0
+        ? { AND: [primary_conditions, { uuid: { in: uuids } }] }
+        : { uuid: { in: uuids } };
 
     return paginate(
       this.prisma.beneficiary,
       { where },
-      {
-        page: +filters?.page,
-        perPage: +filters?.perPage || TARGETS_PER_PAGE,
-      },
+      { page: +filters?.page, perPage: +filters?.perPage || TARGETS_PER_PAGE },
     );
   }
 

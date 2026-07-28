@@ -55,7 +55,23 @@ export class TargetService {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
-   
+
+    //  const primary_conditions = createSearchQuery(filters);
+    //     const where =
+    //       extraConditions.length > 0
+    //         ? { AND: [primary_conditions, ...extraConditions] }
+    //         : primary_conditions;
+
+    //     return paginate(
+    //       this.prisma.beneficiary,
+    //       { where },
+    //       {
+    //         page: +filters?.page,
+    //         perPage: +filters?.perPage || TARGETS_PER_PAGE,
+    //       },
+    //     );
+    //   }
+
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
     return target;
   }
@@ -77,7 +93,10 @@ export class TargetService {
     );
 
     // 2. Fetch data — DB applies both primary and extras filters
-    const benefData = await this.benefService.searchTargets(primary, extraConditions);
+    const benefData = await this.benefService.searchTargets(
+      primary,
+      extraConditions,
+    );
 
     // 3. Save final result in the TargetResult && Update Status to COMPLETED
     await this.createManySearchResult(benefData.rows, targetUuid);
@@ -107,7 +126,10 @@ export class TargetService {
         values,
       );
       // 2. Fetch data — DB applies both primary and extras filters
-      const data = await this.benefService.searchTargets(primary, extraConditions);
+      const data = await this.benefService.searchTargets(
+        primary,
+        extraConditions,
+      );
       // 3. Merge result i.e. final_result UNION data
       final_result = createFinalResult(final_result, data.rows);
     }
