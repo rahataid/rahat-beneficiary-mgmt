@@ -55,23 +55,6 @@ export class TargetService {
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
     const data = { targetUuid: target.uuid, filterOptions };
-
-    //  const primary_conditions = createSearchQuery(filters);
-    //     const where =
-    //       extraConditions.length > 0
-    //         ? { AND: [primary_conditions, ...extraConditions] }
-    //         : primary_conditions;
-
-    //     return paginate(
-    //       this.prisma.beneficiary,
-    //       { where },
-    //       {
-    //         page: +filters?.page,
-    //         perPage: +filters?.perPage || TARGETS_PER_PAGE,
-    //       },
-    //     );
-    //   }
-
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
     return target;
   }
