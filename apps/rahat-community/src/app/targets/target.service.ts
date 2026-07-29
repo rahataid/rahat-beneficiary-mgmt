@@ -92,10 +92,11 @@ export class TargetService {
       values,
     );
 
-    // 2. Fetch data — DB applies both primary and extras filters
+    // 2. Fetch ALL matching beneficiaries — no pagination, so no results are missed
     const benefData = await this.benefService.searchTargets(
       primary,
       extraConditions,
+      true,
     );
 
     // 3. Save final result in the TargetResult && Update Status to COMPLETED

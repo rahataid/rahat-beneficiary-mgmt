@@ -300,23 +300,31 @@ export class BeneficiariesService {
     );
   }
 
-  async searchTargets(filters: any, extraConditions: unknown[] = []) {
+  async searchTargets(
+    filters: Record<string, string | number | undefined>,
+    extraConditions: unknown[] = [],
+    fetchAll = false,
+  ) {
+    const page = +(filters.page ?? 1) || 1;
+    const perPage = +(filters.perPage ?? TARGETS_PER_PAGE) || TARGETS_PER_PAGE;
+
     this.logger.debug(
-      `Searching beneficiaries for targets. page=${
-        +filters?.page || 1
-      }, perPage=${+filters?.perPage || TARGETS_PER_PAGE}`,
+      `Searching beneficiaries for targets. fetchAll=${fetchAll} page=${page}, perPage=${perPage}`,
     );
 
     const primary_conditions = createSearchQuery(filters);
 
     if (extraConditions.length === 0) {
+      if (fetchAll) {
+        const rows = await this.prisma.beneficiary.findMany({
+          where: primary_conditions,
+        });
+        return { rows, meta: { total: rows.length } };
+      }
       return paginate(
         this.prisma.beneficiary,
         { where: primary_conditions },
-        {
-          page: +filters?.page,
-          perPage: +filters?.perPage || TARGETS_PER_PAGE,
-        },
+        { page, perPage },
       );
     }
 
@@ -344,7 +352,7 @@ export class BeneficiariesService {
     }
 
     // Fetch UUIDs of beneficiaries matching the extras conditions via raw SQL,
-    // then feed them back into Prisma for the primary-field filtering + pagination.
+    // then feed them back into Prisma for the primary-field filtering.
     const rawSql = `SELECT uuid FROM tbl_beneficiaries WHERE ${ginClauses.join(
       ' AND ',
     )}`;
@@ -371,11 +379,12 @@ export class BeneficiariesService {
         ? { AND: [primary_conditions, { uuid: { in: uuids } }] }
         : { uuid: { in: uuids } };
 
-    return paginate(
-      this.prisma.beneficiary,
-      { where },
-      { page: +filters?.page, perPage: +filters?.perPage || TARGETS_PER_PAGE },
-    );
+    if (fetchAll) {
+      const rows = await this.prisma.beneficiary.findMany({ where });
+      return { rows, meta: { total: rows.length } };
+    }
+
+    return paginate(this.prisma.beneficiary, { where }, { page, perPage });
   }
 
   async filterConditions(filters: ListBeneficiaryDto) {

@@ -3,7 +3,7 @@ export const createPrimaryAndExtraQuery = (
   keys: any,
   values: any,
 ) => {
-  const primary: Record<string, unknown> = {};
+  const primary: Record<string, string | number | undefined> = {};
   const extraConditions: any[] = [];
 
   for (let i = 0; i < keys.length; i++) {
