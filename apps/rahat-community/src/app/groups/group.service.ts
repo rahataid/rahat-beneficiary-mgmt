@@ -593,46 +593,49 @@ export class GroupService {
   }
 
   // Delete beneficiary permanently
-  async purgeGroup(groupUuid: string, beneficiaryUuid: string[]) {
+  async purgeGroup(
+    groupUuid: string,
+    beneficiaryUuid: string[],
+    batchSize = 100,
+  ) {
     const group = await this.findUnique(groupUuid);
     if (!group) throw new Error('Group not found');
-    await this.prisma.$transaction(async (prisma) => {
-      for (const item of beneficiaryUuid) {
-        // 1. Delete from beneficiaryGroup
-        await prisma.beneficiaryGroup.deleteMany({
-          where: {
-            beneficiaryUID: item,
-          },
-        });
 
-        // 2. Delete from targetResult
-        await prisma.targetResult.deleteMany({
-          where: {
-            benefUuid: item,
-          },
-        });
+    for (let i = 0; i < beneficiaryUuid.length; i += batchSize) {
+      const batch = beneficiaryUuid.slice(i, i + batchSize);
 
-        // 3. Delete from beneficiarySource
-        await prisma.beneficiarySource.deleteMany({
-          where: {
-            beneficiaryUID: item,
-          },
-        });
+      const deletedBeneficiaries = await this.prisma.$transaction([
+        ...batch.map((item) =>
+          this.prisma.beneficiaryGroup.deleteMany({
+            where: { beneficiaryUID: item },
+          }),
+        ),
+        ...batch.map((item) =>
+          this.prisma.targetResult.deleteMany({
+            where: { benefUuid: item },
+          }),
+        ),
+        ...batch.map((item) =>
+          this.prisma.beneficiarySource.deleteMany({
+            where: { beneficiaryUID: item },
+          }),
+        ),
+        ...batch.map((item) =>
+          this.prisma.beneficiary.delete({
+            where: { uuid: item },
+          }),
+        ),
+      ]);
 
-        // 4. Delete from beneficiary
-        const deletedBeneficiary = await prisma.beneficiary.delete({
-          where: {
-            uuid: item,
-          },
-        });
+      // Archive the deleted beneficiaries (last `batch.length` results are the deleted beneficiary records)
+      const deleted = deletedBeneficiaries.slice(-batch.length);
+      await Promise.all(
+        deleted.map((benef) =>
+          this.archiveDeletedBeneficiary(benef, ArchiveType.DELETED),
+        ),
+      );
+    }
 
-        // 5. Archive deleted beneficiary
-        await this.archiveDeletedBeneficiary(
-          deletedBeneficiary,
-          ArchiveType.DELETED,
-        );
-      }
-    });
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_REMOVED);
     return 'Group purged successfully!';
   }
