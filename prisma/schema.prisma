@@ -79,6 +79,7 @@ model Beneficiary {
   @@index([email])
   @@index([govtIDNumber])
   @@index([koboId])
+  @@index([extras(ops: JsonbPathOps)], type: Gin)
   @@map("tbl_beneficiaries")
 }
 

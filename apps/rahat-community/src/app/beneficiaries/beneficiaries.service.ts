@@ -300,22 +300,91 @@ export class BeneficiariesService {
     );
   }
 
-  async searchTargets(filters: any) {
+  async searchTargets(
+    filters: Record<string, string | number | undefined>,
+    extraConditions: unknown[] = [],
+    fetchAll = false,
+  ) {
+    const page = +(filters.page ?? 1) || 1;
+    const perPage = +(filters.perPage ?? TARGETS_PER_PAGE) || TARGETS_PER_PAGE;
+
     this.logger.debug(
-      `Searching beneficiaries for targets. page=${
-        +filters?.page || 1
-      }, perPage=${+filters?.perPage || TARGETS_PER_PAGE}`,
+      `Searching beneficiaries for targets. fetchAll=${fetchAll} page=${page}, perPage=${perPage}`,
     );
 
-    const search_conditions = createSearchQuery(filters);
-    return paginate(
-      this.prisma.beneficiary,
-      { where: search_conditions },
-      {
-        page: +filters?.page,
-        perPage: +filters?.perPage || TARGETS_PER_PAGE,
-      },
+    const primary_conditions = createSearchQuery(filters);
+
+    if (extraConditions.length === 0) {
+      if (fetchAll) {
+        const rows = await this.prisma.beneficiary.findMany({
+          where: primary_conditions,
+        });
+        return { rows, meta: { total: rows.length } };
+      }
+      return paginate(
+        this.prisma.beneficiary,
+        { where: primary_conditions },
+        { page, perPage },
+      );
+    }
+
+    // Build raw SQL @> (containment) clauses for extras so the GIN JsonbPathOps
+    // index on tbl_beneficiaries.extras is used instead of the ->> operator
+    // that Prisma generates for { path, equals } which bypasses the index.
+    //
+    // extraConditions shape: Array<{ OR: Array<{ extras: { path: [key], equals: val } }> }>
+    // Each top-level item is AND-ed; values inside each OR are OR-ed.
+    const ginClauses: string[] = [];
+    const ginParams: string[] = [];
+
+    type ExtraCondition = {
+      OR: { extras: { path: string[]; equals: string } }[];
+    };
+    for (const condition of extraConditions as ExtraCondition[]) {
+      const orParts: string[] = [];
+      for (const orItem of condition.OR) {
+        const key = orItem.extras.path[0];
+        const val = orItem.extras.equals;
+        ginParams.push(JSON.stringify({ [key]: val }));
+        orParts.push(`extras @> $${ginParams.length}::jsonb`);
+      }
+      ginClauses.push(`(${orParts.join(' OR ')})`);
+    }
+
+    // Fetch UUIDs of beneficiaries matching the extras conditions via raw SQL,
+    // then feed them back into Prisma for the primary-field filtering.
+    const rawSql = `SELECT uuid FROM tbl_beneficiaries WHERE ${ginClauses.join(
+      ' AND ',
+    )}`;
+    const matchedRows: { uuid: string }[] = await this.prisma.$queryRawUnsafe(
+      rawSql,
+      ...ginParams,
     );
+
+    if (matchedRows.length === 0) {
+      return {
+        rows: [],
+        meta: {
+          total: 0,
+          lastPage: 0,
+          currentPage: 1,
+          perPage: TARGETS_PER_PAGE,
+        },
+      };
+    }
+
+    const uuids = matchedRows.map((r) => r.uuid);
+    const where =
+      Object.keys(primary_conditions).length > 0
+        ? { AND: [primary_conditions, { uuid: { in: uuids } }] }
+        : { uuid: { in: uuids } };
+
+    if (fetchAll) {
+      const rows = await this.prisma.beneficiary.findMany({ where });
+      return { rows, meta: { total: rows.length } };
+    }
+
+    return paginate(this.prisma.beneficiary, { where }, { page, perPage });
   }
 
   async filterConditions(filters: ListBeneficiaryDto) {
