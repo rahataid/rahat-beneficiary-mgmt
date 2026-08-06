@@ -9,6 +9,7 @@ export type Source = {
   isImported?: boolean;
   details?: any;
   fieldMapping: any;
+  uniqueFields?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 };
