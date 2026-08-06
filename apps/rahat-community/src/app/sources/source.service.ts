@@ -250,8 +250,7 @@ export class SourceService {
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
 
-    const uniqueFields = await this.getUniqueFieldSettings();
-    this.validateUniqueFields(uniqueFields);
+    const uniqueFields = await this.resolveImportUniqueFields(dto.uniqueFields);
     const validateSecondaryField =
       await this.getValidateSecondaryFieldSetting();
 
@@ -401,6 +400,16 @@ export class SourceService {
       );
     }
     return true;
+  }
+
+  private async resolveImportUniqueFields(
+    dtoUniqueFields?: string[],
+  ): Promise<string[]> {
+    if (dtoUniqueFields && dtoUniqueFields.length > 0) {
+      this.validateUniqueFields(dtoUniqueFields);
+      return dtoUniqueFields;
+    }
+    return this.getUniqueFieldSettings();
   }
 
   async ValidateBeneficiaryImort({
@@ -622,7 +631,10 @@ export class SourceService {
         }))
       : [];
 
-    const fieldMappingToStore = { sourceTargetMappings } as any;
+    const fieldMappingToStore = {
+      sourceTargetMappings,
+      uniqueFields: data.uniqueFields ?? [],
+    } as any;
 
     const initialProgress: ImportProgress = {
       total: records.length,
