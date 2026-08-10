@@ -18,7 +18,6 @@ import {
   IsValidDate,
   IsValidLongitude,
 } from '../../validators';
-import { IsValidPhone } from './is-valid-phone.decorator';
 
 export class BulkInsertDto {
   @ApiProperty({
@@ -86,7 +85,7 @@ export class CreateBeneficiaryDto {
     example: '+9779785623749',
   })
   @IsOptional()
-  @IsValidPhone()
+  @IsString()
   phone?: string;
 
   @ApiProperty({
