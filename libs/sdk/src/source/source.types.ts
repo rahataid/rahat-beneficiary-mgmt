@@ -10,6 +10,7 @@ export type Source = {
   details?: any;
   fieldMapping: any;
   uniqueFields?: string[];
+  forceInsert?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 };

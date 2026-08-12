@@ -65,5 +65,10 @@ export const getFieldDefinitionClient = (
       );
       return formatResponse<any>(response);
     },
+
+    listUnique: async (config?: AxiosRequestConfig) => {
+      const response = await client.get('/field-definitions/unique', config);
+      return formatResponse<FieldDefinition[]>(response);
+    },
   };
 };
