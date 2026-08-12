@@ -133,6 +133,7 @@ model FieldDefinition {
   isActive      Boolean   @default(true)
   isTargeting   Boolean   @default(false)
   isSystem      Boolean   @default(false)
+  isUnique      Boolean   @default(false)
   variations    String[]
 
   createdAt DateTime  @default(now())
