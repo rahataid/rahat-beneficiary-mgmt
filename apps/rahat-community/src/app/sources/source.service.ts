@@ -287,13 +287,8 @@ export class SourceService {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
-    const resolvedUniqueFields = await this.resolveImportUniqueFields(
-      dto.uniqueFields,
-    );
-    const forceInsert = resolvedUniqueFields.includes('force_insert');
-    const uniqueFields = resolvedUniqueFields.filter(
-      (f) => f !== 'force_insert',
-    );
+    const forceInsert = dto.forceInsert ?? false;
+    const uniqueFields = await this.resolveImportUniqueFields(dto.uniqueFields);
     const validateSecondaryField =
       await this.getValidateSecondaryFieldSetting();
 
@@ -464,12 +459,7 @@ export class SourceService {
     dtoUniqueFields?: string[],
   ): Promise<string[]> {
     if (dtoUniqueFields && dtoUniqueFields.length > 0) {
-      const withoutSentinel = dtoUniqueFields.filter(
-        (f) => f !== 'force_insert',
-      );
-      if (withoutSentinel.length > 0) {
-        await this.validateUniqueFields(withoutSentinel);
-      }
+      await this.validateUniqueFields(dtoUniqueFields);
       return dtoUniqueFields;
     }
     return this.getUniqueFieldSettings();

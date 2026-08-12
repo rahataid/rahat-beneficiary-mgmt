@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Enums } from '@rahataid/community-tool-sdk';
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -87,4 +88,14 @@ export class CreateSourceDto {
   @IsArray()
   @IsString({ each: true })
   uniqueFields?: string[];
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    default: false,
+    description:
+      'When true, skips all schema validation and imports data as-is. Use for ground data that does not meet format requirements.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  forceInsert?: boolean;
 }
