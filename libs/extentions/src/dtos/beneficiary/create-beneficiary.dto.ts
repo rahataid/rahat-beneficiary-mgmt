@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { Enums } from '@rahataid/community-tool-sdk';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -113,6 +114,7 @@ export class CreateBeneficiaryDto {
   @IsNumber()
   @IsOptional()
   @IsValidLatitude()
+  @Type(() => Number)
   latitude?: number;
 
   @ApiProperty({
@@ -122,6 +124,7 @@ export class CreateBeneficiaryDto {
   @IsNumber()
   @IsOptional()
   @IsValidLongitude()
+  @Type(() => Number)
   longitude?: number;
 
   @ApiProperty({
