@@ -33,7 +33,6 @@ import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { uploadToR2 } from '../export/helpers/r2-upload.helper';
 import { fetchSchemaFields } from '../beneficiary-import/helpers';
 import { DB_MODELS } from '../../constants';
-import { group } from 'console';
 
 export type ImportProgressStatus =
   | 'PENDING'
@@ -92,6 +91,7 @@ export class SourceService {
   async fetchExistingBeneficiaries(payload: any, uniqueFields: string[]) {
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
       resolveUniqueFields(uniqueFields);
+    const { extrasFields } = this.classifyUniqueFields(uniqueFields);
 
     const records: Record<string, string>[] = Array.from(payload);
     const phones = hasPhone
@@ -114,24 +114,39 @@ export class SourceService {
       ? ([...new Set(records.map((p) => p.koboId).filter(Boolean))] as string[])
       : ([] as string[]);
 
+    // Build OR conditions for extras (JSONB) unique fields
+    const extrasOrConditions: any[] = [];
+    for (const field of extrasFields) {
+      const values = [
+        ...new Set(records.map((r) => r[field]).filter(Boolean)),
+      ] as string[];
+      for (const val of values) {
+        extrasOrConditions.push({
+          extras: { path: [field], equals: val },
+        });
+      }
+    }
+
+    const orClauses = [
+      ...(phones.length ? [{ phone: { in: phones } }] : []),
+      ...(emails.length ? [{ email: { in: emails } }] : []),
+      ...(govtIDs.length ? [{ govtIDNumber: { in: govtIDs } }] : []),
+      ...(walletAddrs.length ? [{ walletAddress: { in: walletAddrs } }] : []),
+      ...(koboIds.length ? [{ koboId: { in: koboIds } }] : []),
+      ...extrasOrConditions,
+    ];
+
+    if (!orClauses.length) return [];
+
     const result = await this.prisma.beneficiary.findMany({
-      where: {
-        OR: [
-          ...(phones.length ? [{ phone: { in: phones } }] : []),
-          ...(emails.length ? [{ email: { in: emails } }] : []),
-          ...(govtIDs.length ? [{ govtIDNumber: { in: govtIDs } }] : []),
-          ...(walletAddrs.length
-            ? [{ walletAddress: { in: walletAddrs } }]
-            : []),
-          ...(koboIds.length ? [{ koboId: { in: koboIds } }] : []),
-        ],
-      },
+      where: { OR: orClauses },
       select: {
         phone: true,
         govtIDNumber: true,
         walletAddress: true,
         email: true,
         koboId: true,
+        extras: true,
       },
     });
     return result;
@@ -194,11 +209,12 @@ export class SourceService {
 
   async compareDuplicateBeneficiary(
     payload: any,
-    existingData: Record<string, string | null>[],
+    existingData: Record<string, any>[],
     uniqueFields: string[],
   ) {
     const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
       resolveUniqueFields(uniqueFields);
+    const { extrasFields } = this.classifyUniqueFields(uniqueFields);
 
     const normalize = allowOnlyAlphabetAndNumbers;
     const phoneSet = hasPhone
@@ -217,7 +233,19 @@ export class SourceService {
       ? new Set(existingData.map((e) => normalize(e.koboId ?? '')))
       : null;
 
-    return payload.map((p: Record<string, string>) => {
+    // Build lookup sets for extras fields: field → Set of existing values
+    const extrasSets = new Map<string, Set<string>>();
+    for (const field of extrasFields) {
+      const vals = new Set<string>();
+      for (const e of existingData) {
+        const extras = e.extras as Record<string, any> | null;
+        const v = extras?.[field];
+        if (v !== undefined && v !== null) vals.add(String(v).trim());
+      }
+      extrasSets.set(field, vals);
+    }
+
+    return payload.map((p: Record<string, any>) => {
       const item: Record<string, unknown> = { ...p };
       if (hasPhone && p.phone && phoneSet!.has(normalize(p.phone)))
         item.isDuplicate = true;
@@ -237,6 +265,16 @@ export class SourceService {
         item.isDuplicate = true;
       if (hasKoboId && p.koboId && koboIdSet!.has(normalize(p.koboId)))
         item.isDuplicate = true;
+
+      // Check extras fields against existing DB records
+      for (const field of extrasFields) {
+        const val = p[field];
+        if (val !== undefined && val !== null) {
+          const set = extrasSets.get(field);
+          if (set?.has(String(val).trim())) item.isDuplicate = true;
+        }
+      }
+
       return item;
     });
   }
@@ -249,8 +287,13 @@ export class SourceService {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
-
-    const uniqueFields = await this.resolveImportUniqueFields(dto.uniqueFields);
+    const resolvedUniqueFields = await this.resolveImportUniqueFields(
+      dto.uniqueFields,
+    );
+    const forceInsert = resolvedUniqueFields.includes('force_insert');
+    const uniqueFields = resolvedUniqueFields.filter(
+      (f) => f !== 'force_insert',
+    );
     const validateSecondaryField =
       await this.getValidateSecondaryFieldSetting();
 
@@ -307,24 +350,31 @@ export class SourceService {
 
     if (action === IMPORT_ACTION.IMPORT) {
       this.logger.log(`Import flow started. importId=${dto.importId}`);
-      const { allValidationErrors } = await validateSchemaFields(
-        payloadWithUUID,
-        extraFields,
-        hasUUID,
-        uniqueFields,
-        validateSecondaryField,
-      );
 
-      if (allValidationErrors.length) {
-        this.logger.debug(
-          `Import schema validation failed. importId=${dto.importId}, errorCount=${allValidationErrors.length}`,
+      if (forceInsert) {
+        this.logger.warn(
+          `forceInsert enabled — skipping schema validation. importId=${dto.importId}, records=${payloadWithUUID.length}`,
         );
-        throw new Error('Invalid data submitted!');
-      }
+      } else {
+        const { allValidationErrors } = await validateSchemaFields(
+          payloadWithUUID,
+          extraFields,
+          hasUUID,
+          uniqueFields,
+          validateSecondaryField,
+        );
 
-      this.logger.debug(
-        `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
-      );
+        if (allValidationErrors.length) {
+          this.logger.debug(
+            `Import schema validation failed. importId=${dto.importId}, errorCount=${allValidationErrors.length}`,
+          );
+          throw new Error('Invalid data submitted!');
+        }
+
+        this.logger.debug(
+          `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
+        );
+      }
 
       rest.importField = Enums.ImportField.UUID;
       return this.createSourceAndAddToQueue(rest, payloadWithUUID);
@@ -335,15 +385,14 @@ export class SourceService {
     );
   }
 
-  async getUniqueFieldSettings() {
+  async getUniqueFieldSettings(): Promise<string[]> {
     const row: any = await this.prisma.setting.findFirst({
       where: {
         name: SETTINGS_NAMES.UNIQUE_FIELDS,
       },
     });
-    if (!row || !row.value)
-      throw new Error('Please setup unique fields from settings!');
-    return row.value?.DATA.split(',');
+    if (!row || !row.value?.DATA) return [];
+    return row.value.DATA.split(',').filter(Boolean);
   }
 
   async getValidateSecondaryFieldSetting(): Promise<boolean> {
@@ -384,29 +433,43 @@ export class SourceService {
     });
   }
 
-  validateUniqueFields(fields: string[]) {
-    const allowedFields = [
-      BENEF_UNIQUE_FIELDS.GOVT_ID_NUMBER,
-      BENEF_UNIQUE_FIELDS.PHONE,
-      BENEF_UNIQUE_FIELDS.WALLET_ADDRESS,
-      BENEF_UNIQUE_FIELDS.EMAIL,
-      BENEF_UNIQUE_FIELDS.KOBO_ID,
-    ];
-    if (fields.some((field) => !allowedFields.includes(field))) {
+  async validateUniqueFields(fields: string[]) {
+    const primaryAllowed = Object.values(BENEF_UNIQUE_FIELDS);
+    const activeExtras = await this.fdService.listActive();
+    const extrasNames = activeExtras.map((f: any) => f.name);
+    const allAllowed = [...primaryAllowed, ...extrasNames];
+    const invalid = fields.filter((f) => !allAllowed.includes(f));
+    if (invalid.length) {
       throw new Error(
-        `Allowed unique fields are: [${allowedFields.join(
+        `Invalid unique fields: [${invalid.join(
           ', ',
-        )}]. Please check your settings!`,
+        )}]. Allowed: [${allAllowed.join(', ')}]`,
       );
     }
     return true;
+  }
+
+  classifyUniqueFields(fields: string[]): {
+    primaryFields: string[];
+    extrasFields: string[];
+  } {
+    const primary = new Set(Object.values(BENEF_UNIQUE_FIELDS));
+    return {
+      primaryFields: fields.filter((f) => primary.has(f)),
+      extrasFields: fields.filter((f) => !primary.has(f)),
+    };
   }
 
   private async resolveImportUniqueFields(
     dtoUniqueFields?: string[],
   ): Promise<string[]> {
     if (dtoUniqueFields && dtoUniqueFields.length > 0) {
-      this.validateUniqueFields(dtoUniqueFields);
+      const withoutSentinel = dtoUniqueFields.filter(
+        (f) => f !== 'force_insert',
+      );
+      if (withoutSentinel.length > 0) {
+        await this.validateUniqueFields(withoutSentinel);
+      }
       return dtoUniqueFields;
     }
     return this.getUniqueFieldSettings();
