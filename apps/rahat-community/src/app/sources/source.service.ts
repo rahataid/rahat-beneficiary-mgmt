@@ -505,6 +505,8 @@ export class SourceService {
       uniqueFields,
     );
 
+    const PREVIEW_LIMIT = 500;
+
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
     );
@@ -516,9 +518,20 @@ export class SourceService {
       }
       return item;
     });
+
+    const duplicateCount = dateParsedDuplicates.filter(
+      (d: Record<string, unknown>) => d.isDuplicate,
+    ).length;
+
     return {
-      invalidFields: allValidationErrors,
-      result: dateParsedDuplicates,
+      summary: {
+        total: duplicates.length,
+        invalidCount: allValidationErrors.length,
+        duplicateCount,
+        previewLimit: PREVIEW_LIMIT,
+      },
+      invalidFields: allValidationErrors.slice(0, PREVIEW_LIMIT),
+      result: dateParsedDuplicates.slice(0, PREVIEW_LIMIT),
       hasUUID,
     };
   }
