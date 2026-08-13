@@ -14,6 +14,7 @@ import {
   JOBS,
   QUEUE,
   QUEUE_RETRY_OPTIONS,
+  PREVIEW_LIMIT,
 } from '../../constants';
 import {
   BENEF_UNIQUE_FIELDS,
@@ -31,8 +32,6 @@ import {
 import { paginate } from '../utils/paginate';
 import { Enums, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { uploadToR2 } from '../export/helpers/r2-upload.helper';
-import { fetchSchemaFields } from '../beneficiary-import/helpers';
-import { DB_MODELS } from '../../constants';
 
 export type ImportProgressStatus =
   | 'PENDING'
@@ -494,8 +493,6 @@ export class SourceService {
       processedData,
       uniqueFields,
     );
-
-    const PREVIEW_LIMIT = 500;
 
     this.logger.debug(
       `Validate beneficiaries completed. validationErrors=${allValidationErrors.length}, processed=${processedData.length}`,
