@@ -19,7 +19,6 @@ import {
 import {
   BENEF_UNIQUE_FIELDS,
   formatEnumFieldValues,
-  resolveUniqueFields,
   validateSchemaFields,
 } from '../beneficiary-import/helpers';
 import { FieldDefinitionsService } from '../field-definitions/field-definitions.service';
@@ -88,56 +87,28 @@ export class SourceService {
   ) {}
 
   async fetchExistingBeneficiaries(payload: any, uniqueFields: string[]) {
-    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
-      resolveUniqueFields(uniqueFields);
-    const { extrasFields } = this.classifyUniqueFields(uniqueFields);
-
     const records: Record<string, string>[] = Array.from(payload);
-    const phones = hasPhone
-      ? ([...new Set(records.map((p) => p.phone).filter(Boolean))] as string[])
-      : ([] as string[]);
-    const emails = hasEmail
-      ? ([...new Set(records.map((p) => p.email).filter(Boolean))] as string[])
-      : ([] as string[]);
-    const govtIDs = hasGovtID
-      ? ([
-          ...new Set(records.map((p) => p.govtIDNumber).filter(Boolean)),
-        ] as string[])
-      : ([] as string[]);
-    const walletAddrs = hasWalletAddress
-      ? ([
-          ...new Set(records.map((p) => p.walletAddress).filter(Boolean)),
-        ] as string[])
-      : ([] as string[]);
-    const koboIds = hasKoboId
-      ? ([...new Set(records.map((p) => p.koboId).filter(Boolean))] as string[])
-      : ([] as string[]);
+    const { primaryFields, extrasFields } =
+      this.classifyUniqueFields(uniqueFields);
 
-    // Build OR conditions for extras (JSONB) unique fields
-    const extrasOrConditions: any[] = [];
-    for (const field of extrasFields) {
-      const values = [
-        ...new Set(records.map((r) => r[field]).filter(Boolean)),
-      ] as string[];
-      for (const val of values) {
-        extrasOrConditions.push({
-          extras: { path: [field], equals: val },
-        });
-      }
-    }
+    const uniqueValues = (field: string) =>
+      [...new Set(records.map((r) => r[field]).filter(Boolean))] as string[];
 
-    const orClauses = [
-      ...(phones.length ? [{ phone: { in: phones } }] : []),
-      ...(emails.length ? [{ email: { in: emails } }] : []),
-      ...(govtIDs.length ? [{ govtIDNumber: { in: govtIDs } }] : []),
-      ...(walletAddrs.length ? [{ walletAddress: { in: walletAddrs } }] : []),
-      ...(koboIds.length ? [{ koboId: { in: koboIds } }] : []),
-      ...extrasOrConditions,
-    ];
+    const primaryOrClauses = primaryFields.flatMap((field) => {
+      const values = uniqueValues(field);
+      return values.length ? [{ [field]: { in: values } }] : [];
+    });
 
+    const extrasOrClauses = extrasFields.flatMap((field) =>
+      uniqueValues(field).map((val) => ({
+        extras: { path: [field], equals: val },
+      })),
+    );
+
+    const orClauses = [...primaryOrClauses, ...extrasOrClauses];
     if (!orClauses.length) return [];
 
-    const result = await this.prisma.beneficiary.findMany({
+    return this.prisma.beneficiary.findMany({
       where: { OR: orClauses },
       select: {
         phone: true,
@@ -148,7 +119,6 @@ export class SourceService {
         extras: true,
       },
     });
-    return result;
   }
 
   async checkDuplicateBeneficiary(payload: any, uniqueFields: string[]) {
@@ -211,67 +181,42 @@ export class SourceService {
     existingData: Record<string, any>[],
     uniqueFields: string[],
   ) {
-    const { hasPhone, hasEmail, hasGovtID, hasWalletAddress, hasKoboId } =
-      resolveUniqueFields(uniqueFields);
-    const { extrasFields } = this.classifyUniqueFields(uniqueFields);
-
+    const { primaryFields, extrasFields } =
+      this.classifyUniqueFields(uniqueFields);
     const normalize = allowOnlyAlphabetAndNumbers;
-    const phoneSet = hasPhone
-      ? new Set(existingData.map((e) => normalize(e.phone ?? '')))
-      : null;
-    const emailSet = hasEmail
-      ? new Set(existingData.map((e) => normalize(e.email ?? '')))
-      : null;
-    const govtSet = hasGovtID
-      ? new Set(existingData.map((e) => normalize(e.govtIDNumber ?? '')))
-      : null;
-    const walletSet = hasWalletAddress
-      ? new Set(existingData.map((e) => normalize(e.walletAddress ?? '')))
-      : null;
-    const koboIdSet = hasKoboId
-      ? new Set(existingData.map((e) => normalize(e.koboId ?? '')))
-      : null;
 
-    // Build lookup sets for extras fields: field → Set of existing values
+    // Build lookup sets for primary columns
+    const primarySets = new Map<string, Set<string>>();
+    for (const field of primaryFields) {
+      primarySets.set(
+        field,
+        new Set(existingData.map((e) => normalize(e[field] ?? ''))),
+      );
+    }
+
+    // Build lookup sets for extras (JSONB) fields
     const extrasSets = new Map<string, Set<string>>();
     for (const field of extrasFields) {
       const vals = new Set<string>();
       for (const e of existingData) {
-        const extras = e.extras as Record<string, any> | null;
-        const v = extras?.[field];
-        if (v !== undefined && v !== null) vals.add(String(v).trim());
+        const v = (e.extras as Record<string, any> | null)?.[field];
+        if (v != null) vals.add(String(v).trim());
       }
       extrasSets.set(field, vals);
     }
 
     return payload.map((p: Record<string, any>) => {
       const item: Record<string, unknown> = { ...p };
-      if (hasPhone && p.phone && phoneSet!.has(normalize(p.phone)))
-        item.isDuplicate = true;
-      if (hasEmail && p.email && emailSet!.has(normalize(p.email)))
-        item.isDuplicate = true;
-      if (
-        hasGovtID &&
-        p.govtIDNumber &&
-        govtSet!.has(normalize(p.govtIDNumber))
-      )
-        item.isDuplicate = true;
-      if (
-        hasWalletAddress &&
-        p.walletAddress &&
-        walletSet!.has(normalize(p.walletAddress))
-      )
-        item.isDuplicate = true;
-      if (hasKoboId && p.koboId && koboIdSet!.has(normalize(p.koboId)))
-        item.isDuplicate = true;
 
-      // Check extras fields against existing DB records
+      for (const field of primaryFields) {
+        if (p[field] && primarySets.get(field)?.has(normalize(p[field])))
+          item.isDuplicate = true;
+      }
+
       for (const field of extrasFields) {
         const val = p[field];
-        if (val !== undefined && val !== null) {
-          const set = extrasSets.get(field);
-          if (set?.has(String(val).trim())) item.isDuplicate = true;
-        }
+        if (val != null && extrasSets.get(field)?.has(String(val).trim()))
+          item.isDuplicate = true;
       }
 
       return item;
@@ -279,62 +224,29 @@ export class SourceService {
   }
 
   async create(dto: CreateSourceDto) {
-    this.logger.log(
-      `Create source request received. importId=${dto.importId}, action=${dto.action}`,
-    );
-
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
+
+    const uniqueFields = dto.uniqueFields ?? [];
     const forceInsert = dto.forceInsert ?? false;
-    const uniqueFields = await this.resolveImportUniqueFields(dto.uniqueFields);
-    const validateSecondaryField =
-      await this.getValidateSecondaryFieldSetting();
-
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
-    this.logger.debug(
-      `Preparing import payload. records=${
-        data.length
-      }, hasExternalUUID=${hasUUID}, uniqueFields=${uniqueFields.join(',')}`,
+
+    this.logger.log(
+      `Source create called. action=${action}, importId=${dto.importId}, records=${data.length}, forceInsert=${forceInsert}`,
     );
 
-    const payloadWithUUID = data.map((d: any) => {
-      if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+    const records = data.map((d: any) => this.prepareRecord(d, hasUUID));
 
-      if (d.phone) d.phone = sanitizePhoneNumber(d.phone.toString());
-      Object.keys(d).forEach((key) => {
-        const k = key.toLowerCase();
-        const isBankNumericField =
-          k.includes('bank') &&
-          (k.includes('ac_number') ||
-            k.includes('account_number') ||
-            k.includes('_no'));
-        if (isBankNumericField && d[key]) {
-          d[key] = sanitizeDigitsOnly(d[key].toString());
-        }
-      });
-      const formatted = formatEnumFieldValues(d);
-      const hasKoboId = d.koboId != null && d.koboId !== '';
-      const uid = hasUUID
-        ? d[EXTERNAL_UUID_FIELD]
-        : hasKoboId
-        ? d.koboId
-        : uuid();
-      return {
-        ...formatted,
-        uuid: uid,
-        koboId: hasKoboId ? d.koboId : '',
-      };
-    });
-    const extraFields = await this.listExtraFields();
-    this.logger.debug(
-      `Resolved extra field definitions. count=${extraFields.length}`,
-    );
+    const [extraFields, validateSecondaryField] = await Promise.all([
+      this.listExtraFields(),
+      this.getValidateSecondaryFieldSetting(),
+    ]);
 
     if (action === IMPORT_ACTION.VALIDATE) {
-      this.logger.log(`Validation flow started. importId=${dto.importId}`);
+      this.logger.log(`Starting validation. importId=${dto.importId}`);
       return this.ValidateBeneficiaryImort({
-        data: payloadWithUUID,
+        data: records,
         extraFields,
         hasUUID,
         uniqueFields,
@@ -343,50 +255,59 @@ export class SourceService {
     }
 
     if (action === IMPORT_ACTION.IMPORT) {
-      this.logger.log(`Import flow started. importId=${dto.importId}`);
-
       if (forceInsert) {
         this.logger.warn(
-          `forceInsert enabled — skipping schema validation. importId=${dto.importId}, records=${payloadWithUUID.length}`,
+          `forceInsert=true — skipping schema validation. importId=${dto.importId}`,
         );
       } else {
         const { allValidationErrors } = await validateSchemaFields(
-          payloadWithUUID,
+          records,
           extraFields,
           hasUUID,
           uniqueFields,
           validateSecondaryField,
         );
-
         if (allValidationErrors.length) {
-          this.logger.debug(
-            `Import schema validation failed. importId=${dto.importId}, errorCount=${allValidationErrors.length}`,
+          this.logger.error(
+            `Schema validation failed. importId=${dto.importId}, errors=${allValidationErrors.length}`,
           );
           throw new Error('Invalid data submitted!');
         }
-
-        this.logger.debug(
-          `Import schema validation passed. importId=${dto.importId}, records=${payloadWithUUID.length}`,
-        );
+        this.logger.log(`Schema validation passed. importId=${dto.importId}`);
       }
 
       rest.importField = Enums.ImportField.UUID;
-      return this.createSourceAndAddToQueue(rest, payloadWithUUID);
+      return this.createSourceAndAddToQueue(rest, records);
     }
 
-    this.logger.debug(
-      `Create source request ended without matching action. importId=${dto.importId}, action=${action}`,
+    this.logger.warn(
+      `Unknown action received. importId=${dto.importId}, action=${action}`,
     );
   }
 
-  async getUniqueFieldSettings(): Promise<string[]> {
-    const row: any = await this.prisma.setting.findFirst({
-      where: {
-        name: SETTINGS_NAMES.UNIQUE_FIELDS,
-      },
-    });
-    if (!row || !row.value?.DATA) return [];
-    return row.value.DATA.split(',').filter(Boolean);
+  private prepareRecord(d: any, hasUUID: boolean): any {
+    if (d.govtIDNumber) d.govtIDNumber = d.govtIDNumber.toString();
+    if (d.phone) d.phone = sanitizePhoneNumber(d.phone.toString());
+
+    for (const key of Object.keys(d)) {
+      const k = key.toLowerCase();
+      const isBankField =
+        k.includes('bank') &&
+        (k.includes('ac_number') ||
+          k.includes('account_number') ||
+          k.includes('_no'));
+      if (isBankField && d[key]) d[key] = sanitizeDigitsOnly(d[key].toString());
+    }
+
+    const formatted = formatEnumFieldValues(d);
+    const hasKoboId = d.koboId != null && d.koboId !== '';
+    const uid = hasUUID
+      ? d[EXTERNAL_UUID_FIELD]
+      : hasKoboId
+      ? d.koboId
+      : uuid();
+
+    return { ...formatted, uuid: uid, koboId: hasKoboId ? d.koboId : '' };
   }
 
   async getValidateSecondaryFieldSetting(): Promise<boolean> {
@@ -427,22 +348,6 @@ export class SourceService {
     });
   }
 
-  async validateUniqueFields(fields: string[]) {
-    const primaryAllowed = Object.values(BENEF_UNIQUE_FIELDS);
-    const activeExtras = await this.fdService.listActive();
-    const extrasNames = activeExtras.map((f: any) => f.name);
-    const allAllowed = [...primaryAllowed, ...extrasNames];
-    const invalid = fields.filter((f) => !allAllowed.includes(f));
-    if (invalid.length) {
-      throw new Error(
-        `Invalid unique fields: [${invalid.join(
-          ', ',
-        )}]. Allowed: [${allAllowed.join(', ')}]`,
-      );
-    }
-    return true;
-  }
-
   classifyUniqueFields(fields: string[]): {
     primaryFields: string[];
     extrasFields: string[];
@@ -452,16 +357,6 @@ export class SourceService {
       primaryFields: fields.filter((f) => primary.has(f)),
       extrasFields: fields.filter((f) => !primary.has(f)),
     };
-  }
-
-  private async resolveImportUniqueFields(
-    dtoUniqueFields?: string[],
-  ): Promise<string[]> {
-    if (dtoUniqueFields && dtoUniqueFields.length > 0) {
-      await this.validateUniqueFields(dtoUniqueFields);
-      return dtoUniqueFields;
-    }
-    return this.getUniqueFieldSettings();
   }
 
   async ValidateBeneficiaryImort({
