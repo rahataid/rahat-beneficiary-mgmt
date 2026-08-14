@@ -28,7 +28,7 @@ export const JOBS = {
     IMPORT: 'job.beneficiary.import',
     EXPORT: 'job.beneficiary.export',
     EXPORT_V2: 'job.beneficiary.export-v2',
-     BULK_UPDATE: 'job.beneficiary.bulk_update',
+    BULK_UPDATE: 'job.beneficiary.bulk_update',
   },
   OTP: 'otp',
   CREATE_BENEF_GROUP: 'job.create.benef.group',
@@ -76,3 +76,5 @@ export const CONST_DATA = {
   KOBOTOOL: 'KOBOTOOL',
   TYPE: 'TYPE',
 };
+
+export const PREVIEW_LIMIT = 1000;

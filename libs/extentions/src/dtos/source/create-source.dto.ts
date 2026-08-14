@@ -1,6 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Enums } from '@rahataid/community-tool-sdk';
 import {
+  IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -74,5 +76,26 @@ export class CreateSourceDto {
 
   @IsOptional()
   @IsString()
-  groupName?:string;
+  groupName?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['phone', 'email'],
+    description:
+      'Unique fields for duplicate detection. Overrides the global UNIQUE_FIELDS setting when provided. Allowed values: phone, email, govtIDNumber, walletAddress, koboId.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  uniqueFields?: string[];
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    default: false,
+    description:
+      'When true, skips all schema validation and imports data as-is. Use for ground data that does not meet format requirements.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  forceInsert?: boolean;
 }

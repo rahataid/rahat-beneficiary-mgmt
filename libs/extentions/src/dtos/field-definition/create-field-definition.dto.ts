@@ -36,6 +36,14 @@ export class CreateFieldDefinitionDto {
   isTargeting!: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isUnique?: boolean;
+
+  @ApiProperty({
     type: 'object',
     example: {
       data: [

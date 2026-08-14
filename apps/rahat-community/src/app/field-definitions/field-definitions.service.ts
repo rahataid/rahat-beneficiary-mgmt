@@ -40,18 +40,24 @@ export class FieldDefinitionsService {
       if (skipped > 0) {
         this.logger.debug(`Skipped ${skipped} rows missing name or fieldType`);
       }
-      if (!data.length) throw new Error('No valid field definitions found in the file!');
+      if (!data.length)
+        throw new Error('No valid field definitions found in the file!');
 
       return this.createBulk(data, req);
     } catch (error) {
-      this.logger.error(`Bulk upload failed. fileName=${file.originalname}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Bulk upload failed. fileName=${file.originalname}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
 
   async createBulk(data: CreateFieldDefinitionDto[], req: any) {
     try {
-      this.logger.debug(`Creating bulk upsert transaction for ${data.length} fields`);
+      this.logger.debug(
+        `Creating bulk upsert transaction for ${data.length} fields`,
+      );
       const operations = data.map((d) => {
         const { parsedName, payload } = this.buildUpsertPayload(d, req);
         return this.prisma.fieldDefinition.upsert({
@@ -61,10 +67,15 @@ export class FieldDefinitionsService {
         });
       });
       const results = await this.prisma.$transaction(operations);
-      this.logger.log(`Bulk upload completed. ${results.length} fields upserted`);
+      this.logger.log(
+        `Bulk upload completed. ${results.length} fields upserted`,
+      );
       return { message: `${results.length} fields uploaded successfully!` };
     } catch (error) {
-      this.logger.error(`Bulk create failed for ${data.length} fields`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Bulk create failed for ${data.length} fields`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -79,7 +90,10 @@ export class FieldDefinitionsService {
         create: payload,
       });
     } catch (error) {
-      this.logger.error(`Upsert failed for field: ${parsedName}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Upsert failed for field: ${parsedName}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -91,7 +105,10 @@ export class FieldDefinitionsService {
     const parsedName = convertToValidString(name);
 
     let fieldPopulate = rest.fieldPopulate;
-    if (FieldDefinitionsService.TYPES_WITH_OPTIONS.includes(fieldType) && dropdownPopulates) {
+    if (
+      FieldDefinitionsService.TYPES_WITH_OPTIONS.includes(fieldType) &&
+      dropdownPopulates
+    ) {
       const populateData = convertStringsToFieldOptions(dropdownPopulates);
       if (populateData) fieldPopulate = populateData;
     }
@@ -107,7 +124,9 @@ export class FieldDefinitionsService {
   }
 
   async create(dto: CreateFieldDefinitionDto) {
-    this.logger.log(`Creating field definition: ${dto.name} (${dto.fieldType})`);
+    this.logger.log(
+      `Creating field definition: ${dto.name} (${dto.fieldType})`,
+    );
     try {
       const payload = {
         ...dto,
@@ -115,10 +134,12 @@ export class FieldDefinitionsService {
         fieldPopulate:
           dto?.fieldPopulate?.data?.length > 0
             ? {
-                data: dto.fieldPopulate.data.map((item: { label: string; value: string }) => ({
-                  label: item.label,
-                  value: item.value,
-                })),
+                data: dto.fieldPopulate.data.map(
+                  (item: { label: string; value: string }) => ({
+                    label: item.label,
+                    value: item.value,
+                  }),
+                ),
               }
             : [],
       };
@@ -127,7 +148,10 @@ export class FieldDefinitionsService {
         data: payload,
       });
     } catch (error) {
-      this.logger.error(`Create failed for field: ${dto.name}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Create failed for field: ${dto.name}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -150,6 +174,13 @@ export class FieldDefinitionsService {
     });
   }
 
+  listUnique() {
+    return this.prisma.fieldDefinition.findMany({
+      where: { isActive: true, isUnique: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findAll(query) {
     try {
       const select = {
@@ -157,6 +188,7 @@ export class FieldDefinitionsService {
         name: true,
         fieldType: true,
         isActive: true,
+        isUnique: true,
         isTargeting: true,
         fieldPopulate: true,
         variations: true,
@@ -183,14 +215,20 @@ export class FieldDefinitionsService {
 
       return await paginate(
         this.prisma.fieldDefinition,
-        { select, where: { isTargeting: isTargeting, ...where } },
+        {
+          select,
+          where: { isTargeting: isTargeting, ...where },
+        },
         {
           page: query?.page,
           perPage: query?.perPage,
         },
       );
     } catch (error) {
-      this.logger.error('Failed to fetch field definitions', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        'Failed to fetch field definitions',
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -203,7 +241,10 @@ export class FieldDefinitionsService {
       if (!data) return { status: 404, message: 'Data not found!' };
       return data;
     } catch (error) {
-      this.logger.error(`Failed to fetch field definition id=${id}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Failed to fetch field definition id=${id}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -214,7 +255,9 @@ export class FieldDefinitionsService {
     try {
       const { fieldPopulate } = dto;
       const populateData =
-        fieldPopulate && fieldPopulate.data ? { data: fieldPopulate.data } : null;
+        fieldPopulate && fieldPopulate.data
+          ? { data: fieldPopulate.data }
+          : null;
       const payload = {
         ...dto,
         fieldPopulate: populateData,
@@ -227,7 +270,10 @@ export class FieldDefinitionsService {
         data: payload,
       });
     } catch (error) {
-      this.logger.error(`Update failed for field definition id=${id}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Update failed for field definition id=${id}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -240,7 +286,10 @@ export class FieldDefinitionsService {
         data: dto,
       });
     } catch (error) {
-      this.logger.error(`Status update failed for field definition id=${id}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `Status update failed for field definition id=${id}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
