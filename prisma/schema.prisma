@@ -79,6 +79,7 @@ model Beneficiary {
   @@index([email])
   @@index([govtIDNumber])
   @@index([koboId])
+  @@index([extras(ops: JsonbPathOps)], type: Gin)
   @@map("tbl_beneficiaries")
 }
 
@@ -132,6 +133,7 @@ model FieldDefinition {
   isActive      Boolean   @default(true)
   isTargeting   Boolean   @default(false)
   isSystem      Boolean   @default(false)
+  isUnique      Boolean   @default(false)
   variations    String[]
 
   createdAt DateTime  @default(now())

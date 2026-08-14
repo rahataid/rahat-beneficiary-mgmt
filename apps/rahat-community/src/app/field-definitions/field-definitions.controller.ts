@@ -75,6 +75,12 @@ export class FieldDefinitionsController {
   }
 
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.FIELD_DEFINITION })
+  @Get('unique')
+  findUnique() {
+    return this.fieldDefService.listUnique();
+  }
+
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.FIELD_DEFINITION })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.fieldDefService.findOne(+id);

@@ -33,4 +33,7 @@ export type FieldDefinitionClient = {
     { file }: { file: any },
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
+  listUnique: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<FieldDefinition[]>>;
 };
