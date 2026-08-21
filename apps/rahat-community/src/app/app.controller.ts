@@ -27,8 +27,6 @@ import { memoryStorage } from 'multer';
 
 @Controller('app')
 @ApiTags('APP')
-@ApiBearerAuth('JWT')
-@UseGuards(JwtGuard, AbilitiesGuard)
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -37,21 +35,31 @@ export class AppController {
     return this.appService.getData();
   }
 
+  @Get('version')
+  getVersion() {
+    return this.appService.getVersion();
+  }
+
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @Get('stats')
   getStats(@Query('') query: FilterBeneficiaryByLocationDto) {
     return this.appService.getStats(query);
   }
 
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @Get('kobo-import/:name')
   getDataFromKoboTool(@Param('name') name: string) {
     return this.appService.getDataFromKoboTool(name);
   }
 
-  @Get('settings/kobotool')
   @ApiBearerAuth('JWT')
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @Get('settings/kobotool')
   filterSettingByType() {
     return this.appService.findKobotoolSettings();
   }
@@ -63,6 +71,7 @@ export class AppController {
   })
   @Post('file')
   @ApiBearerAuth('JWT')
+  @UseGuards(JwtGuard, AbilitiesGuard)
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.PUBLIC })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
