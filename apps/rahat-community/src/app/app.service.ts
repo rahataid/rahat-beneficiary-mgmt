@@ -4,8 +4,6 @@ import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsService } from '@rumsan/settings';
 import axios from 'axios';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { KOBO_URL, CONST_DATA } from '../constants';
 import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
 import {
@@ -122,10 +120,7 @@ export class AppService {
   }
 
   getVersion() {
-    const pkg = JSON.parse(
-      readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
-    );
-    return { version: pkg.version };
+    return { version: process.env.npm_package_version ?? 'unknown' };
   }
 
   async getDataFromKoboTool(name: string) {
