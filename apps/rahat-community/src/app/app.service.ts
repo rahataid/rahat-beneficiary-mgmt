@@ -4,7 +4,13 @@ import { REPORTING_FIELD } from '@rahataid/community-tool-sdk';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsService } from '@rumsan/settings';
 import axios from 'axios';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { KOBO_URL, CONST_DATA } from '../constants';
+
+const appVersion = JSON.parse(
+  readFileSync(join(__dirname, 'package.json'), 'utf-8'),
+).version;
 import { BeneficiariesService } from './beneficiaries/beneficiaries.service';
 import {
   calculateBankStats,
@@ -120,7 +126,7 @@ export class AppService {
   }
 
   getVersion() {
-    return { version: process.env.npm_package_version ?? 'unknown' };
+    return { version: appVersion };
   }
 
   async getDataFromKoboTool(name: string) {
