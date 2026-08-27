@@ -9,7 +9,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   FileUploadDto,
   FilterBeneficiaryByLocationDto,
@@ -35,6 +41,7 @@ export class AppController {
     return this.appService.getData();
   }
 
+  @ApiOperation({ summary: 'Get application version' })
   @Get('version')
   getVersion() {
     return this.appService.getVersion();
