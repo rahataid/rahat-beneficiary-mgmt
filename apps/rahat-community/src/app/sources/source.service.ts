@@ -227,7 +227,6 @@ export class SourceService {
     const { action, ...rest } = dto;
     const { data } = dto.fieldMapping;
     if (!data.length) throw new Error('No data found!');
-
     const uniqueFields = dto.uniqueFields ?? [];
     const forceInsert = dto.forceInsert ?? false;
     const hasUUID = data[0].hasOwnProperty(EXTERNAL_UUID_FIELD);
@@ -237,7 +236,6 @@ export class SourceService {
     );
 
     const records = data.map((d: any) => this.prepareRecord(d, hasUUID));
-
     const [extraFields, validateSecondaryField] = await Promise.all([
       this.listExtraFields(),
       this.getValidateSecondaryFieldSetting(),

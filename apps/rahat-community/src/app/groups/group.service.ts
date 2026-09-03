@@ -58,6 +58,8 @@ const PRIMARY_FIELDS = new Set([
   'isVerified',
 ]);
 
+const DATE_FIELDS = new Set(['birthDate']);
+
 @Injectable()
 export class GroupService {
   private readonly logger = new Logger(GroupService.name);
@@ -467,7 +469,10 @@ export class GroupService {
             }
 
             if (PRIMARY_FIELDS.has(key)) {
-              primaryData[key] = value;
+              primaryData[key] =
+                DATE_FIELDS.has(key) && typeof value === 'string' && value
+                  ? new Date(value)
+                  : value;
             } else {
               extraData[key] = value;
             }
