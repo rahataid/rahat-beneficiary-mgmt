@@ -45,5 +45,10 @@ export const getAppClient = (client: AxiosInstance): AppClient => {
       const response = await client.post('/app/file', file, config);
       return formatResponse<any>(response);
     },
+
+    getVersion: async (config?: AxiosRequestConfig) => {
+      const response = await client.get('/app/version', config);
+      return formatResponse<{ version: string }>(response);
+    },
   };
 };
