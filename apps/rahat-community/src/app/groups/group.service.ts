@@ -1,6 +1,19 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '@prisma/client';
+import {
+  Prisma,
+  Gender,
+  BankedStatus,
+  InternetStatus,
+  PhoneStatus,
+} from '@prisma/client';
+
+const ENUM_FIELD_VALUES: Record<string, Set<string>> = {
+  gender: new Set(Object.values(Gender)),
+  bankedStatus: new Set(Object.values(BankedStatus)),
+  internetStatus: new Set(Object.values(InternetStatus)),
+  phoneStatus: new Set(Object.values(PhoneStatus)),
+};
 import {
   CreateGroupDto,
   ListGroupDto,
@@ -467,7 +480,12 @@ export class GroupService {
             }
 
             if (PRIMARY_FIELDS.has(key)) {
-              primaryData[key] = value;
+              const enumValues = ENUM_FIELD_VALUES[key];
+              primaryData[key] = enumValues
+                ? enumValues.has((value as string).toUpperCase())
+                  ? (value as string).toUpperCase()
+                  : value
+                : value;
             } else {
               extraData[key] = value;
             }
@@ -488,7 +506,7 @@ export class GroupService {
           batchOps.push(
             this.prisma.beneficiary.update({
               where: { uuid: resolvedUUID },
-              data: updatePayload,
+              data: updatePayload as Prisma.BeneficiaryUpdateInput,
             }),
           );
         }
