@@ -33,4 +33,8 @@ export type AppClient = {
     file: any,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<any>>;
+
+  getVersion: (
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<{ version: string }>>;
 };
