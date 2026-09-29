@@ -204,6 +204,12 @@ export class GroupService {
         },
       },
     });
+    if (!group) return group;
+
+    group.beneficiariesGroup = this.markDuplicatePhonesInGroup(
+      group.beneficiariesGroup,
+    );
+
     if (query && query.page && query.perPage) {
       const startIndex = (query.page - 1) * query.perPage;
       const endIndex = query.page * query.perPage;
@@ -228,6 +234,34 @@ export class GroupService {
       };
     }
     return group;
+  }
+
+  /**
+   * Flags each beneficiary in the group with isDuplicate:true when its phone
+   * number is shared with another beneficiary in the same group.
+   */
+  private markDuplicatePhonesInGroup<
+    T extends {
+      beneficiary: { phone?: string | null } & Record<string, unknown>;
+    },
+  >(beneficiariesGroup: T[]): T[] {
+    const phoneOccurrences = new Map<string, number>();
+
+    beneficiariesGroup.forEach(({ beneficiary }) => {
+      const phone = beneficiary?.phone?.trim();
+      if (!phone) return;
+      phoneOccurrences.set(phone, (phoneOccurrences.get(phone) ?? 0) + 1);
+    });
+
+    return beneficiariesGroup.map((item) => {
+      const phone = item.beneficiary?.phone?.trim();
+      const count = phone ? phoneOccurrences.get(phone) ?? 0 : 0;
+      const isDuplicate = count > 1;
+      return {
+        ...item,
+        beneficiary: { ...item.beneficiary, isDuplicate },
+      };
+    });
   }
 
   findUnique(uuid: string) {
@@ -291,7 +325,8 @@ export class GroupService {
 
     const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
       (item) => {
-        const { ...rest } = item.beneficiary;
+        const rest = { ...(item.beneficiary as Record<string, unknown>) };
+        delete rest.isDuplicate;
 
         return {
           ...rest,
@@ -311,10 +346,16 @@ export class GroupService {
     if (!group) throw new Error('Group not found');
 
     const formattedData: Record<string, unknown>[] =
-      group.beneficiariesGroup.map((item) => ({
-        ...(item.beneficiary as Record<string, unknown>),
-        groupName: group.name,
-      }));
+      group.beneficiariesGroup.map((item) => {
+        const beneficiary = {
+          ...(item.beneficiary as Record<string, unknown>),
+        };
+        delete beneficiary.isDuplicate;
+        return {
+          ...beneficiary,
+          groupName: group.name,
+        };
+      });
 
     let selectedFields: string[] | null = null;
     if (fields) {
