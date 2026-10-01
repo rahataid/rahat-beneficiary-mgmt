@@ -195,65 +195,93 @@ export class GroupService {
   async findOne(uuid: string, query?: ListGroupDto) {
     const group = await this.prisma.group.findUnique({
       where: { uuid },
-      select: {
-        name: true,
-        beneficiariesGroup: {
-          select: {
-            beneficiary: true,
-          },
-        },
-      },
+      select: { name: true },
     });
     if (!group) return group;
 
-    group.beneficiariesGroup = this.markDuplicatePhonesInGroup(
-      group.beneficiariesGroup,
+    const beneficiaryWhere = query?.filters
+      ? this.buildBeneficiaryFilterWhere(query.filters)
+      : {};
+
+    const { rows, meta } = await paginate<
+      { beneficiary: Record<string, unknown> },
+      unknown
+    >(
+      this.prisma.beneficiaryGroup,
+      {
+        where: { groupUID: uuid, beneficiary: beneficiaryWhere },
+        select: { beneficiary: true },
+        orderBy: { createdAt: 'asc' },
+      },
+      { page: query?.page, perPage: query?.perPage },
     );
 
-    if (query && query.page && query.perPage) {
-      const startIndex = (query.page - 1) * query.perPage;
-      const endIndex = query.page * query.perPage;
-      const paginatedBeneficiaries = group.beneficiariesGroup.slice(
-        startIndex,
-        endIndex,
-      );
-      const total = group.beneficiariesGroup.length;
-      const lastPage = Math.ceil(total / query.perPage);
+    const beneficiariesGroup = await this.markDuplicatePhonesInGroup(
+      uuid,
+      rows,
+    );
 
-      const meta = {
-        total,
-        lastPage,
-        currentPage: query.page,
-        perPage: query.perPage,
-      };
-
-      return {
-        ...group,
-        beneficiariesGroup: paginatedBeneficiaries,
-        meta,
-      };
-    }
-    return group;
+    return { ...group, beneficiariesGroup, meta };
   }
 
   /**
-   * Flags each beneficiary in the group with isDuplicate:true when its phone
-   * number is shared with another beneficiary in the same group.
+   * Builds a Prisma `where` clause for the Beneficiary relation from a map
+   * of field -> search text. Primary beneficiary columns (firstName, phone,
    */
-  private markDuplicatePhonesInGroup<
+  private buildBeneficiaryFilterWhere(
+    filters: Record<string, string>,
+  ): Prisma.BeneficiaryWhereInput {
+    const AND: Prisma.BeneficiaryWhereInput[] = [];
+
+    for (const [field, rawValue] of Object.entries(filters)) {
+      const value = String(rawValue ?? '').trim();
+      if (!value) continue;
+
+      const enumValues = ENUM_FIELD_VALUES[field];
+      if (enumValues) {
+        const upper = value.toUpperCase();
+        if (enumValues.has(upper)) {
+          AND.push({
+            [field]: { equals: upper },
+          } as Prisma.BeneficiaryWhereInput);
+        }
+      } else if (PRIMARY_FIELDS.has(field)) {
+        AND.push({
+          [field]: { contains: value, mode: 'insensitive' },
+        } as Prisma.BeneficiaryWhereInput);
+      } else {
+        AND.push({
+          extras: { path: [field], string_contains: value },
+        } as Prisma.BeneficiaryWhereInput);
+      }
+    }
+
+    return AND.length ? { AND } : {};
+  }
+
+  /**
+   * Flags each beneficiary in the given page with isDuplicate:true when its
+   * phone number is shared with another beneficiary anywhere in the same
+   
+   */
+  private async markDuplicatePhonesInGroup<
     T extends {
       beneficiary: { phone?: string | null } & Record<string, unknown>;
     },
-  >(beneficiariesGroup: T[]): T[] {
-    const phoneOccurrences = new Map<string, number>();
+  >(groupUID: string, pageRows: T[]): Promise<T[]> {
+    const allPhones = await this.prisma.beneficiaryGroup.findMany({
+      where: { groupUID },
+      select: { beneficiary: { select: { phone: true } } },
+    });
 
-    beneficiariesGroup.forEach(({ beneficiary }) => {
+    const phoneOccurrences = new Map<string, number>();
+    allPhones.forEach(({ beneficiary }) => {
       const phone = beneficiary?.phone?.trim();
       if (!phone) return;
       phoneOccurrences.set(phone, (phoneOccurrences.get(phone) ?? 0) + 1);
     });
 
-    return beneficiariesGroup.map((item) => {
+    return pageRows.map((item) => {
       const phone = item.beneficiary?.phone?.trim();
       const count = phone ? phoneOccurrences.get(phone) ?? 0 : 0;
       const isDuplicate = count > 1;
@@ -319,22 +347,31 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
+  /**
+   * Fetches every beneficiary in a group, unpaginated — used by exports,
+   * which need the full set regardless of the findOne API's page size.
+   */
+  private async fetchAllBeneficiariesInGroup(groupUID: string) {
+    return this.prisma.beneficiaryGroup.findMany({
+      where: { groupUID },
+      select: { beneficiary: true },
+    });
+  }
+
   async downloadData(uuid: string) {
-    const getGrouppedBeneficiary = await this.findOne(uuid);
-    const groupName = getGrouppedBeneficiary.name;
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
+      select: { name: true },
+    });
+    if (!group) throw new Error('Group not found');
 
-    const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
-      (item) => {
-        const rest = { ...(item.beneficiary as Record<string, unknown>) };
-        delete rest.isDuplicate;
+    const beneficiariesGroup = await this.fetchAllBeneficiariesInGroup(uuid);
+    const groupName = group.name;
 
-        return {
-          ...rest,
-
-          groupName,
-        };
-      },
-    );
+    const formattedData = beneficiariesGroup.map((item) => ({
+      ...(item.beneficiary as Record<string, unknown>),
+      groupName,
+    }));
 
     const excelData = generateExcelData(formattedData);
 
@@ -342,20 +379,20 @@ export class GroupService {
   }
 
   async downloadGroupExcel(uuid: string, fields?: string): Promise<Buffer> {
-    const group = await this.findOne(uuid);
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
+      select: { name: true },
+    });
     if (!group) throw new Error('Group not found');
 
-    const formattedData: Record<string, unknown>[] =
-      group.beneficiariesGroup.map((item) => {
-        const beneficiary = {
-          ...(item.beneficiary as Record<string, unknown>),
-        };
-        delete beneficiary.isDuplicate;
-        return {
-          ...beneficiary,
-          groupName: group.name,
-        };
-      });
+    const beneficiariesGroup = await this.fetchAllBeneficiariesInGroup(uuid);
+
+    const formattedData: Record<string, unknown>[] = beneficiariesGroup.map(
+      (item) => ({
+        ...(item.beneficiary as Record<string, unknown>),
+        groupName: group.name,
+      }),
+    );
 
     let selectedFields: string[] | null = null;
     if (fields) {
