@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Prisma,
@@ -44,6 +49,16 @@ import {
   downloadFromR2,
   deleteFromR2,
 } from '../export/helpers/r2-upload.helper';
+import {
+  DistinctGroupBeneficiaryValuesDto,
+  SearchGroupBeneficiariesDto,
+} from './dto/search-group-beneficiaries.dto';
+import {
+  GROUP_BENEFICIARY_FROM,
+  buildGroupBeneficiaryWhere,
+  buildOrderBy,
+  resolveColumn,
+} from './helpers/beneficiary-filter.helper';
 
 const PRIMARY_FIELDS = new Set([
   'uuid',
@@ -230,6 +245,131 @@ export class GroupService {
     return group;
   }
 
+  /**
+   * Paginated, Excel-like filtered + sorted list of the beneficiaries in a
+   * group. Used by the Edit & Submit view.
+   */
+  async searchGroupBeneficiaries(
+    groupUID: string,
+    dto: SearchGroupBeneficiariesDto,
+  ) {
+    await this.assertGroupExists(groupUID);
+
+    const page = dto.page ?? 1;
+    const perPage = dto.perPage ?? 50;
+    const where = buildGroupBeneficiaryWhere(groupUID, dto.filters);
+    const orderBy = buildOrderBy(dto.sort);
+
+    const [countRows, rows] = await Promise.all([
+      this.prisma.$queryRaw<{ total: number }[]>(
+        Prisma.sql`SELECT COUNT(*)::int AS total ${GROUP_BENEFICIARY_FROM} ${where}`,
+      ),
+      this.prisma.$queryRaw<Record<string, unknown>[]>(
+        Prisma.sql`SELECT b.* ${GROUP_BENEFICIARY_FROM} ${where}
+          ORDER BY ${orderBy}
+          LIMIT ${perPage} OFFSET ${(page - 1) * perPage}`,
+      ),
+    ]);
+
+    const total = countRows[0]?.total ?? 0;
+    const duplicatePhones = await this.findDuplicatePhonesInGroup(
+      groupUID,
+      rows.map((r) => r.phone as string | null),
+    );
+
+    return {
+      rows: rows.map((row) => {
+        const phone = (row.phone as string | null)?.trim();
+        return { ...row, isDuplicate: !!phone && duplicatePhones.has(phone) };
+      }),
+      meta: {
+        total,
+        lastPage: Math.ceil(total / perPage),
+        currentPage: page,
+        perPage,
+      },
+    };
+  }
+
+  /**
+   * Distinct values (+ counts) of one column for the Excel filter dropdown's
+   * checkbox list. Respects the other columns' active filters. Blanks are
+   * returned as `value: null`.
+   */
+  async distinctGroupBeneficiaryValues(
+    groupUID: string,
+    dto: DistinctGroupBeneficiaryValuesDto,
+  ) {
+    await this.assertGroupExists(groupUID);
+
+    const limit = dto.limit ?? 100;
+    const col = resolveColumn(dto.field, dto.type);
+    let where = buildGroupBeneficiaryWhere(groupUID, dto.filters, dto.field);
+
+    const search = dto.search?.trim();
+    if (search) {
+      const pattern = `%${search.replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
+      where = Prisma.sql`${where} AND ${col.display} ILIKE ${pattern}`;
+    }
+
+    const valueOrder =
+      col.type === 'number'
+        ? Prisma.sql`MIN(${col.num})`
+        : Prisma.sql`LOWER(MIN(TRIM(${col.display})))`;
+
+    const rows = await this.prisma.$queryRaw<
+      { value: string | null; count: number }[]
+    >(Prisma.sql`
+      SELECT NULLIF(MIN(TRIM(${
+        col.display
+      })), '') AS value, COUNT(*)::int AS count
+      ${GROUP_BENEFICIARY_FROM} ${where}
+      GROUP BY LOWER(NULLIF(TRIM(${col.display}), ''))
+      ORDER BY ${valueOrder} ASC NULLS LAST
+      LIMIT ${limit + 1}
+    `);
+
+    return {
+      field: dto.field,
+      type: col.type,
+      values: rows.slice(0, limit),
+      hasMore: rows.length > limit,
+    };
+  }
+
+  private async assertGroupExists(uuid: string) {
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
+      select: { id: true },
+    });
+    if (!group) throw new NotFoundException('Group not found');
+  }
+
+  /**
+   * Returns the subset of `phones` that occur more than once in the group.
+   * Only looks up the phones on the current page instead of loading every
+   * phone in the group.
+   */
+  private async findDuplicatePhonesInGroup(
+    groupUID: string,
+    phones: (string | null | undefined)[],
+  ): Promise<Set<string>> {
+    const unique = [
+      ...new Set(phones.map((p) => p?.trim()).filter(Boolean) as string[]),
+    ];
+    if (!unique.length) return new Set();
+
+    const rows = await this.prisma.$queryRaw<{ phone: string }[]>(Prisma.sql`
+      SELECT TRIM(b."phone") AS phone
+      ${GROUP_BENEFICIARY_FROM}
+      WHERE bg."groupUID" = ${groupUID}::uuid
+        AND TRIM(b."phone") = ANY(${unique}::text[])
+      GROUP BY TRIM(b."phone")
+      HAVING COUNT(*) > 1
+    `);
+    return new Set(rows.map((r) => r.phone));
+  }
+
   findUnique(uuid: string) {
     return this.prisma.group.findUnique({
       where: {
@@ -285,21 +425,31 @@ export class GroupService {
     return 'Beneficiary removed successfully!';
   }
 
+  /**
+   * Fetches every beneficiary in a group, unpaginated — used by exports,
+   * which need the full set regardless of the findOne API's page size.
+   */
+  private async fetchAllBeneficiariesInGroup(groupUID: string) {
+    return this.prisma.beneficiaryGroup.findMany({
+      where: { groupUID },
+      select: { beneficiary: true },
+    });
+  }
+
   async downloadData(uuid: string) {
-    const getGrouppedBeneficiary = await this.findOne(uuid);
-    const groupName = getGrouppedBeneficiary.name;
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
+      select: { name: true },
+    });
+    if (!group) throw new Error('Group not found');
 
-    const formattedData = getGrouppedBeneficiary.beneficiariesGroup.map(
-      (item) => {
-        const { ...rest } = item.beneficiary;
+    const beneficiariesGroup = await this.fetchAllBeneficiariesInGroup(uuid);
+    const groupName = group.name;
 
-        return {
-          ...rest,
-
-          groupName,
-        };
-      },
-    );
+    const formattedData = beneficiariesGroup.map((item) => ({
+      ...(item.beneficiary as Record<string, unknown>),
+      groupName,
+    }));
 
     const excelData = generateExcelData(formattedData);
 
@@ -307,14 +457,20 @@ export class GroupService {
   }
 
   async downloadGroupExcel(uuid: string, fields?: string): Promise<Buffer> {
-    const group = await this.findOne(uuid);
+    const group = await this.prisma.group.findUnique({
+      where: { uuid },
+      select: { name: true },
+    });
     if (!group) throw new Error('Group not found');
 
-    const formattedData: Record<string, unknown>[] =
-      group.beneficiariesGroup.map((item) => ({
+    const beneficiariesGroup = await this.fetchAllBeneficiariesInGroup(uuid);
+
+    const formattedData: Record<string, unknown>[] = beneficiariesGroup.map(
+      (item) => ({
         ...(item.beneficiary as Record<string, unknown>),
         groupName: group.name,
-      }));
+      }),
+    );
 
     let selectedFields: string[] | null = null;
     if (fields) {
