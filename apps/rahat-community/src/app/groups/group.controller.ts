@@ -3,9 +3,11 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -38,6 +40,10 @@ import { UUID } from 'crypto';
 import { multerOptions } from '../utils/multer';
 import { DownloadGroupDto } from './dto/download-group.dto';
 import { BulkUpdateGroupDto } from './dto/bulk-update-group.dto';
+import {
+  DistinctGroupBeneficiaryValuesDto,
+  SearchGroupBeneficiariesDto,
+} from './dto/search-group-beneficiaries.dto';
 
 const MAX_FILE_SIZE = 10_000_000_000;
 
@@ -59,6 +65,26 @@ export class GroupController {
   @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.GROUP })
   async downloadData(@Body('uuid') uuid: string) {
     return this.groupService.downloadData(uuid);
+  }
+
+  @Post(':uuid/beneficiaries/search')
+  @HttpCode(200)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.GROUP })
+  searchBeneficiaries(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Body() dto: SearchGroupBeneficiariesDto,
+  ) {
+    return this.groupService.searchGroupBeneficiaries(uuid, dto);
+  }
+
+  @Post(':uuid/beneficiaries/distinct')
+  @HttpCode(200)
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.GROUP })
+  distinctBeneficiaryValues(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Body() dto: DistinctGroupBeneficiaryValuesDto,
+  ) {
+    return this.groupService.distinctGroupBeneficiaryValues(uuid, dto);
   }
 
   @Get(':uuid/download-excel')
