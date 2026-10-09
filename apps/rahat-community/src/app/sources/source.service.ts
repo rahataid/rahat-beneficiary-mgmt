@@ -412,7 +412,7 @@ export class SourceService {
         duplicateCount,
         previewLimit: PREVIEW_LIMIT,
       },
-      invalidFields: allValidationErrors.slice(0, PREVIEW_LIMIT),
+      invalidFields: allValidationErrors,
       result: dateParsedDuplicates.slice(0, PREVIEW_LIMIT),
       hasUUID,
     };
