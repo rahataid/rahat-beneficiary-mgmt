@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { uuid } from 'uuidv4';
 import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
+import { getMetadataStorage, validateSync } from 'class-validator';
 import { CreateBeneficiaryDto } from '@rahataid/community-tool-extensions';
 import {
   DB_MODELS,
@@ -78,19 +78,26 @@ const validateSecondaryFields = async (
 ) => {
   const secondaryErrors = [];
   const dbFields = await fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-  const primaryFields = dbFields.map((f) => f.name);
-  payload.map((item: any) => {
+  const primaryFieldSet = new Set(dbFields.map((f) => f.name));
+  const extraFieldMap = new Map(extraFields.map((f: any) => [f.name, f]));
+  const populateValuesCache = new Map<string, Set<string>>();
+
+  payload.forEach((item: any) => {
     Object.keys(item).forEach((key) => {
-      if (!primaryFields.includes(key) && key !== 'rawData') {
+      if (!primaryFieldSet.has(key) && key !== 'rawData') {
         // This is extra field
         const val = item[key];
-        const found = extraFields.find((f) => f.name === key);
+        // Empty secondary values are optional — don't flag them as invalid.
+        // (With wide sheets this alone produced rows x columns error objects.)
+        if (isEmptyValue(val)) return;
+        const found = extraFieldMap.get(key);
         if (found) {
           const isValid = validateValueByType({
             value: val,
             type: found.type,
             fieldName: key,
-            extraFields,
+            extraFieldMap,
+            populateValuesCache,
           });
           if (!isValid) {
             secondaryErrors.push({
@@ -107,25 +114,19 @@ const validateSecondaryFields = async (
   return secondaryErrors;
 };
 
+const isEmptyValue = (val: any) =>
+  val === undefined || val === null || String(val).trim() === '';
+
 const fillSecondaryFieldDefaults = (
   payload: any,
   extraFields: IExtraField[],
 ) => {
   const dbFields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
-  const primaryFields = dbFields.map((f) => f.name);
+  const primaryFieldSet = new Set(dbFields.map((f) => f.name));
 
   payload.forEach((item: any) => {
-    // extraFields.forEach((ef) => {
-    //   if (!primaryFields.includes(ef.name)) {
-    //     const val = item[ef.name];
-    //     if (val === undefined || val === null || val === '') {
-    //       item[ef.name] = 'N/A';
-    //     }
-    //   }
-    // });
-
     Object.keys(item).forEach((key) => {
-      if (!primaryFields.includes(key) && key !== 'rawData') {
+      if (!primaryFieldSet.has(key) && key !== 'rawData') {
         const val = item[key];
         if (val === undefined || val === null || val === '') {
           item[key] = 'N/A';
@@ -135,7 +136,13 @@ const fillSecondaryFieldDefaults = (
   });
 };
 
-function validateValueByType({ value, type, fieldName, extraFields }) {
+function validateValueByType({
+  value,
+  type,
+  fieldName,
+  extraFieldMap,
+  populateValuesCache,
+}) {
   switch (type.toUpperCase()) {
     case FIELD_DEF_TYPES.NUMBER:
       const val = value ? value : 0;
@@ -143,11 +150,26 @@ function validateValueByType({ value, type, fieldName, extraFields }) {
     case FIELD_DEF_TYPES.TEXT:
       return typeof value === 'string' || typeof value === 'number';
     case FIELD_DEF_TYPES.DROPDOWN:
-      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+      return checkIfPopulateValuesMatch(
+        fieldName,
+        value,
+        extraFieldMap,
+        populateValuesCache,
+      );
     case FIELD_DEF_TYPES.RADIO:
-      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+      return checkIfPopulateValuesMatch(
+        fieldName,
+        value,
+        extraFieldMap,
+        populateValuesCache,
+      );
     case FIELD_DEF_TYPES.CHECKBOX:
-      return checkIfPopulateValuesMatch(fieldName, value, extraFields);
+      return checkIfPopulateValuesMatch(
+        fieldName,
+        value,
+        extraFieldMap,
+        populateValuesCache,
+      );
     case FIELD_DEF_TYPES.DATE:
       return isValidDateFormat(value);
     default:
@@ -158,78 +180,96 @@ function validateValueByType({ value, type, fieldName, extraFields }) {
 function checkIfPopulateValuesMatch(
   fieldName: string,
   value: string,
-  extraFields: any,
+  extraFieldMap: Map<string, any>,
+  populateValuesCache: Map<string, Set<string>>,
 ) {
-  const values = getPopulateFieldValues(fieldName, extraFields);
-  const v = value.toString().trim();
-  const isValid = values.includes(v);
-  return isValid;
+  if (value === undefined || value === null) return false;
+  const values = getPopulateFieldValues(
+    fieldName,
+    extraFieldMap,
+    populateValuesCache,
+  );
+  return values.has(String(value).trim());
 }
 
-function getPopulateFieldValues(fieldName: string, extraFields: any) {
-  const found = extraFields.find((f: any) => f.name === fieldName);
-  if (!found) return [];
-  const values = found.fieldPopulate?.data?.map((d: any) => d.value) || [];
+function getPopulateFieldValues(
+  fieldName: string,
+  extraFieldMap: Map<string, any>,
+  populateValuesCache: Map<string, Set<string>>,
+): Set<string> {
+  const cached = populateValuesCache.get(fieldName);
+  if (cached) return cached;
+  const found = extraFieldMap.get(fieldName);
+  const values = new Set<string>(
+    (found?.fieldPopulate?.data || []).map((d: any) => String(d.value).trim()),
+  );
+  populateValuesCache.set(fieldName, values);
   return values;
 }
 
-const VALIDATION_CHUNK_SIZE = 500;
+// Properties CreateBeneficiaryDto actually validates. Only these are passed to
+// class-transformer/class-validator, so wide sheets (100+ extra columns) don't
+// inflate the cost of primary validation.
+let dtoPropertyNames: string[] | null = null;
+const getDtoPropertyNames = () => {
+  if (!dtoPropertyNames) {
+    const metas = getMetadataStorage().getTargetValidationMetadatas(
+      CreateBeneficiaryDto,
+      '',
+      false,
+      false,
+    );
+    dtoPropertyNames = [...new Set(metas.map((m) => m.propertyName))];
+  }
+  return dtoPropertyNames;
+};
 
 const validatePrimaryFields = async (
   payload: any,
   requiredFields: string[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   uniqueFields: string[] = [],
 ) => {
-  const emptyFields: string[] = [];
+  const emptyFields = new Set<string>();
   const primaryErrors = [];
+  const dtoProps = getDtoPropertyNames();
 
-  for (let i = 0; i < payload.length; i += VALIDATION_CHUNK_SIZE) {
-    const chunkResults = await Promise.all(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload.slice(i, i + VALIDATION_CHUNK_SIZE).map(async (item: any) => {
-        const errors = [];
-        const fields: string[] = [];
+  for (const item of payload) {
+    const dtoInput: Record<string, any> = {};
+    for (const prop of dtoProps) {
+      if (item[prop] !== undefined) dtoInput[prop] = item[prop];
+    }
+    if (dtoInput[BENEF_UNIQUE_FIELDS.PHONE] === '')
+      dtoInput[BENEF_UNIQUE_FIELDS.PHONE] = null;
+    if (!dtoInput.lastName) dtoInput.lastName = '';
 
-        const dtoInput =
-          item[BENEF_UNIQUE_FIELDS.PHONE] === ''
-            ? { ...item, [BENEF_UNIQUE_FIELDS.PHONE]: null }
-            : item;
-        if (!dtoInput.lastName) dtoInput.lastName = '';
-        const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, dtoInput);
-        const validationErrors = await validate(beneficiaryDto);
+    const beneficiaryDto = plainToInstance(CreateBeneficiaryDto, dtoInput);
+    const validationErrors = validateSync(beneficiaryDto);
 
-        for (const e of validationErrors) {
-          errors.push({
-            uuid: item.uuid,
-            fieldName: e.property,
-            value: item[e.property],
-            message: `Invalid value for field '${e.property}'`,
-          });
-        }
+    for (const e of validationErrors) {
+      primaryErrors.push({
+        uuid: item.uuid,
+        fieldName: e.property,
+        value: item[e.property],
+        message: `Invalid value for field '${e.property}'`,
+      });
+    }
 
-        for (const f of requiredFields) {
-          if (!item[f]) {
-            fields.push(f);
-            errors.push({
-              uuid: item.uuid,
-              fieldName: f,
-              value: '',
-              isNull: true,
-              message: 'Required field is missing',
-            });
-          }
-        }
-
-        return { errors, fields };
-      }),
-    );
-    for (const r of chunkResults) {
-      primaryErrors.push(...r.errors);
-      emptyFields.push(...r.fields);
+    for (const f of requiredFields) {
+      if (!item[f]) {
+        emptyFields.add(f);
+        primaryErrors.push({
+          uuid: item.uuid,
+          fieldName: f,
+          value: '',
+          isNull: true,
+          message: 'Required field is missing',
+        });
+      }
     }
   }
 
-  const processedData = addEmptyFieldsToPayload(payload, emptyFields);
+  const processedData = addEmptyFieldsToPayload(payload, [...emptyFields]);
   return { primaryErrors, processedData };
 };
 
