@@ -12,6 +12,10 @@ import {
   ResultGroup,
   BulkUpdateResponse,
   DownloadExcelQuery,
+  SearchGroupBeneficiariesInput,
+  SearchGroupBeneficiariesResult,
+  DistinctGroupBeneficiaryValuesInput,
+  DistinctGroupBeneficiaryValuesResult,
 } from '../groups';
 import { formatResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -116,6 +120,31 @@ export const getGroupClient = (client: AxiosInstance): GroupClient => {
         },
       );
       return formatResponse<BulkUpdateResponse>(response);
+    },
+    searchBeneficiaries: async (
+      uuid: string,
+      data: SearchGroupBeneficiariesInput = {},
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.post(
+        `/group/${uuid}/beneficiaries/search`,
+        { filters: [], ...data },
+        config,
+      );
+      return formatResponse<SearchGroupBeneficiariesResult>(response);
+    },
+
+    distinctBeneficiaryValues: async (
+      uuid: string,
+      data: DistinctGroupBeneficiaryValuesInput,
+      config?: AxiosRequestConfig,
+    ) => {
+      const response = await client.post(
+        `/group/${uuid}/beneficiaries/distinct`,
+        data,
+        config,
+      );
+      return formatResponse<DistinctGroupBeneficiaryValuesResult>(response);
     },
   };
 };

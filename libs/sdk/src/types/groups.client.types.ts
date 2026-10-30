@@ -1,6 +1,8 @@
 import { AxiosRequestConfig } from 'axios';
 import {
   BulkUpdateResponse,
+  DistinctGroupBeneficiaryValuesInput,
+  DistinctGroupBeneficiaryValuesResult,
   DownloadExcelQuery,
   GroupBeneficiaryQuery,
   GroupInput,
@@ -11,6 +13,8 @@ import {
   ListGroup,
   RemoveGroup,
   ResultGroup,
+  SearchGroupBeneficiariesInput,
+  SearchGroupBeneficiariesResult,
 } from '../groups';
 import { FormattedResponse } from '@rumsan/sdk/utils';
 import { Pagination } from '@rumsan/sdk/types';
@@ -75,4 +79,16 @@ export type GroupClient = {
     uniqueField?: string,
     config?: AxiosRequestConfig,
   ) => Promise<FormattedResponse<BulkUpdateResponse>>;
+
+  searchBeneficiaries: (
+    uuid: string,
+    data?: SearchGroupBeneficiariesInput,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<SearchGroupBeneficiariesResult>>;
+
+  distinctBeneficiaryValues: (
+    uuid: string,
+    data: DistinctGroupBeneficiaryValuesInput,
+    config?: AxiosRequestConfig,
+  ) => Promise<FormattedResponse<DistinctGroupBeneficiaryValuesResult>>;
 };
