@@ -1,6 +1,6 @@
 {
   "name": "@community-tool/source",
-  "version": "v1.0.0",
+  "version": "v1.0.1",
   "license": "MIT",
   "prisma": {
     "seed": "ts-node prisma/seed.local.ts"
