@@ -626,24 +626,22 @@ export class GroupService {
           const extraData: Record<string, unknown> = {};
 
           for (const [key, value] of Object.entries(rest)) {
-            if (
-              value === undefined ||
-              value === null ||
-              value === '' ||
-              (typeof value === 'string' && value.trim() === '')
-            ) {
+            if (value === undefined || value === null) {
               continue;
             }
+
+            const normalizedValue =
+              typeof value === 'string' ? value.trim() : value;
 
             if (PRIMARY_FIELDS.has(key)) {
               const enumValues = ENUM_FIELD_VALUES[key];
               primaryData[key] = enumValues
-                ? enumValues.has((value as string).toUpperCase())
-                  ? (value as string).toUpperCase()
-                  : value
-                : value;
+                ? enumValues.has((normalizedValue as string).toUpperCase())
+                  ? (normalizedValue as string).toUpperCase()
+                  : normalizedValue
+                : normalizedValue;
             } else {
-              extraData[key] = value;
+              extraData[key] = normalizedValue;
             }
           }
 
