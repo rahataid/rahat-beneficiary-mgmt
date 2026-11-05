@@ -18,13 +18,13 @@ export const convertDateToISO = (date: string) => {
 };
 
 export const convertToValidString = (inputString: string) => {
-  // Remove special characters using regular expression
-  const cleanedString = inputString.replace(/[^\w\s]/gi, '');
+  // Replace special characters (except hyphen) with a space so word boundaries are preserved
+  const cleanedString = inputString.replace(/[^\w\s-]/gi, ' ');
 
-  // Split the string into words
-  const words = cleanedString.split(/\s+/);
+  // Split the string into words, dropping empty entries from repeated separators
+  const words = cleanedString.split(/\s+/).filter(Boolean);
 
-  // Join the words with underscore
+  // Join the words with underscore, keeping literal hyphens intact
   return words.join('_').toLowerCase();
 };
 
