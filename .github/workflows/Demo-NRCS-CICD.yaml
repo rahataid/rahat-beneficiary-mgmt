@@ -1,4 +1,4 @@
-name: Dev CI/CD
+name: DEMO NRCS CI/CD
 on:
   push:
     branches:
