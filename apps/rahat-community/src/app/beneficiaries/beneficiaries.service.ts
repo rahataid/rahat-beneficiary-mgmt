@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { startTimer } from '../utils/timer';
 
 import {
   BulkInsertDto,
@@ -313,12 +314,19 @@ export class BeneficiariesService {
     );
 
     const primary_conditions = createSearchQuery(filters);
+    const t = startTimer();
 
     if (extraConditions.length === 0) {
       if (fetchAll) {
         const rows = await this.prisma.beneficiary.findMany({
           where: primary_conditions,
         });
+        t.lap('findManyAllColumns');
+        this.logger.log(
+          `[timing] searchTargets primaryOnly rows=${
+            rows.length
+          } ${t.summary()}`,
+        );
         return { rows, meta: { total: rows.length } };
       }
       return paginate(
@@ -360,6 +368,7 @@ export class BeneficiariesService {
       rawSql,
       ...ginParams,
     );
+    t.lap(`extrasQuery(${matchedRows.length}uuids)`);
 
     if (matchedRows.length === 0) {
       return {
@@ -381,6 +390,10 @@ export class BeneficiariesService {
 
     if (fetchAll) {
       const rows = await this.prisma.beneficiary.findMany({ where });
+      t.lap(`findManyByUuidIn(${uuids.length}params)`);
+      this.logger.log(
+        `[timing] searchTargets withExtras rows=${rows.length} ${t.summary()}`,
+      );
       return { rows, meta: { total: rows.length } };
     }
 

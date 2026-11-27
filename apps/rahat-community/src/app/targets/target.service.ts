@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bull';
 import { Prisma } from '@prisma/client';
@@ -37,11 +37,14 @@ import { createFinalResult, createPrimaryAndExtraQuery } from './helpers';
 import { GroupService } from '../groups/group.service';
 import { GroupOrigins, SETTINGS_NAMES } from '@rahataid/community-tool-sdk';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SLOW_QUERY_MS, startTimer } from '../utils/timer';
 
 const EXPORT_BATCH_SIZE = 500;
 
 @Injectable()
 export class TargetService {
+  private readonly logger = new Logger(TargetService.name);
+
   constructor(
     @InjectQueue(QUEUE.TARGETING) private targetingQueue: Queue,
     @InjectQueue(QUEUE.BENEFICIARY) private benefQueue: Queue,
@@ -52,15 +55,26 @@ export class TargetService {
   ) {}
 
   async create(dto: CreateTargetQueryDto) {
+    const t = startTimer();
     const { filterOptions } = dto;
     const target = await this.prismaService.targetQuery.create({ data: dto });
+    t.lap('insertTargetQuery');
     const data = { targetUuid: target.uuid, filterOptions };
     this.targetingQueue.add(JOBS.TARGET_BENEFICIARY, data, QUEUE_RETRY_OPTIONS);
+    t.lap('queueAdd');
+    this.logger.log(
+      `[timing] create (API) target=${target.uuid} ${t.summary()}`,
+    );
     return target;
   }
 
   async saveTargetResult(data: CreateTargetResultDto) {
+    const t = startTimer();
     const { filterOptions, targetUuid } = data;
+    // set by TargetProcessor: when the job was queued / picked up
+    const jobTiming = (data as any)?._timing as
+      | { enqueuedAt?: number; pickedAt?: number }
+      | undefined;
 
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
     const primary_fields = fields.filter((f) => f.name !== 'extras');
@@ -74,6 +88,7 @@ export class TargetService {
       keys,
       values,
     );
+    t.lap('buildQuery');
 
     // 2. Fetch ALL matching beneficiaries — no pagination, so no results are missed
     const benefData = await this.benefService.searchTargets(
@@ -81,12 +96,34 @@ export class TargetService {
       extraConditions,
       true,
     );
+    t.lap('fetchBeneficiaries');
 
     // 3. Save final result in the TargetResult && Update Status to COMPLETED
     await this.createManySearchResult(benefData.rows, targetUuid);
+    t.lap('insertResults');
     await this.updateTargetQuery(targetUuid, {
       status: TARGET_QUERY_STATUS.COMPLETED as TargetQueryStatusEnum,
     });
+    t.lap('statusUpdate');
+
+    const timings = t.toJSON();
+    const queued =
+      jobTiming?.enqueuedAt && jobTiming?.pickedAt
+        ? jobTiming.pickedAt - jobTiming.enqueuedAt
+        : undefined;
+    const endToEnd = jobTiming?.enqueuedAt
+      ? Date.now() - jobTiming.enqueuedAt
+      : undefined;
+    const line =
+      `[timing] create target=${targetUuid} rows=${benefData.rows.length} ` +
+      `extrasFilters=${extraConditions.length} ${t.summary()}` +
+      (queued !== undefined ? ` queued=${queued}ms` : '') +
+      (endToEnd !== undefined ? ` endToEnd=${endToEnd}ms` : '');
+    if (timings.total >= SLOW_QUERY_MS) {
+      this.logger.warn(`${line} SLOW filters=${JSON.stringify(getFilterData)}`);
+    } else {
+      this.logger.log(line);
+    }
 
     this.eventEmitter.emit(EVENTS.TARGETING_COMPLETED, targetUuid);
 
@@ -96,6 +133,7 @@ export class TargetService {
   }
 
   async searchTargetBeneficiaries(query: any) {
+    const t = startTimer();
     const { filterOptions } = query;
     let final_result = [];
     const fields = fetchSchemaFields(DB_MODELS.TBL_BENEFICIARY);
@@ -114,9 +152,18 @@ export class TargetService {
         primary,
         extraConditions,
       );
+      t.lap(
+        `fetchGroup${filterOptions.indexOf(item) + 1}(${data.rows.length}rows)`,
+      );
       // 3. Merge result i.e. final_result UNION data
       final_result = createFinalResult(final_result, data.rows);
+      t.lap(`mergeGroup${filterOptions.indexOf(item) + 1}`);
     }
+    const line = `[timing] search (preview) groups=${
+      filterOptions.length
+    } rows=${final_result.length} ${t.summary()}`;
+    if (t.total() >= SLOW_QUERY_MS) this.logger.warn(`${line} SLOW`);
+    else this.logger.log(line);
     return final_result;
   }
 
@@ -139,8 +186,10 @@ export class TargetService {
   }
 
   async updateTargetQueryLabel(uuid: string, dto: updateTargetQueryLabelDTO) {
+    const t = startTimer();
     const targetCriteria = { data: dto.targetingCriteria } as any;
     const benef = await this.findTargetedBeneficiary(uuid);
+    t.lap('loadTargetResults');
     if (!benef.length) throw new Error('No beneficiaries found!');
 
     const group = await this.groupService.upsertByName({
@@ -149,6 +198,7 @@ export class TargetService {
       createdBy: dto.createdBy,
       targetingCriteria: targetCriteria,
     });
+    t.lap('upsertGroup');
     const groupedBenef = benef.map((b: any) => {
       return {
         beneficiaryUID: b.benefUuid,
@@ -160,6 +210,12 @@ export class TargetService {
       data: groupedBenef,
       skipDuplicates: true,
     });
+    t.lap('insertGroupMembers');
+    this.logger.log(
+      `[timing] label (save as group) target=${uuid} group="${
+        dto.label
+      }" rows=${benef.length} added=${bgData.count} ${t.summary()}`,
+    );
 
     return bgData;
   }
@@ -283,6 +339,7 @@ export class TargetService {
 
     const conditions = { targetUuid: targetUuid };
 
+    const t = startTimer();
     const rData = await paginate(
       this.prismaService.targetResult,
       { where: { ...conditions }, include },
@@ -292,22 +349,38 @@ export class TargetService {
         perPage: +query?.perPage,
       },
     );
-    // console.log(rData);
-    // setTimeout(async () => {
-    // }, 2000);
+    t.lap('paginate(count+page)');
+    this.logger.log(
+      `[timing] results target=${targetUuid} page=${query?.page ?? 1}/${
+        query?.perPage ?? '-'
+      } ${t.summary()}`,
+    );
 
     return rData;
   }
 
   async cleanTargetQueryAndResults() {
+    const t = startTimer();
     let count = 0;
     const targetQueries = await this.findCompletedAndNoLabelTargetQuery();
-    if (!targetQueries.length) return;
+    t.lap('findTargets');
+    if (!targetQueries.length) {
+      this.logger.log(`[timing] cleanup nothing to check ${t.summary()}`);
+      return;
+    }
+    let loaded = 0;
     for (const q of targetQueries) {
       const targetResults = await this.findTargetResultByQueryUID(q.uuid);
+      loaded += targetResults.length;
       count = await this.compareDateAndDelete(targetResults, q.uuid);
     }
+    t.lap('checkAndDelete');
     console.log(`${count} Target results deleted!`);
+    this.logger.log(
+      `[timing] cleanup targets=${
+        targetQueries.length
+      } resultRowsLoaded=${loaded} ${t.summary()}`,
+    );
   }
 
   async compareDateAndDelete(targetResult: any, targetQueryUID: string) {
@@ -388,6 +461,7 @@ export class TargetService {
   }
 
   async downloadPinnedBeneficiary(targetUuid: string) {
+    const t = startTimer();
     const getLabelName = await this.prismaService.targetQuery.findUnique({
       where: { uuid: targetUuid },
       select: {
@@ -404,7 +478,14 @@ export class TargetService {
       return { ...item.beneficiary, label: getLabelName.label };
     });
 
+    t.lap('loadRows');
     const excelData = generateExcelData(formattedData);
+    t.lap('buildExcel');
+    this.logger.log(
+      `[timing] download target=${targetUuid} rows=${
+        formattedData.length
+      } ${t.summary()}`,
+    );
     return excelData;
   }
 }
